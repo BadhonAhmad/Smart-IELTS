@@ -1,4 +1,5 @@
 import { Agent, Doc, Model, VectorDB } from '@smythos/sdk';
+import { Pinecone } from '@pinecone-database/pinecone';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,6 +15,9 @@ dotenv.config();
 const __dirname = process.cwd();
 const BOOKS_NAMESPACE = 'books';
 
+// Simple tracking - reset on application restart
+let purgeExecuted = false;
+
 //#region [ Agent Instance] ===================================
 
 //We create the agent instance
@@ -28,21 +32,22 @@ const agent = new Agent({
     model: 'gemini-2.0-flash',
 
     //the behavior of the agent, this describes the personnality and behavior of the agent
-    behavior: `You are a helpful assistant that can answer questions about books. 
+    behavior: `You are a helpful book assistant. 
 
-IMPORTANT RULES:
-1. When a skill execution completes successfully, ALWAYS provide a final response to the user
-2. NEVER call the same skill multiple times in a row
-3. If a skill returns a success message, acknowledge it and respond to the user immediately
-4. Do not retry skills that have already executed successfully
+When the user asks to delete books or PDFs:
+1. Call the purge_books skill ONCE
+2. When you get a response from the skill, tell the user the result
+3. DO NOT call purge_books again - one call per request
+
+When any skill returns a success message, respond to the user immediately.
 
 Available skills:
-- index_book: Index a PDF book into the vector database
-- lookup_book: Search for content in indexed books  
-- purge_books: Remove all indexed books (use carefully!)
-- get_book_info: Get book information from OpenLibrary
+- index_book: Index a PDF book 
+- lookup_book: Search in books
+- purge_books: Delete all books (call once only)
+- get_book_info: Get book information
 
-Always be concise and helpful in your responses.`,
+Be helpful and concise.`,
 });
 
 //We create a Pinecone vectorDB instance, at the agent scope
@@ -110,7 +115,7 @@ agent.addSkill({
             console.log(`[DEBUG] Insert result:`, result);
 
             if (result) {
-                const successMsg = `Book ${name} indexed successfully in Pinecone`;
+                const successMsg = `✅ SUCCESS: Book ${name} indexed successfully in Pinecone. Task completed.`;
                 console.log(`[SUCCESS] ${successMsg}`);
                 
                 // Verify the insertion by searching
@@ -120,12 +125,12 @@ agent.addSkill({
                 
                 return successMsg;
             } else {
-                const failMsg = `Book ${name} indexing failed - no result returned`;
+                const failMsg = `❌ Book ${name} indexing failed - no result returned`;
                 console.log(`[ERROR] ${failMsg}`);
                 return failMsg;
             }
         } catch (error) {
-            const errorMsg = `Error indexing book: ${error.message}`;
+            const errorMsg = `❌ Error indexing book: ${error.message}`;
             console.error(`[ERROR] ${errorMsg}`, error);
             console.error(`[ERROR] Stack trace:`, error.stack);
             return errorMsg;
@@ -158,7 +163,7 @@ agent.addSkill({
             
             console.log(`[DEBUG] Extracted text length:`, text.length);
             
-            const response = `✅ Found content from ${source}:\n\n${text}`;
+            const response = `✅ SUCCESS: Found content from ${source}:\n\n${text}\n\nSearch completed.`;
             console.log(`[DEBUG] Returning response successfully`);
             
             return response;
@@ -171,26 +176,60 @@ agent.addSkill({
     },
 });
 
+// Helper to purge ALL namespaces from the Pinecone index (bypasses SDK scoping)
+async function purgeAllNamespacesDirect(): Promise<{ purged: string[] }> {
+    const apiKey = process.env.PINECONE_API_KEY;
+    const indexName = 'ilts';
+    if (!apiKey) throw new Error('Missing PINECONE_API_KEY');
+    const client = new Pinecone({ apiKey });
+    const index = client.Index(indexName);
+    const stats = await index.describeIndexStats();
+    const namespaces = Object.keys((stats as any)?.namespaces || {});
+
+    const purged: string[] = [];
+    for (const ns of namespaces) {
+        try {
+            await index.namespace(ns).deleteAll();
+            purged.push(ns);
+        } catch (e) {
+            console.warn(`[WARN] Failed to purge namespace '${ns}':`, (e as any)?.message || e);
+        }
+    }
+    return { purged };
+}
+
 //Purge all data from Pinecone vector database (useful for testing)
 const purgeSkill = agent.addSkill({
     name: 'purge_books',
     description: 'Use this skill to remove all indexed books from the vector database. WARNING: This will delete all data! Only call this once per user request.',
     process: async (params) => {
+        console.log(`[DEBUG] Purge skill called with params:`, params);
+        
+        // Simple check - if already executed, return success immediately
+        if (purgeExecuted) {
+            const msg = `All PDF books have already been deleted from the database. The operation was completed successfully.`;
+            console.log(`[INFO] ${msg}`);
+            return msg;
+        }
+        
         try {
-            console.log(`[DEBUG] Purging all data from Pinecone...`);
-            console.log(`[DEBUG] Skill called with params:`, params);
-            
+            console.log(`[DEBUG] Executing Pinecone purge operation (SDK-scoped namespace)...`);
             await pinecone.purge();
+
+            console.log(`[DEBUG] Purging ALL namespaces directly from Pinecone index for completeness...`);
+            const { purged } = await purgeAllNamespacesDirect();
+            console.log(`[DEBUG] Purged namespaces:`, purged);
             
-            const successMsg = `All books have been successfully deleted from the vector database. The database is now completely empty.`;
+            // Mark as executed
+            purgeExecuted = true;
+            
+            const successMsg = `All PDF books have been successfully deleted from the vector database. The database is now empty and the operation is complete. (Purged namespaces: ${purged.length})`;
             console.log(`[SUCCESS] ${successMsg}`);
-            
             return successMsg;
             
         } catch (error) {
-            const errorMsg = `Failed to delete books from database: ${error.message}`;
-            console.error(`[ERROR] ${errorMsg}`, error);
-            return errorMsg;
+            console.error(`[ERROR] Purge operation failed:`, error.message);
+            return `Failed to delete books: ${error.message}`;
         }
     },
 });

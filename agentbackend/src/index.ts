@@ -24,8 +24,8 @@ const main = async () => {
         persist: true,
     });
 
-    //Run the chat session in the terminal
-    runChat(chat);
+    //Run the chat session in the terminal (pass agent for direct skill calls on special intents)
+    runChat(chat, agent);
 };
 
 main();
