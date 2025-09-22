@@ -50,7 +50,6 @@ agent.addSkill({
     process: async ({ book_path }) => {
         try {
             console.log(`[DEBUG] Attempting to index book: ${book_path}`);
-            console.log(`[DEBUG] Pinecone API Key exists: ${!!process.env.PINECONE_API_KEY}`);
             console.log(`[DEBUG] Using index name: ilts`);
             
             // Handle both relative and absolute paths, and clean up duplicated directory names
@@ -123,12 +122,39 @@ agent.addSkill({
 //Lookup a book in Pinecone vector database
 agent.addSkill({
     name: 'lookup_book',
-    description: 'Use this skill to lookup a book in the Pinecone vector database',
+    description: 'Use this skill to lookup a book in the Pinecone vector database and get relevant content from indexed books',
     process: async ({ user_query }) => {
-        const result = await pinecone.search(user_query, {
-            topK: 5,
-        });
-        return result;
+        try {
+            console.log(`[DEBUG] Searching for: "${user_query}"`);
+            
+            const result = await pinecone.search(user_query, {
+                topK: 3, // Reduced to 3 for better response
+            });
+            
+            console.log(`[DEBUG] Search completed. Found ${result?.length || 0} results`);
+            console.log(`[DEBUG] Raw result structure:`, JSON.stringify(result, null, 2));
+            
+            if (!result || result.length === 0) {
+                return "No relevant content found in the indexed books. Please make sure books are indexed first using the 'index_book' skill.";
+            }
+            
+            // Simple approach - just return the first result's text
+            const firstResult = result[0];
+            const text = firstResult.text || firstResult.content || firstResult.pageContent || 'No text found';
+            const source = firstResult.metadata?.fileName || firstResult.metadata?.datasourceLabel || 'Bitcoin PDF';
+            
+            console.log(`[DEBUG] Extracted text:`, text.substring(0, 200) + '...');
+            
+            const response = `From ${source}:\n\n${text}`;
+            console.log(`[DEBUG] Final response length:`, response.length);
+            
+            return response;
+            
+        } catch (error) {
+            const errorMsg = `Error searching books: ${error.message}`;
+            console.error(`[ERROR] ${errorMsg}`, error);
+            return errorMsg;
+        }
     },
 });
 
