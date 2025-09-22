@@ -1,7 +1,10 @@
-import { Agent, Doc, Model } from '@smythos/sdk';
+import { Agent, Doc, Model, VectorDB } from '@smythos/sdk';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 /**
  * This is an example of a simple agent where the skills are implemented programmatically
@@ -28,49 +31,123 @@ const agent = new Agent({
     behavior: 'You are a helpful assistant that can answer questions about the books.',
 });
 
-//We create a vectorDB instance, at the agent scope
-//RAMVec is a minimal in memory vectorDB, we mostly use it for testing and development
-//In production we will use a more robust vectorDB like Pinecone or Milvus
-const ramvec = agent.vectorDB.RAMVec(BOOKS_NAMESPACE, {
-    embeddings: Model.OpenAI('text-embedding-3-small'),
+//We create a Pinecone vectorDB instance, at the agent scope
+//Pinecone is a production-ready vector database for remote storage
+const pinecone = agent.vectorDB.Pinecone(BOOKS_NAMESPACE, {
+    indexName: 'ilts',
+    apiKey: process.env.PINECONE_API_KEY,
+    embeddings: Model.GoogleAI('gemini-embedding-001'),
 });
 
 //#endregion
 
 //#region [ Skills ] ===================================
 
-//Index a book in RAMVec vector database
+//Index a book in Pinecone vector database
 agent.addSkill({
     name: 'index_book',
-    description: 'Use this skill to index a book in a vector database, the user will provide the path to the book',
+    description: 'Use this skill to index a book in a vector database. The user will provide the path to the book (e.g., "data/bitcoin.pdf" or "agentbackend/data/bitcoin.pdf")',
     process: async ({ book_path }) => {
-        const filePath = path.resolve(__dirname, book_path);
-        if (!fs.existsSync(filePath)) {
-            return `File resolved path to ${filePath} does not exist`;
-        }
+        try {
+            console.log(`[DEBUG] Attempting to index book: ${book_path}`);
+            console.log(`[DEBUG] Pinecone API Key exists: ${!!process.env.PINECONE_API_KEY}`);
+            console.log(`[DEBUG] Using index name: ilts`);
+            
+            // Handle both relative and absolute paths, and clean up duplicated directory names
+            let filePath;
+            if (path.isAbsolute(book_path)) {
+                filePath = book_path;
+            } else {
+                // Remove leading 'agentbackend/' if present since we're already in that directory
+                const cleanPath = book_path.replace(/^agentbackend\//, '');
+                filePath = path.resolve(__dirname, cleanPath);
+            }
+            
+            console.log(`[DEBUG] Resolved file path: ${filePath}`);
+            
+            if (!fs.existsSync(filePath)) {
+                const errorMsg = `File resolved path to ${filePath} does not exist`;
+                console.log(`[ERROR] ${errorMsg}`);
+                return errorMsg;
+            }
 
-        const parsedDoc = await Doc.auto.parse(filePath);
+            console.log(`[DEBUG] Parsing document...`);
+            const parsedDoc = await Doc.pdf.parse(filePath);
+            console.log(`[DEBUG] Document parsed successfully`);
 
-        const name = path.basename(filePath);
-        const result = await ramvec.insertDoc(name, parsedDoc);
+            const name = path.basename(filePath);
+            console.log(`[DEBUG] Inserting document ${name} into Pinecone vector DB...`);
+            console.log(`[DEBUG] Document will be inserted with namespace: ${BOOKS_NAMESPACE}`);
+            
+            // Test Pinecone connection first
+            try {
+                console.log(`[DEBUG] Testing Pinecone connection...`);
+                const testResult = await pinecone.search('test', { topK: 1 });
+                console.log(`[DEBUG] Pinecone connection successful`);
+            } catch (connError) {
+                console.log(`[ERROR] Pinecone connection failed:`, connError.message);
+                return `Pinecone connection failed: ${connError.message}`;
+            }
+            
+            const result = await pinecone.insertDoc(name, parsedDoc, { 
+                fileName: name, 
+                indexedAt: new Date().toISOString(),
+                namespace: BOOKS_NAMESPACE 
+            });
+            console.log(`[DEBUG] Insert result:`, result);
 
-        if (result) {
-            return `Book ${name} indexed successfully`;
-        } else {
-            return `Book ${name} indexing failed`;
+            if (result) {
+                const successMsg = `Book ${name} indexed successfully in Pinecone`;
+                console.log(`[SUCCESS] ${successMsg}`);
+                
+                // Verify the insertion by searching
+                console.log(`[DEBUG] Verifying insertion by searching...`);
+                const verifyResult = await pinecone.search('test', { topK: 1 });
+                console.log(`[DEBUG] Verification search result:`, verifyResult);
+                
+                return successMsg;
+            } else {
+                const failMsg = `Book ${name} indexing failed - no result returned`;
+                console.log(`[ERROR] ${failMsg}`);
+                return failMsg;
+            }
+        } catch (error) {
+            const errorMsg = `Error indexing book: ${error.message}`;
+            console.error(`[ERROR] ${errorMsg}`, error);
+            console.error(`[ERROR] Stack trace:`, error.stack);
+            return errorMsg;
         }
     },
 });
 
-//Lookup a book in RAMVec vector database
+//Lookup a book in Pinecone vector database
 agent.addSkill({
     name: 'lookup_book',
-    description: 'Use this skill to lookup a book in the vector database',
+    description: 'Use this skill to lookup a book in the Pinecone vector database',
     process: async ({ user_query }) => {
-        const result = await ramvec.search(user_query, {
+        const result = await pinecone.search(user_query, {
             topK: 5,
         });
         return result;
+    },
+});
+
+//Purge all data from Pinecone vector database (useful for testing)
+agent.addSkill({
+    name: 'purge_books',
+    description: 'Use this skill to remove all indexed books from the vector database. WARNING: This will delete all data!',
+    process: async () => {
+        try {
+            console.log(`[DEBUG] Purging all data from Pinecone...`);
+            await pinecone.purge();
+            const successMsg = `All books purged from vector database successfully`;
+            console.log(`[SUCCESS] ${successMsg}`);
+            return successMsg;
+        } catch (error) {
+            const errorMsg = `Error purging vector database: ${error.message}`;
+            console.error(`[ERROR] ${errorMsg}`, error);
+            return errorMsg;
+        }
     },
 });
 
