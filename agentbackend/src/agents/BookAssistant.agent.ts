@@ -28,7 +28,21 @@ const agent = new Agent({
     model: 'gemini-2.0-flash',
 
     //the behavior of the agent, this describes the personnality and behavior of the agent
-    behavior: 'You are a helpful assistant that can answer questions about the books.',
+    behavior: `You are a helpful assistant that can answer questions about books. 
+
+IMPORTANT RULES:
+1. When a skill execution completes successfully, ALWAYS provide a final response to the user
+2. NEVER call the same skill multiple times in a row
+3. If a skill returns a success message, acknowledge it and respond to the user immediately
+4. Do not retry skills that have already executed successfully
+
+Available skills:
+- index_book: Index a PDF book into the vector database
+- lookup_book: Search for content in indexed books  
+- purge_books: Remove all indexed books (use carefully!)
+- get_book_info: Get book information from OpenLibrary
+
+Always be concise and helpful in your responses.`,
 });
 
 //We create a Pinecone vectorDB instance, at the agent scope
@@ -122,36 +136,35 @@ agent.addSkill({
 //Lookup a book in Pinecone vector database
 agent.addSkill({
     name: 'lookup_book',
-    description: 'Use this skill to lookup a book in the Pinecone vector database and get relevant content from indexed books',
+    description: 'Use this skill ONCE to lookup content in the Pinecone vector database. Do not call this skill multiple times for the same query.',
     process: async ({ user_query }) => {
         try {
             console.log(`[DEBUG] Searching for: "${user_query}"`);
             
             const result = await pinecone.search(user_query, {
-                topK: 3, // Reduced to 3 for better response
+                topK: 3,
             });
             
             console.log(`[DEBUG] Search completed. Found ${result?.length || 0} results`);
-            console.log(`[DEBUG] Raw result structure:`, JSON.stringify(result, null, 2));
             
             if (!result || result.length === 0) {
-                return "No relevant content found in the indexed books. Please make sure books are indexed first using the 'index_book' skill.";
+                return "❌ No relevant content found in the indexed books. Please make sure books are indexed first using the 'index_book' skill.";
             }
             
             // Simple approach - just return the first result's text
             const firstResult = result[0];
-            const text = firstResult.text || firstResult.content || firstResult.pageContent || 'No text found';
+            const text = firstResult.text || firstResult.content || firstResult.pageContent || 'No text found in result';
             const source = firstResult.metadata?.fileName || firstResult.metadata?.datasourceLabel || 'Bitcoin PDF';
             
-            console.log(`[DEBUG] Extracted text:`, text.substring(0, 200) + '...');
+            console.log(`[DEBUG] Extracted text length:`, text.length);
             
-            const response = `From ${source}:\n\n${text}`;
-            console.log(`[DEBUG] Final response length:`, response.length);
+            const response = `✅ Found content from ${source}:\n\n${text}`;
+            console.log(`[DEBUG] Returning response successfully`);
             
             return response;
             
         } catch (error) {
-            const errorMsg = `Error searching books: ${error.message}`;
+            const errorMsg = `❌ Error searching books: ${error.message}`;
             console.error(`[ERROR] ${errorMsg}`, error);
             return errorMsg;
         }
@@ -159,22 +172,35 @@ agent.addSkill({
 });
 
 //Purge all data from Pinecone vector database (useful for testing)
-agent.addSkill({
+const purgeSkill = agent.addSkill({
     name: 'purge_books',
-    description: 'Use this skill to remove all indexed books from the vector database. WARNING: This will delete all data!',
-    process: async () => {
+    description: 'Use this skill to remove all indexed books from the vector database. WARNING: This will delete all data! Only call this once per user request.',
+    process: async (params) => {
         try {
             console.log(`[DEBUG] Purging all data from Pinecone...`);
+            console.log(`[DEBUG] Skill called with params:`, params);
+            
             await pinecone.purge();
-            const successMsg = `All books purged from vector database successfully`;
+            
+            const successMsg = `All books have been successfully deleted from the vector database. The database is now completely empty.`;
             console.log(`[SUCCESS] ${successMsg}`);
+            
             return successMsg;
+            
         } catch (error) {
-            const errorMsg = `Error purging vector database: ${error.message}`;
+            const errorMsg = `Failed to delete books from database: ${error.message}`;
             console.error(`[ERROR] ${errorMsg}`, error);
             return errorMsg;
         }
     },
+});
+
+// Add explicit input validation to prevent retries
+purgeSkill.in({
+    confirmation: {
+        description: 'Set to "yes" to confirm deletion of all books',
+        optional: true
+    }
 });
 
 //Openlibrary lookup : this is a simple skill that uses the openlibrary API to get information about a book
