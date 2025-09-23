@@ -37,13 +37,19 @@ export default function VoiceAssistant() {
         signedUrl,
         onMessage: (message) => {
           console.log('message', message)
-          setMessages((prev) => [
-            ...prev,
+          const newMessages = [
+            ...messages,
             {
               source: message.source,
               message: message.message,
             },
-          ])
+          ];
+          setMessages(newMessages);
+          
+          // Emit event to notify parent component about conversation updates
+          window.dispatchEvent(new CustomEvent('conversationUpdate', {
+            detail: { messages: newMessages }
+          }));
         },
         onError: (error) => {
           console.error('Conversation error:', error)
@@ -211,6 +217,7 @@ export default function VoiceAssistant() {
                       }`}
                     >
                       <p className='text-sm'>{message.message}</p>
+                      console.log('message', message);
                     </div>
                   </div>
                 ))}

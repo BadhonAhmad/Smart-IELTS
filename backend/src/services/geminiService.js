@@ -101,7 +101,7 @@ async function generateIELTSQuestions(skill = 'reading', count = 5) {
  * @param {number} wordCount - Approximate word count (default: 500)
  * @returns {Promise<Object>} Generated passage response
  */
-async function generatePassage(topic = 'Academic Research', level = 'intermediate', wordCount = 500) {
+async function generatePassage(topic = 'Academic Research', level = 'intermediate') {
   try {
     // Get the generative model
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -111,7 +111,6 @@ async function generatePassage(topic = 'Academic Research', level = 'intermediat
 
     Requirements:
     - Level: ${level}
-    - Word count: approximately ${wordCount} words
     - Academic style appropriate for IELTS
     - Include complex sentence structures and academic vocabulary
     - Should be informative and engaging
@@ -125,7 +124,6 @@ async function generatePassage(topic = 'Academic Research', level = 'intermediat
       "passage": {
         "title": "Passage Title Here",
         "content": "The full passage text here...",
-        "wordCount": ${wordCount},
         "level": "${level}",
         "topic": "${topic}",
         "summary": "Brief summary of the passage content"
@@ -162,7 +160,6 @@ async function generatePassage(topic = 'Academic Research', level = 'intermediat
       data: parsedResponse.passage || {},
       metadata: {
         generatedAt: new Date().toISOString(),
-        requestedWordCount: wordCount,
         actualWordCount: parsedResponse.passage?.content?.split(' ').length || 0
       }
     };
@@ -183,7 +180,7 @@ async function generatePassage(topic = 'Academic Research', level = 'intermediat
  * @param {number} wordCount - Word count
  * @returns {Promise<Object>} Generated passage response
  */
-async function generateIELTSPassage(theme = 'science', level = 'intermediate', wordCount = 500) {
+async function generateIELTSPassage(theme = 'science', level = 'intermediate') {
   const themes = {
     science: 'Scientific discoveries and technological innovations',
     environment: 'Environmental issues and climate change',
@@ -198,7 +195,7 @@ async function generateIELTSPassage(theme = 'science', level = 'intermediate', w
   };
 
   const topicDescription = themes[theme.toLowerCase()] || themes.science;
-  return await generatePassage(topicDescription, level, wordCount);
+  return await generatePassage(topicDescription, level);
 }
 
 /**
@@ -213,46 +210,22 @@ async function generateQuestionsFromPassage(passageContent, level = 'intermediat
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // Create the prompt for passage-based question generation
-    const prompt = `Based on the following passage, generate exactly 10 multiple choice questions for IELTS reading comprehension at ${level} level:
+    const prompt = `Based on the following passage, generate exactly 5 multiple choice questions for IELTS reading comprehension at ${level} level:
 
 PASSAGE:
 ${passageContent}
 
-Generate questions that test:
-- 3 detail questions (specific information from the text)
-- 2 main idea questions (overall understanding)
-- 2 inference questions (reading between the lines)
-- 2 vocabulary questions (word meaning in context)
-- 1 reference question (what pronouns/words refer to)
+CRITICAL: Return ONLY valid JSON in this EXACT format with NO additional text, explanations, or formatting:
 
-Return the response in this exact JSON format:
-{
-  "questions": [
-    {
-      "questionText": "What is the main purpose of the passage?",
-      "options": {
-        "A": "Option A text",
-        "B": "Option B text",
-        "C": "Option C text",
-        "D": "Option D text"
-      },
-      "correctAnswer": "A",
-      "explanation": "Brief explanation of why this is correct",
-      "difficulty": "medium",
-      "questionType": "main_idea"
-    }
-  ]
-}
+{"questions":[{"questionText":"What is the main purpose of the passage?","options":{"A":"Option A text","B":"Option B text","C":"Option C text","D":"Option D text"},"correctAnswer":"A","explanation":"Brief explanation","difficulty":"medium","questionType":"main_idea"}]}
 
-IMPORTANT:
-- Generate exactly 10 questions
+Requirements:
+- Generate exactly 5 questions
 - Each question must have exactly 4 options (A, B, C, D)
 - Only one correct answer per question
-- Include brief explanations
-- Use appropriate difficulty: easy, medium, hard
+- Use difficulty: easy, medium, hard
 - Use question types: detail, main_idea, inference, vocabulary, reference
-- Make sure all questions are answerable from the passage
-- Ensure proper JSON format`;
+- Return ONLY the JSON object, no other text`;
 
     // Generate content
     const result = await model.generateContent(prompt);
@@ -263,18 +236,31 @@ IMPORTANT:
     let cleanedText = text.trim();
     
     // Remove markdown code blocks if present
-    if (cleanedText.startsWith('```json')) {
-      cleanedText = cleanedText.replace(/```json\n/, '').replace(/\n```$/, '');
-    } else if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/```\n/, '').replace(/\n```$/, '');
-    }
-
-    // Parse JSON
-    const parsedResponse = JSON.parse(cleanedText);
+    cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/\n?```/g, '');
     
-    // Validate that we have exactly 10 questions
-    if (!parsedResponse.questions || parsedResponse.questions.length !== 10) {
-      throw new Error(`Expected 10 questions, got ${parsedResponse.questions?.length || 0}`);
+    // Extract JSON part
+    const jsonStart = cleanedText.indexOf('{');
+    const jsonEnd = cleanedText.lastIndexOf('}');
+    
+    if (jsonStart === -1 || jsonEnd === -1) {
+      throw new Error('No valid JSON found in response');
+    }
+    
+    cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(cleanedText);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError.message);
+      console.error('Raw response:', text.substring(0, 500) + '...');
+      console.error('Cleaned text:', cleanedText.substring(0, 500) + '...');
+      throw new Error(`JSON parsing failed: ${parseError.message}`);
+    }
+    
+    // Validate that we have questions
+    if (!parsedResponse.questions || parsedResponse.questions.length === 0) {
+      throw new Error('No questions generated');
     }
 
     return {

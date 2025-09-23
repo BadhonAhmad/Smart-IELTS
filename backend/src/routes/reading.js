@@ -11,7 +11,7 @@ const { protect } = require('../middleware/auth');
 const router = express.Router();
 
 // Generate a complete reading test with passage and MCQs
-router.post('/generate-test', generateReadingTest);
+router.get('/generate-test', generateReadingTest);
 
 // Get all reading tests (with filtering and pagination)
 router.get('/tests', getAllReadingTests);

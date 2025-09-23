@@ -226,6 +226,92 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* AI Assistant Chatbot Section */}
+        <div className="mb-8">
+          <h3 className="text-2xl font-bold text-white mb-6">
+            AI Learning Assistant
+          </h3>
+          <div className="bg-gradient-to-r from-indigo-900 to-purple-900 rounded-lg shadow-lg p-8 border border-indigo-700">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-indigo-800 rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-8 h-8 text-indigo-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="text-2xl font-bold text-white mb-2">
+                    IELTS Study Chatbot
+                  </h4>
+                  <p className="text-indigo-200 text-lg">
+                    Get instant answers to your IELTS questions from our AI assistant trained on comprehensive study materials
+                  </p>
+                  <div className="mt-3 flex items-center space-x-4">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-900 text-green-300">
+                      <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                      Online
+                    </span>
+                    <span className="text-indigo-300 text-sm">
+                      📚 Powered by vectorized PDF database
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  window.open('https://cmfwa1ah7ycfcjxgthiwbjwr9.agent.pa.smyth.ai/chatBot', '_blank', 'noopener,noreferrer');
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-2"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                <span>Start Chat</span>
+              </button>
+            </div>
+            <div className="mt-6 grid md:grid-cols-3 gap-4">
+              <div className="bg-indigo-800/50 rounded-lg p-4 border border-indigo-600/50">
+                <h5 className="font-semibold text-indigo-200 mb-2">📖 Study Materials</h5>
+                <p className="text-indigo-300 text-sm">
+                  Ask about IELTS strategies, tips, and preparation methods
+                </p>
+              </div>
+              <div className="bg-indigo-800/50 rounded-lg p-4 border border-indigo-600/50">
+                <h5 className="font-semibold text-indigo-200 mb-2">❓ Question Help</h5>
+                <p className="text-indigo-300 text-sm">
+                  Get explanations for practice questions and sample answers
+                </p>
+              </div>
+              <div className="bg-indigo-800/50 rounded-lg p-4 border border-indigo-600/50">
+                <h5 className="font-semibold text-indigo-200 mb-2">🎯 Exam Tips</h5>
+                <p className="text-indigo-300 text-sm">
+                  Learn test-taking strategies and time management techniques
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Performance Analytics Section */}
         <div className="mb-8">
           <h3 className="text-2xl font-bold text-white mb-6">

@@ -31,17 +31,24 @@ export default function ReadingTest() {
     fillBlanks: {},
   });
   const [showResults, setShowResults] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [userPrompt, setUserPrompt] = useState<string>("");
+  const [hasTestData, setHasTestData] = useState(false);
 
-  // Get user prompt from localStorage on component mount
+  // Get user prompt from localStorage on component mount and check for test data
   useEffect(() => {
     const prompt = localStorage.getItem("readingTestPrompt");
+    const testData = localStorage.getItem("generatedReadingTest");
+
     if (prompt) {
       setUserPrompt(prompt);
       // Clear it after use
       localStorage.removeItem("readingTestPrompt");
     }
+
+    // Check if we have test data from popup or just show mock data
+    setHasTestData(true);
+    setIsLoading(false);
   }, []);
 
   // Mock passage from MCP server
@@ -238,6 +245,21 @@ However, implementing these solutions requires significant financial investment 
   };
 
   const scores = showResults ? calculateScore() : null;
+
+  // Show loading state initially
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <h2 className="text-2xl font-semibold">Loading Reading Test...</h2>
+          <p className="text-gray-400 mt-2">
+            Please wait while we prepare your test
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black">

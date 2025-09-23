@@ -4,41 +4,18 @@ const { generatePassage, generateQuestionsFromPassage } = require('../services/g
 
 /**
  * Generate a complete reading test with passage and 10 MCQs
- * POST /api/reading/generate-test
+ * GET /api/reading/generate-test
  */
 const generateReadingTest = async (req, res) => {
   try {
-    const {
-      theme = 'science',
-      level = 'intermediate',
-      wordCount = 500,
-      title
-    } = req.body;
-
-    // Validate inputs
-    const validThemes = ['science', 'environment', 'education', 'culture', 'business', 'health', 'technology', 'history', 'society', 'arts'];
-    const validLevels = ['beginner', 'intermediate', 'advanced'];
-
-    if (!validThemes.includes(theme)) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid theme. Must be one of: ${validThemes.join(', ')}`
-      });
-    }
-
-    if (!validLevels.includes(level)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid level. Must be one of: beginner, intermediate, advanced'
-      });
-    }
-
-    if (wordCount < 200 || wordCount > 1000) {
-      return res.status(400).json({
-        success: false,
-        message: 'Word count must be between 200 and 1000'
-      });
-    }
+    // Use implicit/random parameters - no user input dependency
+    const themes = ['science', 'environment', 'education', 'culture', 'business', 'health', 'technology', 'history', 'society', 'arts'];
+    const levels = ['intermediate', 'advanced'];
+    
+    // Randomly select theme and level
+    const theme = themes[Math.floor(Math.random() * themes.length)];
+    const level = levels[Math.floor(Math.random() * levels.length)];
+    const title = `${theme.charAt(0).toUpperCase() + theme.slice(1)} Reading Test`;
 
     // Step 1: Generate passage
     const themeDescriptions = {
@@ -54,7 +31,7 @@ const generateReadingTest = async (req, res) => {
       arts: 'Arts, literature and creative expression'
     };
 
-    const passageResult = await generatePassage(themeDescriptions[theme], level, wordCount);
+    const passageResult = await generatePassage(themeDescriptions[theme], level);
 
     if (!passageResult.success) {
       return res.status(500).json({
@@ -68,21 +45,28 @@ const generateReadingTest = async (req, res) => {
     const questionsResult = await generateQuestionsFromPassage(passageResult.data.content, level);
 
     if (!questionsResult.success) {
+      console.error('Questions generation failed:', questionsResult.error);
       return res.status(500).json({
         success: false,
         message: 'Failed to generate questions',
-        error: questionsResult.error
+        error: questionsResult.error,
+        details: 'The AI service encountered an issue generating questions from the passage. Please try again.'
       });
     }
 
     // Step 3: Create reading test object
+    const passageContent = passageResult.data.content;
+    const calculatedWordCount = passageContent ? passageContent.split(/\s+/).length : 0;
+    const calculatedReadingTime = Math.ceil(calculatedWordCount / 200); // Average reading speed: 200 words/minute
+
     const readingTest = new ReadingTest({
       title: title || passageResult.data.title || `${theme.charAt(0).toUpperCase() + theme.slice(1)} Reading Test`,
       passage: {
-        title: passageResult.data.title,
-        content: passageResult.data.content,
-        wordCount: passageResult.data.wordCount,
-        summary: passageResult.data.summary
+        title: passageResult.data.title || `${theme.charAt(0).toUpperCase() + theme.slice(1)} Passage`,
+        content: passageContent,
+        wordCount: calculatedWordCount,
+        readingTime: calculatedReadingTime,
+        summary: passageResult.data.summary || 'AI-generated passage for IELTS reading practice'
       },
       questions: questionsResult.data.map((q, index) => ({
         questionNumber: index + 1,

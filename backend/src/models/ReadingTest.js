@@ -5,8 +5,7 @@ const mcqQuestionSchema = new mongoose.Schema({
   questionNumber: {
     type: Number,
     required: true,
-    min: 1,
-    max: 10
+    min: 1
   },
   questionText: {
     type: String,
@@ -77,8 +76,7 @@ const readingTestSchema = new mongoose.Schema({
     wordCount: {
       type: Number,
       required: true,
-      min: 200,
-      max: 1000
+      min: 100
     },
     readingTime: {
       type: Number, // in minutes
@@ -96,9 +94,9 @@ const readingTestSchema = new mongoose.Schema({
     type: [mcqQuestionSchema],
     validate: {
       validator: function(questions) {
-        return questions.length === 10;
+        return questions.length >= 1;
       },
-      message: 'Reading test must have exactly 10 questions'
+      message: 'Reading test must have at least 1 question'
     }
   },
   metadata: {

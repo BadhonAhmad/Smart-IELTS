@@ -77,19 +77,120 @@ export default function TestSetupPopup({
 
   const config = testTypeConfig[testType];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (userInput.trim()) {
       setIsGenerating(true);
 
-      // Simulate loading and then navigate to test page
-      setTimeout(() => {
-        // Store the user input for the test page to use (mock data)
-        localStorage.setItem(`${testType}TestPrompt`, userInput);
-        router.push(config.route);
+      try {
+        if (testType === "reading") {
+          // Use mock data instead of API call
+          setIsGenerating(true);
+
+          // Simulate loading time
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+
+          // Create mock test data that matches the expected format
+          const mockTestData = {
+            _id: "mock-test-" + Date.now(),
+            title: "IELTS Reading Test",
+            passage: {
+              title: "Climate Change and Urban Planning",
+              content: `Climate Change and Urban Planning
+
+The relationship between climate change and urban planning has become increasingly critical in the 21st century. As global temperatures continue to rise, cities worldwide are experiencing unprecedented challenges that require innovative solutions and adaptive strategies.
+
+Urban areas are particularly vulnerable to climate change impacts due to their high population density and infrastructure complexity. The phenomenon known as the "urban heat island effect" exacerbates temperature increases in cities, where concrete and asphalt surfaces absorb and retain heat more effectively than natural landscapes. This creates localized temperature differences that can be 2-5 degrees Celsius higher than surrounding rural areas.
+
+Modern urban planners are now incorporating climate resilience into their designs through various approaches. Green infrastructure, including parks, green roofs, and urban forests, helps mitigate heat absorption while providing natural cooling through evapotranspiration. Additionally, sustainable transportation systems reduce greenhouse gas emissions and improve air quality.
+
+The integration of renewable energy sources into urban planning represents another crucial adaptation strategy. Solar panels on building rooftops, wind turbines in appropriate locations, and district cooling systems powered by renewable energy all contribute to reducing cities' carbon footprints.
+
+However, implementing these solutions requires significant financial investment and political commitment. Many developing cities face the challenge of balancing immediate economic needs with long-term environmental sustainability. The success of climate-adaptive urban planning ultimately depends on collaboration between government agencies, private sector stakeholders, and community organizations.`,
+              wordCount: 245,
+              readingTime: 5,
+              summary:
+                "This passage discusses the relationship between climate change and urban planning, focusing on challenges and solutions.",
+            },
+            questions: [
+              {
+                questionText:
+                  "According to the passage, what is the primary cause of the urban heat island effect?",
+                options: {
+                  A: "High population density in cities",
+                  B: "Concrete and asphalt surfaces absorbing heat",
+                  C: "Lack of green spaces in urban areas",
+                  D: "Industrial activities in cities",
+                },
+                correctAnswer: "B",
+                explanation:
+                  "The passage states that concrete and asphalt surfaces absorb and retain heat more effectively than natural landscapes.",
+                difficulty: "medium",
+                questionType: "multiple choice",
+              },
+              {
+                questionText:
+                  "How much higher can urban temperatures be compared to rural areas?",
+                options: {
+                  A: "1-3 degrees Celsius",
+                  B: "2-5 degrees Celsius",
+                  C: "3-7 degrees Celsius",
+                  D: "5-10 degrees Celsius",
+                },
+                correctAnswer: "B",
+                explanation:
+                  "The passage mentions that urban areas can be 2-5 degrees Celsius higher than surrounding rural areas.",
+                difficulty: "easy",
+                questionType: "multiple choice",
+              },
+              {
+                questionText:
+                  "What challenge do developing cities face according to the passage?",
+                options: {
+                  A: "Lack of renewable energy technology",
+                  B: "Insufficient green infrastructure",
+                  C: "Balancing economic needs with environmental sustainability",
+                  D: "Political instability affecting planning",
+                },
+                correctAnswer: "C",
+                explanation:
+                  "The passage states that developing cities face the challenge of balancing immediate economic needs with long-term environmental sustainability.",
+                difficulty: "medium",
+                questionType: "multiple choice",
+              },
+            ],
+            metadata: {
+              theme: userInput || "climate change and urban planning",
+              level: "intermediate",
+              tags: ["environment", "urban planning", "climate change"],
+            },
+          };
+
+          // Store the mock test data
+          localStorage.setItem(
+            "generatedReadingTest",
+            JSON.stringify(mockTestData)
+          );
+          localStorage.setItem(`${testType}TestPrompt`, userInput);
+
+          // Clear any old localStorage items
+          localStorage.removeItem("readingTestData");
+
+          router.push(config.route);
+        } else {
+          // For other test types, use mock data for now
+          localStorage.setItem(`${testType}TestPrompt`, userInput);
+          router.push(config.route);
+        }
+
         setIsGenerating(false);
         onClose();
-      }, 1500);
+      } catch (error) {
+        console.error("Error generating test:", error);
+        setIsGenerating(false);
+        // Show error message to user
+        alert("Failed to generate test. Please try again.");
+      }
     }
   };
 
