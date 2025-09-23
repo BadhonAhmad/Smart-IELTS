@@ -1,8 +1,54 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, Legend, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
 export default function Dashboard() {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userStr = localStorage.getItem("user");
+
+    if (!token || !userStr) {
+      router.push("/login");
+      return;
+    }
+
+    const user = JSON.parse(userStr);
+    if (user.role === "admin") {
+      router.push("/admin/dashboard");
+      return;
+    }
+
+    setCurrentUser(user);
+    setIsLoading(false);
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-black">
       {/* Header */}
@@ -13,13 +59,15 @@ export default function Dashboard() {
               <h1 className="text-2xl font-bold text-white">Smart IELTS</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-300">Welcome back!</span>
-              <Link
-                href="/"
+              <span className="text-sm text-gray-300">
+                Welcome back, {currentUser?.name}!
+              </span>
+              <button
+                onClick={handleLogout}
                 className="text-sm text-blue-400 hover:text-blue-300 font-medium"
               >
                 Sign Out
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -133,85 +181,207 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* MCP Question Bank Management */}
+        {/* Performance Analytics Section */}
         <div className="mb-8">
-          <h3 className="text-xl font-bold text-white mb-4">
-            🤖 AI Question Bank Management
-          </h3>
-          <Link href="/question-bank" className="group">
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-shadow duration-300 cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-semibold mb-1">
-                      Question Bank Management
-                    </h4>
-                    <p className="text-indigo-100">
-                      Upload PDFs to train AI with IELTS question patterns
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-indigo-200">MCP Server</div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">Active</span>
-                  </div>
+          <h3 className="text-2xl font-bold text-white mb-6">Performance Overview</h3>
+          
+          {/* Skills Performance Cards */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-white">Listening</h4>
+                <div className="w-8 h-8 bg-green-900 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728" />
+                  </svg>
                 </div>
               </div>
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-indigo-200">
-                  AI learns question patterns from your uploaded PDFs
+              <div className="text-3xl font-bold text-green-400 mb-2">78%</div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div className="bg-green-400 h-2 rounded-full" style={{width: '78%'}}></div>
+              </div>
+              <p className="text-sm text-gray-400 mt-2">+5% from last week</p>
+            </div>
+
+            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-white">Reading</h4>
+                <div className="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
                 </div>
-                <div className="text-sm font-semibold">Click to manage →</div>
+              </div>
+              <div className="text-3xl font-bold text-blue-400 mb-2">85%</div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div className="bg-blue-400 h-2 rounded-full" style={{width: '85%'}}></div>
+              </div>
+              <p className="text-sm text-gray-400 mt-2">+8% from last week</p>
+            </div>
+
+            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-white">Writing</h4>
+                <div className="w-8 h-8 bg-purple-900 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-purple-400 mb-2">72%</div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div className="bg-purple-400 h-2 rounded-full" style={{width: '72%'}}></div>
+              </div>
+              <p className="text-sm text-gray-400 mt-2">+3% from last week</p>
+            </div>
+
+            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-white">Speaking</h4>
+                <div className="w-8 h-8 bg-red-900 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-red-400 mb-2">69%</div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div className="bg-red-400 h-2 rounded-full" style={{width: '69%'}}></div>
+              </div>
+              <p className="text-sm text-gray-400 mt-2">+2% from last week</p>
+            </div>
+          </div>
+
+          {/* Charts Section */}
+          <div className="grid lg:grid-cols-2 gap-8 mb-8">
+            {/* Skills Comparison Bar Chart */}
+            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+              <h4 className="text-xl font-semibold text-white mb-4">Skills Comparison</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={[
+                  { skill: 'Listening', score: 78, color: '#10b981' },
+                  { skill: 'Reading', score: 85, color: '#3b82f6' },
+                  { skill: 'Writing', score: 72, color: '#8b5cf6' },
+                  { skill: 'Speaking', score: 69, color: '#ef4444' }
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="skill" tick={{ fill: '#9ca3af' }} />
+                  <YAxis tick={{ fill: '#9ca3af' }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1f2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#ffffff'
+                    }} 
+                  />
+                  <Bar dataKey="score" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Progress Over Time Line Chart */}
+            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+              <h4 className="text-xl font-semibold text-white mb-4">Progress Over Time</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={[
+                  { week: 'Week 1', Listening: 65, Reading: 70, Writing: 60, Speaking: 58 },
+                  { week: 'Week 2', Listening: 68, Reading: 74, Writing: 63, Speaking: 61 },
+                  { week: 'Week 3', Listening: 72, Reading: 78, Writing: 67, Speaking: 64 },
+                  { week: 'Week 4', Listening: 75, Reading: 81, Writing: 69, Speaking: 67 },
+                  { week: 'Week 5', Listening: 78, Reading: 85, Writing: 72, Speaking: 69 }
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="week" tick={{ fill: '#9ca3af' }} />
+                  <YAxis tick={{ fill: '#9ca3af' }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1f2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#ffffff'
+                    }} 
+                  />
+                  <Line type="monotone" dataKey="Listening" stroke="#10b981" strokeWidth={2} />
+                  <Line type="monotone" dataKey="Reading" stroke="#3b82f6" strokeWidth={2} />
+                  <Line type="monotone" dataKey="Writing" stroke="#8b5cf6" strokeWidth={2} />
+                  <Line type="monotone" dataKey="Speaking" stroke="#ef4444" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Overall Performance Radial Chart */}
+          <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+            <h4 className="text-xl font-semibold text-white mb-4">Overall IELTS Performance</h4>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <ResponsiveContainer width="100%" height={300}>
+                  <RadialBarChart cx="50%" cy="50%" innerRadius="20%" outerRadius="80%" data={[
+                    { name: 'Overall Score', value: 76, fill: '#3b82f6' }
+                  ]}>
+                    <RadialBar dataKey="value" cornerRadius={10} fill="#3b82f6" />
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-white text-2xl font-bold">
+                      76%
+                    </text>
+                  </RadialBarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 pl-8">
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <h5 className="text-lg font-semibold text-white mb-2">IELTS Band Equivalent</h5>
+                    <div className="text-4xl font-bold text-blue-400 mb-2">6.5</div>
+                    <p className="text-gray-400">Competent User</p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Target Band:</span>
+                      <span className="text-white">7.0</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Tests Completed:</span>
+                      <span className="text-white">12</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Study Streak:</span>
+                      <span className="text-white">15 days</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </Link>
+          </div>
         </div>
 
         {/* Quick Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h4 className="text-lg font-semibold text-gray-800 mb-2">
+          <div className="bg-gray-900 rounded-lg shadow p-6 border border-gray-700">
+            <h4 className="text-lg font-semibold text-white mb-2">
               Tests Completed
             </h4>
-            <p className="text-3xl font-bold text-blue-600">0</p>
-            <p className="text-sm text-gray-600">
-              Start your first practice test
+            <p className="text-3xl font-bold text-blue-400">12</p>
+            <p className="text-sm text-gray-400">
+              Great progress this month!
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h4 className="text-lg font-semibold text-gray-800 mb-2">
+          <div className="bg-gray-900 rounded-lg shadow p-6 border border-gray-700">
+            <h4 className="text-lg font-semibold text-white mb-2">
               Average Score
             </h4>
-            <p className="text-3xl font-bold text-green-600">-</p>
-            <p className="text-sm text-gray-600">
-              Complete tests to see your progress
+            <p className="text-3xl font-bold text-green-400">76%</p>
+            <p className="text-sm text-gray-400">
+              Improved by 8% this week
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h4 className="text-lg font-semibold text-gray-800 mb-2">
+          <div className="bg-gray-900 rounded-lg shadow p-6 border border-gray-700">
+            <h4 className="text-lg font-semibold text-white mb-2">
               Study Streak
             </h4>
-            <p className="text-3xl font-bold text-purple-600">1</p>
-            <p className="text-sm text-gray-600">Day - Keep it up!</p>
+            <p className="text-3xl font-bold text-purple-400">15</p>
+            <p className="text-sm text-gray-400">Days - Amazing consistency!</p>
           </div>
         </div>
 

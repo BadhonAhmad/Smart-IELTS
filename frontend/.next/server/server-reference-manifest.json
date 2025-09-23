@@ -1,19 +1,5 @@
 {
-  "node": {
-    "00b23b9bd0c7b25eaf9dfc8f715a59906c8781766d": {
-      "workers": {
-        "app/speaking/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CNobel%5C%5CDesktop%5C%5CProjects%5C%5CSmart%20IELTS%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cactions%5C%5CgetSignedUrl.js%22%2C%5B%7B%22id%22%3A%2200b23b9bd0c7b25eaf9dfc8f715a59906c8781766d%22%2C%22exportedName%22%3A%22getSignedUrl%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5CNobel%5C%5CDesktop%5C%5CProjects%5C%5CSmart%20IELTS%5C%5Cfrontend%5C%5Csrc%5C%5Capp%5C%5Cactions%5C%5CgetSignedUrl.js%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/speaking/page": "action-browser"
-      },
-      "filename": "../C:\\Users\\Nobel\\Desktop\\Projects\\Smart IELTS\\frontend\\src\\app\\actions\\getSignedUrl.js",
-      "exportedName": "getSignedUrl"
-    }
-  },
+  "node": {},
   "edge": {},
   "encryptionKey": "N0iBqbf1vACcQcRmkGsEF5hvcjXNgvxp/Zh7g7EhOaI="
 }

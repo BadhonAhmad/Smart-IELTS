@@ -6,8 +6,14 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
+// Import database connection
+const { connectDB } = require('../config/database');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Connect to database
+connectDB();
 
 // Security middleware
 app.use(helmet());
