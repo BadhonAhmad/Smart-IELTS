@@ -84,10 +84,10 @@ async function generateMCQQuestions(topic = 'General Knowledge', count = 5) {
  */
 async function generateIELTSQuestions(skill = 'reading', count = 5) {
   const skillTopics = {
-    listening: 'IELTS Listening comprehension with audio scenarios, conversations, and academic lectures',
-    reading: 'IELTS Reading comprehension with academic texts, articles, and passage analysis',
-    writing: 'IELTS Writing skills including task response, coherence, lexical resource, and grammatical accuracy',
-    speaking: 'IELTS Speaking skills including fluency, pronunciation, vocabulary, and grammar'
+    listening: 'IELTS Listening',
+    reading: 'IELTS Reading',
+    writing: 'IELTS Writing',
+    speaking: 'IELTS Speaking'
   };
 
   const topic = skillTopics[skill.toLowerCase()] || skillTopics.reading;
@@ -207,7 +207,7 @@ async function generateIELTSPassage(theme = 'science', level = 'intermediate') {
 async function generateQuestionsFromPassage(passageContent, level = 'intermediate') {
   try {
     // Get the generative model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Create the prompt for passage-based question generation
     const prompt = `Based on the following passage, generate exactly 5 multiple choice questions for IELTS reading comprehension at ${level} level:

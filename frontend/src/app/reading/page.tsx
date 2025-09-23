@@ -34,9 +34,15 @@ export default function ReadingTest() {
   const [isLoading, setIsLoading] = useState(true);
   const [userPrompt, setUserPrompt] = useState<string>("");
   const [hasTestData, setHasTestData] = useState(false);
+  const [mcqQuestions, setMcqQuestions] = useState<MCQQuestion[]>([]);
+  const [error, setError] = useState<string>("");
+  const [isClient, setIsClient] = useState(false);
 
   // Get user prompt from localStorage on component mount and check for test data
   useEffect(() => {
+    // Set client-side flag
+    setIsClient(true);
+    
     const prompt = localStorage.getItem("readingTestPrompt");
     const testData = localStorage.getItem("generatedReadingTest");
 
@@ -48,8 +54,146 @@ export default function ReadingTest() {
 
     // Check if we have test data from popup or just show mock data
     setHasTestData(true);
-    setIsLoading(false);
+    
+    // Generate MCQ questions using AI
+    generateQuestions();
   }, []);
+
+  // Function to generate MCQ questions
+  const generateQuestions = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+      
+      // Use backend URL from environment or default to localhost:5000
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      
+      // Make multiple API calls to get 3 questions (since single calls work better)
+      const questionPromises = [];
+      for (let i = 0; i < 3; i++) {
+        questionPromises.push(
+          fetch(`${backendUrl}/api/gemini/generate-ielts`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              skill: 'reading',
+              count: 1
+            }),
+          })
+        );
+      }
+
+      const responses = await Promise.all(questionPromises);
+      
+      // Check if all responses are ok
+      for (const response of responses) {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      }
+
+      const dataPromises = responses.map(response => response.json());
+      const dataArray = await Promise.all(dataPromises);
+      
+      console.log('API Responses:', dataArray); // Debug log
+      
+      // Combine all questions from multiple API calls
+      const allQuestions: any[] = [];
+      dataArray.forEach((data, index) => {
+        if (data.success && data.data && data.data.questions) {
+          data.data.questions.forEach((q: any) => {
+            allQuestions.push({...q, id: allQuestions.length + 1});
+          });
+        }
+      });
+      
+      if (allQuestions.length > 0) {
+        // Transform the response to match our MCQQuestion interface
+        const transformedQuestions: MCQQuestion[] = allQuestions.map((q: any, index: number) => {
+          let correctAnswerIndex = 0;
+          
+          // Find the correct answer index by matching the string with options
+          if (Array.isArray(q.options)) {
+            correctAnswerIndex = q.options.findIndex((option: string) => 
+              option.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase()
+            );
+            if (correctAnswerIndex === -1) correctAnswerIndex = 0; // fallback
+          } else {
+            // Handle object-style options {A, B, C, D}
+            const optionsArray = [q.options.A, q.options.B, q.options.C, q.options.D];
+            correctAnswerIndex = optionsArray.findIndex((option: string) => 
+              option.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase()
+            );
+            if (correctAnswerIndex === -1) {
+              // Try matching by letter
+              correctAnswerIndex = q.correctAnswer === 'A' ? 0 : q.correctAnswer === 'B' ? 1 : q.correctAnswer === 'C' ? 2 : 3;
+            }
+          }
+          
+          return {
+            id: index + 1,
+            question: q.question,
+            options: Array.isArray(q.options) ? q.options : [q.options.A, q.options.B, q.options.C, q.options.D],
+            correctAnswer: correctAnswerIndex,
+            explanation: q.explanation
+          };
+        });
+        
+        console.log('Transformed questions:', transformedQuestions); // Debug log
+        setMcqQuestions(transformedQuestions);
+      } else {
+        throw new Error('Failed to generate questions - no questions received');
+      }
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      setError(`Failed to generate questions: ${error instanceof Error ? error.message : 'Unknown error'}. Using default questions.`);
+      
+      // Fallback to mock questions
+      const mockQuestions: MCQQuestion[] = [
+        {
+          id: 1,
+          question: "What is the main cause of the urban heat island effect mentioned in the passage?",
+          options: [
+            "High population density in cities",
+            "Concrete and asphalt surfaces absorbing heat",
+            "Lack of green spaces in urban areas",
+            "Industrial activities in cities",
+          ],
+          correctAnswer: 1,
+          explanation: "The passage states that concrete and asphalt surfaces absorb and retain heat more effectively than natural landscapes.",
+        },
+        {
+          id: 2,
+          question: "How much higher can urban temperatures be compared to rural areas?",
+          options: [
+            "1-3 degrees Celsius",
+            "2-5 degrees Celsius",
+            "3-7 degrees Celsius",
+            "5-10 degrees Celsius",
+          ],
+          correctAnswer: 1,
+          explanation: "The passage mentions that urban areas can be 2-5 degrees Celsius higher than surrounding rural areas.",
+        },
+        {
+          id: 3,
+          question: "What challenge do developing cities face according to the passage?",
+          options: [
+            "Lack of renewable energy technology",
+            "Insufficient green infrastructure",
+            "Balancing economic needs with environmental sustainability",
+            "Political instability affecting planning",
+          ],
+          correctAnswer: 2,
+          explanation: "The passage states that developing cities face the challenge of balancing immediate economic needs with long-term environmental sustainability.",
+        },
+      ];
+      setMcqQuestions(mockQuestions);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Mock passage from MCP server
   const passage = `
@@ -65,52 +209,6 @@ The integration of renewable energy sources into urban planning represents anoth
 
 However, implementing these solutions requires significant financial investment and political commitment. Many developing cities face the challenge of balancing immediate economic needs with long-term environmental sustainability. The success of climate-adaptive urban planning ultimately depends on collaboration between government agencies, private sector stakeholders, and community organizations.
   `;
-
-  // Mock MCQ questions from MCP server
-  const mcqQuestions: MCQQuestion[] = [
-    {
-      id: 1,
-      question:
-        "According to the passage, what is the primary cause of the urban heat island effect?",
-      options: [
-        "High population density in cities",
-        "Concrete and asphalt surfaces absorbing heat",
-        "Lack of green spaces in urban areas",
-        "Industrial activities in cities",
-      ],
-      correctAnswer: 1,
-      explanation:
-        "The passage states that concrete and asphalt surfaces absorb and retain heat more effectively than natural landscapes.",
-    },
-    {
-      id: 2,
-      question:
-        "How much higher can urban temperatures be compared to rural areas?",
-      options: [
-        "1-3 degrees Celsius",
-        "2-5 degrees Celsius",
-        "3-7 degrees Celsius",
-        "5-10 degrees Celsius",
-      ],
-      correctAnswer: 1,
-      explanation:
-        "The passage mentions that urban areas can be 2-5 degrees Celsius higher than surrounding rural areas.",
-    },
-    {
-      id: 3,
-      question:
-        "What challenge do developing cities face according to the passage?",
-      options: [
-        "Lack of renewable energy technology",
-        "Insufficient green infrastructure",
-        "Balancing economic needs with environmental sustainability",
-        "Political instability affecting planning",
-      ],
-      correctAnswer: 2,
-      explanation:
-        "The passage states that developing cities face the challenge of balancing immediate economic needs with long-term environmental sustainability.",
-    },
-  ];
 
   // Mock fill-in-the-blanks questions from MCP server
   const fillBlankQuestions: FillBlankQuestion[] = [
@@ -246,16 +344,26 @@ However, implementing these solutions requires significant financial investment 
 
   const scores = showResults ? calculateScore() : null;
 
-  // Show loading state initially
-  if (isLoading) {
+  // Show loading state initially or if not on client yet
+  if (isLoading || !isClient) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <h2 className="text-2xl font-semibold">Loading Reading Test...</h2>
+          <h2 className="text-2xl font-semibold">
+            {!isClient ? "Loading..." : "Generating AI Questions..."}
+          </h2>
           <p className="text-gray-400 mt-2">
-            Please wait while we prepare your test
+            {!isClient 
+              ? "Initializing the application..."
+              : "Please wait while we create personalized IELTS reading questions using AI"
+            }
           </p>
+          {isClient && (
+            <div className="mt-4 text-sm text-gray-500">
+              This may take a moment as we generate high-quality questions for you
+            </div>
+          )}
         </div>
       </div>
     );
@@ -314,6 +422,37 @@ However, implementing these solutions requires significant financial investment 
                 </h3>
                 <p className="text-gray-300 text-sm italic">
                   &quot;{userPrompt}&quot;
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 bg-red-900/20 border border-red-600/30 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-5 h-5 text-red-400 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-red-300 mb-1">
+                  Warning:
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  {error}
                 </p>
               </div>
             </div>
