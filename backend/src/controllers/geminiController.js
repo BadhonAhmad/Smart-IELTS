@@ -1,4 +1,4 @@
-const { generateMCQQuestions, generateIELTSQuestions, generatePassage, generateIELTSPassage } = require('../services/geminiService');
+const { generateMCQQuestions, generateIELTSQuestions, generatePassage, generateIELTSPassage, generateFillBlankQuestions } = require('../services/geminiService');
 
 /**
  * Generate general MCQ questions
@@ -278,11 +278,64 @@ const handleChat = async (req, res) => {
   }
 };
 
+/**
+ * Generate fill-in-the-blank questions based on passage
+ * POST /api/gemini/generate-fill-blank
+ */
+const generateFillBlank = async (req, res) => {
+  try {
+    const { passage, count = 2 } = req.body;
+
+    // Validate passage
+    if (!passage || typeof passage !== 'string' || passage.trim().length < 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Passage must be provided and should be at least 100 characters long'
+      });
+    }
+
+    // Validate count
+    if (count < 1 || count > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Count must be between 1 and 5'
+      });
+    }
+
+    const result = await generateFillBlankQuestions(passage, count);
+
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to generate fill-blank questions',
+        error: result.error
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Fill-blank questions generated successfully',
+      data: {
+        count: result.count,
+        questions: result.data
+      }
+    });
+  } catch (error) {
+    console.error('Error in generateFillBlank controller:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   generateMCQ,
   generateIELTS,
   testGemini,
   generateReadingPassage,
   generateIELTSReadingPassage,
+  generateFillBlank,
   handleChat
 };

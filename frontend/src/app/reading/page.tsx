@@ -36,6 +36,8 @@ export default function ReadingTest() {
   const [userPrompt, setUserPrompt] = useState<string>("");
   const [hasTestData, setHasTestData] = useState(false);
   const [mcqQuestions, setMcqQuestions] = useState<MCQQuestion[]>([]);
+  const [fillBlankQuestions, setFillBlankQuestions] = useState<FillBlankQuestion[]>([]);
+  const [passage, setPassage] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isClient, setIsClient] = useState(false);
 
@@ -60,7 +62,7 @@ export default function ReadingTest() {
     generateQuestions();
   }, []);
 
-  // Function to generate MCQ questions
+  // Function to generate all content: passage, MCQ questions, and fill-blank questions
   const generateQuestions = async () => {
     try {
       setIsLoading(true);
@@ -69,7 +71,35 @@ export default function ReadingTest() {
       // Use backend URL from environment or default to localhost:4000
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
       
-      // Make multiple API calls to get 3 questions (since single calls work better)
+      // Step 1: Generate passage
+      console.log('Generating passage...');
+      const passageResponse = await fetch(`${backendUrl}/api/gemini/generate-ielts-passage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          theme: 'science',
+          level: 'intermediate'
+        }),
+      });
+
+      if (!passageResponse.ok) {
+        throw new Error(`Failed to generate passage: ${passageResponse.status}`);
+      }
+
+      const passageData = await passageResponse.json();
+      console.log('Passage generated:', passageData);
+
+      if (!passageData.success || !passageData.data.content) {
+        throw new Error('Failed to generate passage - invalid response');
+      }
+
+      const generatedPassage = passageData.data.content;
+      setPassage(generatedPassage);
+
+      // Step 2: Generate MCQ questions (make 3 parallel calls as before)
+      console.log('Generating MCQ questions...');
       const questionPromises = [];
       for (let i = 0; i < 3; i++) {
         questionPromises.push(
@@ -98,7 +128,7 @@ export default function ReadingTest() {
       const dataPromises = responses.map(response => response.json());
       const dataArray = await Promise.all(dataPromises);
       
-      console.log('API Responses:', dataArray); // Debug log
+      console.log('MCQ API Responses:', dataArray);
       
       // Combine all questions from multiple API calls
       const allQuestions: any[] = [];
@@ -142,13 +172,57 @@ export default function ReadingTest() {
           };
         });
         
-        console.log('Transformed questions:', transformedQuestions); // Debug log
+        console.log('Transformed MCQ questions:', transformedQuestions);
         setMcqQuestions(transformedQuestions);
-      } else {
+      }
+
+      // Step 3: Generate fill-blank questions based on the passage
+      console.log('Generating fill-blank questions...');
+      console.log('Passage length:', generatedPassage.length);
+      console.log('Passage content:', generatedPassage.substring(0, 200) + '...');
+      
+      try {
+        const fillBlankResponse = await fetch(`${backendUrl}/api/gemini/generate-fill-blank`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            passage: generatedPassage,
+            count: 2
+          }),
+        });
+
+        if (!fillBlankResponse.ok) {
+          console.error('Fill-blank response not ok:', fillBlankResponse.status, fillBlankResponse.statusText);
+          const errorText = await fillBlankResponse.text();
+          console.error('Fill-blank error response:', errorText);
+          throw new Error(`Failed to generate fill-blank questions: ${fillBlankResponse.status}`);
+        }
+
+        const fillBlankData = await fillBlankResponse.json();
+        console.log('Fill-blank generated:', fillBlankData);
+
+        if (fillBlankData.success && fillBlankData.data && fillBlankData.data.questions) {
+          setFillBlankQuestions(fillBlankData.data.questions);
+        }
+      } catch (fillBlankError) {
+        console.error('Fill-blank generation failed:', fillBlankError);
+        // Continue without fill-blank questions, we still have passage and MCQ
+        setFillBlankQuestions([]);
+      }
+      
+      // Check if we have at least MCQ questions to consider success
+      if (allQuestions.length === 0) {
         throw new Error('Failed to generate questions - no questions received');
       }
     } catch (error) {
       console.error('Error generating questions:', error);
+      console.error('Error type:', typeof error);
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+      }
       setError(`Failed to generate questions: ${error instanceof Error ? error.message : 'Unknown error'}. Using default questions.`);
       
       // Fallback to mock questions
@@ -195,55 +269,6 @@ export default function ReadingTest() {
       setIsLoading(false);
     }
   };
-
-  // Mock passage from MCP server
-  const passage = `
-Climate Change and Urban Planning
-
-The relationship between climate change and urban planning has become increasingly critical in the 21st century. As global temperatures continue to rise, cities worldwide are experiencing unprecedented challenges that require innovative solutions and adaptive strategies.
-
-Urban areas are particularly vulnerable to climate change impacts due to their high population density and infrastructure complexity. The phenomenon known as the "urban heat island effect" exacerbates temperature increases in cities, where concrete and asphalt surfaces absorb and retain heat more effectively than natural landscapes. This creates localized temperature differences that can be 2-5 degrees Celsius higher than surrounding rural areas.
-
-Modern urban planners are now incorporating climate resilience into their designs through various approaches. Green infrastructure, including parks, green roofs, and urban forests, helps mitigate heat absorption while providing natural cooling through evapotranspiration. Additionally, sustainable transportation systems reduce greenhouse gas emissions and improve air quality.
-
-The integration of renewable energy sources into urban planning represents another crucial adaptation strategy. Solar panels on building rooftops, wind turbines in appropriate locations, and district cooling systems powered by renewable energy all contribute to reducing cities' carbon footprints.
-
-However, implementing these solutions requires significant financial investment and political commitment. Many developing cities face the challenge of balancing immediate economic needs with long-term environmental sustainability. The success of climate-adaptive urban planning ultimately depends on collaboration between government agencies, private sector stakeholders, and community organizations.
-  `;
-
-  // Mock fill-in-the-blanks questions from MCP server
-  const fillBlankQuestions: FillBlankQuestion[] = [
-    {
-      id: 1,
-      text: "Green infrastructure helps mitigate heat absorption while providing natural cooling through _____.",
-      blanks: [
-        {
-          position: 0,
-          correctAnswer: "evapotranspiration",
-          explanation:
-            "Evapotranspiration is the process by which plants release water vapor, providing natural cooling.",
-        },
-      ],
-    },
-    {
-      id: 2,
-      text: "The success of climate-adaptive urban planning depends on collaboration between _____, private sector stakeholders, and _____.",
-      blanks: [
-        {
-          position: 0,
-          correctAnswer: "government agencies",
-          explanation:
-            "Government agencies are mentioned as one of the key stakeholders in collaboration.",
-        },
-        {
-          position: 1,
-          correctAnswer: "community organizations",
-          explanation:
-            "Community organizations are the third group mentioned for successful collaboration.",
-        },
-      ],
-    },
-  ];
 
   const handleMCQAnswer = (questionId: number, selectedOption: number) => {
     setUserAnswers((prev) => ({

@@ -279,6 +279,87 @@ Requirements:
 }
 
 /**
+ * Generate fill-in-the-blank questions based on a given passage
+ * @param {string} passageContent - The passage content
+ * @param {number} count - Number of fill-blank questions to generate
+ * @returns {Promise<Object>} Generated fill-blank questions response
+ */
+async function generateFillBlankQuestions(passageContent, count = 2) {
+  try {
+    // Get the generative model
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // Create the prompt for fill-blank question generation
+    const prompt = `Based on the following passage, generate exactly ${count} fill-in-the-blank questions for IELTS reading comprehension:
+
+PASSAGE:
+${passageContent}
+
+CRITICAL: Return ONLY valid JSON in this EXACT format with NO additional text, explanations, or formatting:
+
+{"questions":[{"id":1,"text":"The passage states that green infrastructure helps mitigate heat absorption while providing natural cooling through _____.","blanks":[{"position":0,"correctAnswer":"evapotranspiration","explanation":"Brief explanation of the answer"}]}]}
+
+Requirements:
+- Generate exactly ${count} fill-in-the-blank questions
+- Each question should have 1-2 blanks (represented by _____)
+- Blanks should test key vocabulary, concepts, or factual information from the passage
+- Provide position index for each blank (starting from 0)
+- Include brief explanations for each correct answer
+- Use information directly from the passage
+- Return ONLY the JSON object, no other text`;
+
+    // Generate content
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Clean and parse the JSON response
+    let cleanedText = text.trim();
+    
+    // Remove markdown code blocks if present
+    cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/\n?```/g, '');
+    
+    // Extract JSON part
+    const jsonStart = cleanedText.indexOf('{');
+    const jsonEnd = cleanedText.lastIndexOf('}');
+    
+    if (jsonStart === -1 || jsonEnd === -1) {
+      throw new Error('No valid JSON found in response');
+    }
+    
+    cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(cleanedText);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError.message);
+      console.error('Raw response:', text.substring(0, 500) + '...');
+      console.error('Cleaned text:', cleanedText.substring(0, 500) + '...');
+      throw new Error(`JSON parsing failed: ${parseError.message}`);
+    }
+    
+    // Validate that we have questions
+    if (!parsedResponse.questions || parsedResponse.questions.length === 0) {
+      throw new Error('No fill-blank questions generated');
+    }
+
+    return {
+      success: true,
+      data: parsedResponse.questions,
+      count: parsedResponse.questions.length
+    };
+  } catch (error) {
+    console.error('Error generating fill-blank questions:', error);
+    return {
+      success: false,
+      error: error.message,
+      data: []
+    };
+  }
+}
+
+/**
  * Generate chat response using Gemini AI for IELTS assistance
  * @param {string} message - User's message/question
  * @returns {Promise<Object>} Response object with success status and data
@@ -330,5 +411,6 @@ module.exports = {
   generatePassage,
   generateIELTSPassage,
   generateQuestionsFromPassage,
+  generateFillBlankQuestions,
   generateChatResponse
 };

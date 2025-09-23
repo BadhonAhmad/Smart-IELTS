@@ -1,5 +1,5 @@
 const express = require('express');
-const { generateMCQ, generateIELTS, testGemini, generateReadingPassage, generateIELTSReadingPassage, handleChat } = require('../controllers/geminiController');
+const { generateMCQ, generateIELTS, testGemini, generateReadingPassage, generateIELTSReadingPassage, generateFillBlank, handleChat } = require('../controllers/geminiController');
 
 const router = express.Router();
 
@@ -17,6 +17,9 @@ router.post('/generate-passage', generateReadingPassage);
 
 // Generate IELTS themed passages
 router.post('/generate-ielts-passage', generateIELTSReadingPassage);
+
+// Generate fill-in-the-blank questions
+router.post('/generate-fill-blank', generateFillBlank);
 
 // Handle chat conversations
 router.post('/chat', handleChat);
