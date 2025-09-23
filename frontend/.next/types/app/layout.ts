@@ -1,4 +1,4 @@
-// File: C:\Users\Nobel\Desktop\Projects\Smart IELTS\frontend\src\app\layout.tsx
+// File: /home/sk-sazid/Desktop/Smart-IELTS/frontend/src/app/layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
