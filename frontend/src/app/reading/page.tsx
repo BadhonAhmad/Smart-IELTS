@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 interface MCQQuestion {
@@ -31,7 +31,25 @@ export default function ReadingTest() {
     fillBlanks: {},
   });
   const [showResults, setShowResults] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userPrompt, setUserPrompt] = useState<string>("");
+  const [hasTestData, setHasTestData] = useState(false);
+
+  // Get user prompt from localStorage on component mount and check for test data
+  useEffect(() => {
+    const prompt = localStorage.getItem("readingTestPrompt");
+    const testData = localStorage.getItem("generatedReadingTest");
+
+    if (prompt) {
+      setUserPrompt(prompt);
+      // Clear it after use
+      localStorage.removeItem("readingTestPrompt");
+    }
+
+    // Check if we have test data from popup or just show mock data
+    setHasTestData(true);
+    setIsLoading(false);
+  }, []);
 
   // Mock passage from MCP server
   const passage = `
@@ -228,6 +246,21 @@ However, implementing these solutions requires significant financial investment 
 
   const scores = showResults ? calculateScore() : null;
 
+  // Show loading state initially
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <h2 className="text-2xl font-semibold">Loading Reading Test...</h2>
+          <p className="text-gray-400 mt-2">
+            Please wait while we prepare your test
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black">
       {/* Header */}
@@ -256,6 +289,37 @@ However, implementing these solutions requires significant financial investment 
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* User Prompt Display */}
+        {userPrompt && (
+          <div className="mb-6 bg-blue-900/20 border border-blue-600/30 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-5 h-5 text-blue-400 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-blue-300 mb-1">
+                  Your Test Request:
+                </h3>
+                <p className="text-gray-300 text-sm italic">
+                  &quot;{userPrompt}&quot;
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
