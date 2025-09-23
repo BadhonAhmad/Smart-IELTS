@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: agentbackend
+    env: node
+    plan: free
+    region: singapore
+    rootDir: ./
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Smythos SDK Configuration
+      - key: SMYTH_VAULT_PATH
+        value: /tmp/.smyth/.sre/vault.json
+      - key: HOME
+        value: /tmp
+      # API Keys - Set these in Render Dashboard
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GOOGLEAI_API_KEY
+        sync: false  
+      - key: PINECONE_API_KEY
+        sync: false
+      # - key: DATABASE_URL
+      #   sync: false

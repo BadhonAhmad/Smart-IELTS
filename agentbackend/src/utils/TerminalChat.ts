@@ -1,13 +1,15 @@
-import { Chat, TLLMEvent } from '@smythos/sdk';
+import { Agent, Chat, TLLMEvent } from '@smythos/sdk';
 import chalk from 'chalk';
 import readline from 'readline';
+
+let inputCounter = 0;
 
 /**
  * This function runs a chat session using a chat object.
  * a chat object is obtained from an Agent.
  * @param chat
  */
-export function runChat(chat: Chat) {
+export function runChat(chat: Chat, agent?: Agent) {
     // Create readline interface for user input
     const rl = readline.createInterface({
         input: process.stdin,
@@ -20,7 +22,7 @@ export function runChat(chat: Chat) {
     console.log(chalk.gray('Type "exit" or "quit" to end the conversation.\n'));
 
     // Set up readline event handlers
-    rl.on('line', (input) => handleUserInput(input, rl, chat));
+    rl.on('line', (input) => handleUserInput(input, rl, chat, agent));
 
     rl.on('close', () => {
         console.log(chalk.gray('Chat session ended.'));
@@ -32,7 +34,18 @@ export function runChat(chat: Chat) {
 }
 
 // Function to handle user input and chat response
-async function handleUserInput(input: string, rl: readline.Interface, chat: Chat) {
+function isDeleteIntent(text: string) {
+    const t = text.toLowerCase();
+    return (
+        t.includes('delete all') ||
+        (t.includes('delete') && (t.includes('pdf') || t.includes('book') || t.includes('books'))) ||
+        t.trim() === 'purge' ||
+        t.includes('clear database') ||
+        t.includes('purge database')
+    );
+}
+
+async function handleUserInput(input: string, rl: readline.Interface, chat: Chat, agent?: Agent) {
     if (input.toLowerCase().trim() === 'exit' || input.toLowerCase().trim() === 'quit') {
         console.log(chalk.green('👋 Goodbye!'));
         rl.close();
@@ -47,7 +60,22 @@ async function handleUserInput(input: string, rl: readline.Interface, chat: Chat
     try {
         console.log(chalk.gray('Assistant is thinking...'));
 
-        // Send message to the agent and get response
+        // If it's a delete intent, call the purge skill ONCE directly and short-circuit
+        if (agent && isDeleteIntent(input)) {
+            try {
+                console.log(chalk.yellow('[Direct Skill] purge_books'));
+                const result = await agent.call('purge_books', { params: input });
+                console.log(chalk.green(`🤖 Assistant: ${result}`));
+                rl.prompt();
+                return;
+            } catch (e: any) {
+                console.error(chalk.red('❌ Error (purge_books):', e?.message || e));
+                rl.prompt();
+                return;
+            }
+        }
+
+        // Send message to the agent and get response (normal flow)
         const streamChat = await chat.prompt(input).stream();
 
         // Clear the current line and move to a new line for the response

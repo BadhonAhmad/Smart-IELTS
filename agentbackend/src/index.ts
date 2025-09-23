@@ -4,28 +4,44 @@
 
 //Edit the vault.json file to update your API keys
 
-import BookAssistantAgent from './agents/BookAssistant.agent';
-import { runChat } from './utils/TerminalChat';
-
-//In this example we are directly starting with the Book Assistant
-//You can modify this to add back the agent selection menu if needed
+import BookAssistantAgent from './agents/BookAssistant.agent.js';
+import { runChat } from './utils/TerminalChat.js';
+import { startServer } from './api/server.js';
 
 const main = async () => {
-    console.log('Starting Book Assistant...');
+    // Check command line arguments to determine mode
+    const args = process.argv.slice(2);
+    const mode = args[0] || 'api'; // default to API mode
     
-    //Use the Book Assistant agent
-    const agent = BookAssistantAgent;
+    if (mode === 'chat') {
+        console.log('Starting Document Assistant Chat...');
+        
+        //Use the Document Assistant agent
+        const agent = BookAssistantAgent;
 
-    //Create a chat object from the agent
-    //this is used to identify the chat session, using the same ID will load the previous chat session
-    const sessionId = `my-chat-session-book-assistant`;
-    const chat = agent.chat({
-        id: sessionId,
-        persist: true,
-    });
+        //Create a chat object from the agent
+        //this is used to identify the chat session, using the same ID will load the previous chat session
+        const sessionId = `my-chat-session-document-assistant`;
+        const chat = agent.chat({
+            id: sessionId,
+            persist: true,
+        });
 
-    //Run the chat session in the terminal
-    runChat(chat);
+        //Run the chat session in the terminal (pass agent for direct skill calls on special intents)
+        runChat(chat, agent);
+    } else {
+        console.log('Starting Document Assistant API Server...');
+        
+        // Start the Express API server
+        await startServer();
+        
+        console.log(`\n📖 Document Assistant is ready to help!`);
+        console.log(`\nTo test the API, try these commands:`);
+        console.log(`  curl http://localhost:5000/health`);
+        console.log(`  curl http://localhost:5000/api/agent/skills`);
+        console.log(`  curl -X POST http://localhost:5000/api/agent/skills/get_document_info -H "Content-Type: application/json" -d '{"document_name": "Bitcoin"}'`);
+        console.log(`\nTo run in chat mode instead: npm start chat`);
+    }
 };
 
 main();
