@@ -1,4 +1,4 @@
-const { generateMCQQuestions, generateIELTSQuestions, generatePassage, generateIELTSPassage, generateFillBlankQuestions } = require('../services/geminiService');
+const { generateMCQQuestions, generateIELTSQuestions, generatePassage, generateIELTSPassage, generateFillBlankQuestions, generateQuestionsFromPassage } = require('../services/geminiService');
 
 /**
  * Generate general MCQ questions
@@ -330,6 +330,66 @@ const generateFillBlank = async (req, res) => {
   }
 };
 
+/**
+ * Generate MCQ questions based on a passage
+ * POST /api/gemini/generate-mcq-from-passage
+ */
+const generateMCQFromPassage = async (req, res) => {
+  try {
+    const { passage, level = 'intermediate', count = 3 } = req.body;
+
+    // Validate passage
+    if (!passage || typeof passage !== 'string' || passage.trim().length < 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Passage must be provided and should be at least 100 characters long'
+      });
+    }
+
+    // Validate level
+    const validLevels = ['easy', 'intermediate', 'advanced'];
+    if (!validLevels.includes(level)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Level must be one of: easy, intermediate, advanced'
+      });
+    }
+
+    const result = await generateQuestionsFromPassage(passage, level);
+
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to generate MCQ questions from passage',
+        error: result.error
+      });
+    }
+
+    // Limit the number of questions to the requested count
+    let questions = result.data || [];
+    if (count && count > 0 && count < questions.length) {
+      questions = questions.slice(0, count);
+    }
+
+    res.json({
+      success: true,
+      message: `MCQ questions generated from passage successfully`,
+      data: {
+        level,
+        count: questions.length,
+        questions: questions
+      }
+    });
+  } catch (error) {
+    console.error('Error in generateMCQFromPassage controller:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   generateMCQ,
   generateIELTS,
@@ -337,5 +397,6 @@ module.exports = {
   generateReadingPassage,
   generateIELTSReadingPassage,
   generateFillBlank,
+  generateMCQFromPassage,
   handleChat
 };

@@ -98,77 +98,55 @@ export default function ReadingTest() {
       const generatedPassage = passageData.data.content;
       setPassage(generatedPassage);
 
-      // Step 2: Generate MCQ questions (make 3 parallel calls as before)
-      console.log('Generating MCQ questions...');
-      const questionPromises = [];
-      for (let i = 0; i < 3; i++) {
-        questionPromises.push(
-          fetch(`${backendUrl}/api/gemini/generate-ielts`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              skill: 'reading',
-              count: 1
-            }),
-          })
-        );
-      }
-
-      const responses = await Promise.all(questionPromises);
-      
-      // Check if all responses are ok
-      for (const response of responses) {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-      }
-
-      const dataPromises = responses.map(response => response.json());
-      const dataArray = await Promise.all(dataPromises);
-      
-      console.log('MCQ API Responses:', dataArray);
-      
-      // Combine all questions from multiple API calls
-      const allQuestions: any[] = [];
-      dataArray.forEach((data, index) => {
-        if (data.success && data.data && data.data.questions) {
-          data.data.questions.forEach((q: any) => {
-            allQuestions.push({...q, id: allQuestions.length + 1});
-          });
-        }
+      // Step 2: Generate MCQ questions based on the passage
+      console.log('Generating MCQ questions from passage...');
+      const mcqResponse = await fetch(`${backendUrl}/api/gemini/generate-mcq-from-passage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          passage: generatedPassage,
+          count: 3,
+          level: 'intermediate'
+        }),
       });
-      
-      if (allQuestions.length > 0) {
+
+      if (!mcqResponse.ok) {
+        throw new Error(`Failed to generate MCQ questions: ${mcqResponse.status}`);
+      }
+
+      const mcqData = await mcqResponse.json();
+      console.log('MCQ questions generated from passage:', mcqData);
+
+      if (mcqData.success && mcqData.data && mcqData.data.questions) {
         // Transform the response to match our MCQQuestion interface
-        const transformedQuestions: MCQQuestion[] = allQuestions.map((q: any, index: number) => {
+        const transformedQuestions: MCQQuestion[] = mcqData.data.questions.map((q: any, index: number) => {
           let correctAnswerIndex = 0;
           
-          // Find the correct answer index by matching the string with options
-          if (Array.isArray(q.options)) {
-            correctAnswerIndex = q.options.findIndex((option: string) => 
-              option.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase()
-            );
-            if (correctAnswerIndex === -1) correctAnswerIndex = 0; // fallback
-          } else {
-            // Handle object-style options {A, B, C, D}
+          // Handle the response format from generateQuestionsFromPassage
+          if (q.options && typeof q.options === 'object') {
             const optionsArray = [q.options.A, q.options.B, q.options.C, q.options.D];
-            correctAnswerIndex = optionsArray.findIndex((option: string) => 
-              option.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase()
-            );
-            if (correctAnswerIndex === -1) {
-              // Try matching by letter
-              correctAnswerIndex = q.correctAnswer === 'A' ? 0 : q.correctAnswer === 'B' ? 1 : q.correctAnswer === 'C' ? 2 : 3;
-            }
+            // Find correct answer index by matching the letter
+            correctAnswerIndex = q.correctAnswer === 'A' ? 0 : 
+                               q.correctAnswer === 'B' ? 1 : 
+                               q.correctAnswer === 'C' ? 2 : 3;
+            
+            return {
+              id: index + 1,
+              question: q.questionText || q.question,
+              options: optionsArray,
+              correctAnswer: correctAnswerIndex,
+              explanation: q.explanation || 'No explanation provided'
+            };
           }
           
           return {
             id: index + 1,
-            question: q.question,
-            options: Array.isArray(q.options) ? q.options : [q.options.A, q.options.B, q.options.C, q.options.D],
-            correctAnswer: correctAnswerIndex,
-            explanation: q.explanation
+            question: q.questionText || q.question,
+            options: q.options || [],
+            correctAnswer: 0,
+            explanation: q.explanation || 'No explanation provided'
           };
         });
         
@@ -212,9 +190,9 @@ export default function ReadingTest() {
         setFillBlankQuestions([]);
       }
       
-      // Check if we have at least MCQ questions to consider success
-      if (allQuestions.length === 0) {
-        throw new Error('Failed to generate questions - no questions received');
+      // Check if we have MCQ questions to consider success
+      if (!mcqData.success || !mcqData.data || !mcqData.data.questions || mcqData.data.questions.length === 0) {
+        throw new Error('Failed to generate MCQ questions - no questions received');
       }
     } catch (error) {
       console.error('Error generating questions:', error);
