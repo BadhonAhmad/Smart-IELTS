@@ -55,25 +55,12 @@ export default function WritingTest() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [expandedInstructions, setExpandedInstructions] = useState<Set<number>>(new Set());
+  const [displayedQuestions, setDisplayedQuestions] = useState<WritingQuestion[]>([]);
 
-  // Mock writing questions from MCP server
-  const writingQuestions: WritingQuestion[] = [
+  // Full pool of 16 writing questions from MCP server
+  const allWritingQuestions: WritingQuestion[] = [
     {
       id: 1,
-      type: "essay",
-      title: "Task 2: Climate Change Solutions",
-      description: "Essay Writing Task",
-      instructions: [
-        "Write an essay discussing both individual and governmental solutions to climate change.",
-        "Present a well-structured argument with clear examples.",
-        "Express your own opinion in the conclusion.",
-        "Use formal academic language throughout.",
-      ],
-      timeLimit: "40 minutes",
-      wordCount: "At least 250 words",
-    },
-    {
-      id: 2,
       type: "diagram",
       title: "Task 1: Process Diagram Analysis",
       description: "Diagram Description Task",
@@ -89,9 +76,9 @@ export default function WritingTest() {
         "Water Cycle Process - showing evaporation, condensation, precipitation, and collection stages",
     },
     {
-      id: 3,
+      id: 2,
       type: "letter",
-      title: "Task 1: Formal Letter Writing",
+      title: "Task 2: Formal Letter Writing",
       description: "Complaint Letter Task",
       instructions: [
         "Write a formal letter to complain about a recent online purchase.",
@@ -103,9 +90,23 @@ export default function WritingTest() {
       wordCount: "At least 150 words",
     },
     {
+      id: 3,
+      type: "essay",
+      title: "Task 3: Climate Change Solutions",
+      description: "Essay Writing Task",
+      instructions: [
+        "Write an essay discussing both individual and governmental solutions to climate change.",
+        "Present a well-structured argument with clear examples.",
+        "Express your own opinion in the conclusion.",
+        "Use formal academic language throughout.",
+      ],
+      timeLimit: "40 minutes",
+      wordCount: "At least 250 words",
+    },
+    {
       id: 4,
       type: "essay",
-      title: "Task 2: Technology and Education",
+      title: "Task 4: Technology and Education",
       description: "Argumentative Essay",
       instructions: [
         "Some people believe that technology has made learning easier, while others think it has made students lazy.",
@@ -116,7 +117,207 @@ export default function WritingTest() {
       timeLimit: "40 minutes",
       wordCount: "At least 250 words",
     },
+    {
+      id: 5,
+      type: "diagram",
+      title: "Task 5: Manufacturing Process",
+      description: "Process Description Task",
+      instructions: [
+        "Describe the manufacturing process shown in the diagram.",
+        "Explain each stage of production in chronological order.",
+        "Use appropriate technical vocabulary.",
+        "Write in a formal, objective style.",
+      ],
+      timeLimit: "20 minutes",
+      wordCount: "At least 150 words",
+      diagram:
+        "Chocolate Production Process - from cocoa beans to finished chocolate bars",
+    },
+    {
+      id: 6,
+      type: "letter",
+      title: "Task 6: Job Application Letter",
+      description: "Formal Application Letter",
+      instructions: [
+        "Write a formal letter applying for a part-time job at a local bookstore.",
+        "Mention your relevant experience and qualifications.",
+        "Explain why you are interested in this position.",
+        "Use appropriate formal letter structure and tone.",
+      ],
+      timeLimit: "20 minutes",
+      wordCount: "At least 150 words",
+    },
+    {
+      id: 7,
+      type: "essay",
+      title: "Task 7: Social Media Impact",
+      description: "Opinion Essay",
+      instructions: [
+        "Social media has both positive and negative effects on society.",
+        "Discuss the advantages and disadvantages of social media.",
+        "Give your own opinion with supporting examples.",
+        "Organize your essay with clear paragraphs and logical flow.",
+      ],
+      timeLimit: "40 minutes",
+      wordCount: "At least 250 words",
+    },
+    {
+      id: 8,
+      type: "diagram",
+      title: "Task 8: Life Cycle Analysis",
+      description: "Biological Process Task",
+      instructions: [
+        "Describe the life cycle shown in the diagram.",
+        "Explain each stage of development clearly.",
+        "Use scientific terminology appropriately.",
+        "Present information in a logical sequence.",
+      ],
+      timeLimit: "20 minutes",
+      wordCount: "At least 150 words",
+      diagram:
+        "Butterfly Life Cycle - egg, larva, pupa, adult butterfly stages",
+    },
+    {
+      id: 9,
+      type: "letter",
+      title: "Task 9: Invitation Letter",
+      description: "Formal Invitation Task",
+      instructions: [
+        "Write a formal letter inviting a guest speaker to your university.",
+        "Explain the purpose of the event and audience details.",
+        "Mention the proposed date, time, and venue.",
+        "Include information about accommodation and travel arrangements.",
+      ],
+      timeLimit: "20 minutes",
+      wordCount: "At least 150 words",
+    },
+    {
+      id: 10,
+      type: "essay",
+      title: "Task 10: Work-Life Balance",
+      description: "Discussion Essay",
+      instructions: [
+        "Many people struggle to maintain a healthy work-life balance in modern society.",
+        "What are the causes of this problem?",
+        "What solutions can you suggest?",
+        "Support your ideas with relevant examples and explanations.",
+      ],
+      timeLimit: "40 minutes",
+      wordCount: "At least 250 words",
+    },
+    {
+      id: 11,
+      type: "diagram",
+      title: "Task 11: Urban Planning Map",
+      description: "Map Description Task",
+      instructions: [
+        "Describe the changes in the town layout shown in the maps.",
+        "Compare the town in different time periods.",
+        "Highlight the most significant developments.",
+        "Use appropriate geographical and directional language.",
+      ],
+      timeLimit: "20 minutes",
+      wordCount: "At least 150 words",
+      diagram:
+        "Town Development Maps - showing changes from 1990 to 2020",
+    },
+    {
+      id: 12,
+      type: "letter",
+      title: "Task 12: Recommendation Letter",
+      description: "Formal Recommendation Task",
+      instructions: [
+        "Write a letter recommending improvements to your local library.",
+        "Describe current problems or limitations.",
+        "Suggest specific improvements and their benefits.",
+        "Use a polite and constructive tone throughout.",
+      ],
+      timeLimit: "20 minutes",
+      wordCount: "At least 150 words",
+    },
+    {
+      id: 13,
+      type: "essay",
+      title: "Task 13: Transportation and Environment",
+      description: "Problem-Solution Essay",
+      instructions: [
+        "Increasing car ownership is causing environmental problems in many cities.",
+        "What are the main environmental impacts?",
+        "What measures can be taken to reduce these problems?",
+        "Provide specific examples and practical solutions.",
+      ],
+      timeLimit: "40 minutes",
+      wordCount: "At least 250 words",
+    },
+    {
+      id: 14,
+      type: "diagram",
+      title: "Task 14: Energy Production Flow",
+      description: "Technical Process Task",
+      instructions: [
+        "Describe how electricity is generated in the power plant shown.",
+        "Explain the energy conversion process step by step.",
+        "Include technical details and specific terminology.",
+        "Maintain an objective, factual writing style.",
+      ],
+      timeLimit: "20 minutes",
+      wordCount: "At least 150 words",
+      diagram:
+        "Solar Power Plant - photovoltaic panels to electrical grid distribution",
+    },
+    {
+      id: 15,
+      type: "letter",
+      title: "Task 15: Inquiry Letter",
+      description: "Information Request Task",
+      instructions: [
+        "Write a letter inquiring about English language courses at a college.",
+        "Ask about course duration, fees, and entry requirements.",
+        "Request information about accommodation options.",
+        "Mention your current English level and learning goals.",
+      ],
+      timeLimit: "20 minutes",
+      wordCount: "At least 150 words",
+    },
+    {
+      id: 16,
+      type: "essay",
+      title: "Task 16: Healthcare and Technology",
+      description: "Advantage-Disadvantage Essay",
+      instructions: [
+        "Technology is increasingly being used in healthcare and medical treatment.",
+        "What are the advantages and disadvantages of this development?",
+        "Do the benefits outweigh the drawbacks?",
+        "Use specific examples to support your arguments.",
+      ],
+      timeLimit: "40 minutes",
+      wordCount: "At least 250 words",
+    },
   ];
+
+  // Function to randomly select 3 questions from the pool of 16 and renumber them as 1, 2, 3
+  const getRandomQuestions = (questions: WritingQuestion[], count: number = 3): WritingQuestion[] => {
+    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, count);
+    
+    // Renumber the selected questions as Task 1, Task 2, Task 3
+    return selected.map((question, index) => ({
+      ...question,
+      id: index + 1, // Renumber as 1, 2, 3
+      title: question.title.replace(/Task \d+:/, `Task ${index + 1}:`), // Update title numbering
+    }));
+  };
+
+  // Initialize with 3 random questions from 16 on component mount
+  useEffect(() => {
+    setDisplayedQuestions(getRandomQuestions(allWritingQuestions, 3));
+  }, []);
+
+  // Function to generate new random questions from the pool of 16
+  const generateNewQuestions = () => {
+    setDisplayedQuestions(getRandomQuestions(allWritingQuestions, 3));
+    setSelectedQuestion(null); // Reset selection when generating new questions
+  };
 
   const handleQuestionSelect = (questionId: number) => {
     setSelectedQuestion(questionId);
@@ -216,7 +417,7 @@ export default function WritingTest() {
 
   // Generate mock evaluation based on question type
   const generateMockEvaluation = (questionId: number): WritingEvaluation => {
-    const question = writingQuestions.find((q) => q.id === questionId);
+    const question = allWritingQuestions.find((q) => q.id === questionId);
     const questionType = question?.type || "essay";
 
     // Mock extracted text based on question type
@@ -369,10 +570,10 @@ export default function WritingTest() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <span className="text-sm text-gray-300 block">MCP Questions:</span>
+                <span className="text-sm text-gray-300 block">Question Pool: 16 Questions</span>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-800 text-green-200">
                   <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-                  Active & Loaded
+                  3 Random Tasks Loaded
                 </span>
               </div>
             </div>
@@ -389,7 +590,7 @@ export default function WritingTest() {
               Writing Test Instructions
             </h2>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <span className="text-blue-400 font-bold text-sm mt-0.5">1.</span>
@@ -397,20 +598,34 @@ export default function WritingTest() {
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-blue-400 font-bold text-sm mt-0.5">2.</span>
-                <p className="text-gray-300 text-sm">Write your answer on paper using pen/pencil</p>
+                <p className="text-gray-300 text-sm">Write your answer clearly on paper using pen/pencil</p>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-blue-400 font-bold text-sm mt-0.5">3.</span>
-                <p className="text-gray-300 text-sm">Take a clear photo of your written answer</p>
+                <p className="text-gray-300 text-sm">Use proper paragraphing and structure</p>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <span className="text-blue-400 font-bold text-sm mt-0.5">4.</span>
-                <p className="text-gray-300 text-sm">Upload the photo using the upload button on the right</p>
+                <p className="text-gray-300 text-sm">Check your word count meets the minimum requirement</p>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-blue-400 font-bold text-sm mt-0.5">5.</span>
+                <p className="text-gray-300 text-sm">Review your work before taking the photo</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">6.</span>
+                <p className="text-gray-300 text-sm">Take a clear photo of your written answer</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">7.</span>
+                <p className="text-gray-300 text-sm">Upload the photo using the upload button on the right</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">8.</span>
                 <p className="text-gray-300 text-sm">Get instant AI evaluation and detailed feedback</p>
               </div>
               <div className="flex items-start gap-3">
@@ -423,11 +638,20 @@ export default function WritingTest() {
 
         {/* Question Selection */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-6">
-            Select a Writing Task
-          </h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-white">
+              Select a Writing Task
+            </h2>
+            <button
+              onClick={generateNewQuestions}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+            >
+              <span>🎲</span>
+              Generate New Questions
+            </button>
+          </div>
           <div className="space-y-6">
-            {writingQuestions.map((question) => {
+            {displayedQuestions.map((question) => {
               const uploadedAnswer = getUploadedAnswer(question.id);
               const isSelected = selectedQuestion === question.id;
 
@@ -643,14 +867,14 @@ export default function WritingTest() {
               <div className="flex items-center space-x-3 mb-4">
                 <span className="text-3xl">
                   {getQuestionIcon(
-                    writingQuestions.find((q) => q.id === selectedQuestion)
+                    allWritingQuestions.find((q) => q.id === selectedQuestion)
                       ?.type || ""
                   )}
                 </span>
                 <div>
                   <h2 className="text-2xl font-bold text-white">
                     {
-                      writingQuestions.find((q) => q.id === selectedQuestion)
+                      allWritingQuestions.find((q) => q.id === selectedQuestion)
                         ?.title
                     }
                   </h2>
@@ -658,14 +882,14 @@ export default function WritingTest() {
                     <span className="text-sm text-gray-300">
                       ⏱️{" "}
                       {
-                        writingQuestions.find((q) => q.id === selectedQuestion)
+                        allWritingQuestions.find((q) => q.id === selectedQuestion)
                           ?.timeLimit
                       }
                     </span>
                     <span className="text-sm text-gray-400">
                       📝{" "}
                       {
-                        writingQuestions.find((q) => q.id === selectedQuestion)
+                        allWritingQuestions.find((q) => q.id === selectedQuestion)
                           ?.wordCount
                       }
                     </span>
@@ -682,32 +906,32 @@ export default function WritingTest() {
               </div>
             </div>
 
-            {/* Detailed Instructions */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-white mb-4">
-                📝 Task Instructions
-              </h3>
-              <div className="bg-gray-700 border-l-4 border-blue-500 p-4 rounded-r-lg">
-                <ul className="space-y-3">
-                  {writingQuestions
-                    .find((q) => q.id === selectedQuestion)
-                    ?.instructions.map((instruction, index) => (
-                      <li
-                        key={index}
-                        className="text-gray-300 flex items-start"
-                      >
-                        <span className="text-blue-400 font-bold mr-3 min-w-[20px]">
-                          {index + 1}.
-                        </span>
-                        <span>{instruction}</span>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            </div>
+            {/* Detailed Instructions
+            // <div className="mb-8">
+            //   <h3 className="text-lg font-semibold text-white mb-4">
+            //     📝 Task Instructions
+            //   </h3>
+            //   <div className="bg-gray-700 border-l-4 border-blue-500 p-4 rounded-r-lg">
+            //     <ul className="space-y-3">
+            //       {writingQuestions
+            //         .find((q) => q.id === selectedQuestion)
+            //         ?.instructions.map((instruction, index) => (
+            //           <li
+            //             key={index}
+            //             className="text-gray-300 flex items-start"
+            //           >
+            //             <span className="text-blue-400 font-bold mr-3 min-w-[20px]">
+            //               {index + 1}.
+            //             </span>
+            //             <span>{instruction}</span>
+            //           </li>
+            //         ))}
+            //     </ul>
+            //   </div>
+            // </div> */}
 
             {/* Diagram Display (if applicable) */}
-            {writingQuestions.find((q) => q.id === selectedQuestion)
+            {allWritingQuestions.find((q) => q.id === selectedQuestion)
               ?.diagram && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-white mb-4">
@@ -717,7 +941,7 @@ export default function WritingTest() {
                   <div className="text-4xl mb-4">📊</div>
                   <p className="text-gray-300 font-medium">
                     {
-                      writingQuestions.find((q) => q.id === selectedQuestion)
+                      allWritingQuestions.find((q) => q.id === selectedQuestion)
                         ?.diagram
                     }
                   </p>
@@ -728,20 +952,7 @@ export default function WritingTest() {
               </div>
             )}
 
-            {/* Writing Area Instructions */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-white mb-4">
-                ✍️ Writing Instructions
-              </h3>
-              <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4">
-                <ul className="space-y-2 text-yellow-200">
-                  <li>• Write your answer clearly on paper</li>
-                  <li>• Use proper paragraphing and structure</li>
-                  <li>• Check your word count meets the minimum requirement</li>
-                  <li>• Review your work before taking the photo</li>
-                </ul>
-              </div>
-            </div>
+
 
             {/* Photo Upload Section */}
             <div className="border-t border-gray-600 pt-6">
@@ -1036,7 +1247,7 @@ export default function WritingTest() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {uploadedAnswers.map((answer) => {
-                const question = writingQuestions.find(
+                const question = allWritingQuestions.find(
                   (q) => q.id === answer.questionId
                 );
                 return (
