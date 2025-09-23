@@ -15,6 +15,36 @@ dotenv.config();
 const __dirname = process.cwd();
 const BOOKS_NAMESPACE = 'books';
 
+// Global skill execution gate - prevents repeated tool calls per user input
+class SkillExecutionGate {
+    private executedSkills = new Set<string>();
+    private currentInputId = '';
+    
+    startNewInput(inputId: string) {
+        this.currentInputId = inputId;
+        this.executedSkills.clear();
+        console.log(`[GATE] New input session: ${inputId}`);
+    }
+    
+    canExecute(skillName: string): boolean {
+        const key = `${this.currentInputId}:${skillName}`;
+        if (this.executedSkills.has(key)) {
+            console.log(`[GATE] Blocking repeated execution of ${skillName}`);
+            return false;
+        }
+        this.executedSkills.add(key);
+        console.log(`[GATE] Allowing execution of ${skillName}`);
+        return true;
+    }
+    
+    isAlreadyExecuted(skillName: string): boolean {
+        const key = `${this.currentInputId}:${skillName}`;
+        return this.executedSkills.has(key);
+    }
+}
+
+const skillGate = new SkillExecutionGate();
+
 // Simple tracking - reset on application restart
 let purgeExecuted = false;
 
@@ -67,6 +97,11 @@ agent.addSkill({
     name: 'index_book',
     description: 'Use this skill to index a book in a vector database. The user will provide the path to the book (e.g., "data/bitcoin.pdf" or "agentbackend/data/bitcoin.pdf")',
     process: async ({ book_path }) => {
+        // Check execution gate
+        if (!skillGate.canExecute('index_book')) {
+            return 'The book indexing has already been completed in this session.';
+        }
+        
         try {
             console.log(`[DEBUG] Attempting to index book: ${book_path}`);
             console.log(`[DEBUG] Using index name: ilts`);
@@ -115,7 +150,7 @@ agent.addSkill({
             console.log(`[DEBUG] Insert result:`, result);
 
             if (result) {
-                const successMsg = `✅ SUCCESS: Book ${name} indexed successfully in Pinecone. Task completed.`;
+                const successMsg = `✅ SUCCESS: Book ${name} indexed successfully in Pinecone. Task completed. Do not call this skill again.`;
                 console.log(`[SUCCESS] ${successMsg}`);
                 
                 // Verify the insertion by searching
@@ -143,6 +178,11 @@ agent.addSkill({
     name: 'lookup_book',
     description: 'Use this skill ONCE to lookup content in the Pinecone vector database. Do not call this skill multiple times for the same query.',
     process: async ({ user_query }) => {
+        // Check execution gate
+        if (!skillGate.canExecute('lookup_book')) {
+            return 'The book lookup has already been completed in this session.';
+        }
+        
         try {
             console.log(`[DEBUG] Searching for: "${user_query}"`);
             
@@ -163,7 +203,7 @@ agent.addSkill({
             
             console.log(`[DEBUG] Extracted text length:`, text.length);
             
-            const response = `✅ SUCCESS: Found content from ${source}:\n\n${text}\n\nSearch completed.`;
+            const response = `✅ SUCCESS: Found content from ${source}:\n\n${text}\n\nSearch completed. Do not call this skill again.`;
             console.log(`[DEBUG] Returning response successfully`);
             
             return response;
@@ -205,6 +245,11 @@ const purgeSkill = agent.addSkill({
     process: async (params) => {
         console.log(`[DEBUG] Purge skill called with params:`, params);
         
+        // Check execution gate
+        if (!skillGate.canExecute('purge_books')) {
+            return 'The database purge has already been completed in this session.';
+        }
+        
         // Simple check - if already executed, return success immediately
         if (purgeExecuted) {
             const msg = `All PDF books have already been deleted from the database. The operation was completed successfully.`;
@@ -223,7 +268,7 @@ const purgeSkill = agent.addSkill({
             // Mark as executed
             purgeExecuted = true;
             
-            const successMsg = `All PDF books have been successfully deleted from the vector database. The database is now empty and the operation is complete. (Purged namespaces: ${purged.length})`;
+            const successMsg = `All PDF books have been successfully deleted from the vector database. The database is now empty and the operation is complete. (Purged namespaces: ${purged.length}) Do not call this skill again.`;
             console.log(`[SUCCESS] ${successMsg}`);
             return successMsg;
             
@@ -267,4 +312,5 @@ openlibraryLookupSkill.in({
 
 //#endregion
 
+export { skillGate };
 export default agent;

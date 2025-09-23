@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "cross-env BUILD=dev FORMAT=esm rollup -c ./rollup.config.js",
-    "start": "node dist/index.js"
+    "start": "npm run build && node dist/index.js",
+    "start:chat": "npm run build && node dist/index.js chat",
+    "start:api": "npm run build && node dist/index.js api",
+    "dev": "npm run build && node dist/index.js",
+    "dev:chat": "npm run build && node dist/index.js chat"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^6.1.0",
@@ -20,8 +24,12 @@
     "@google/genai": "^1.20.0",
     "@pinecone-database/pinecone": "^5.0.2",
     "@smythos/sdk": "^1.1.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
     "chalk": "^5.4.1",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.2",
+    "express": "^5.1.0",
     "inquirer": "^12.6.3"
   }
 }

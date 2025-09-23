@@ -2,6 +2,8 @@ import { Agent, Chat, TLLMEvent } from '@smythos/sdk';
 import chalk from 'chalk';
 import readline from 'readline';
 
+let inputCounter = 0;
+
 /**
  * This function runs a chat session using a chat object.
  * a chat object is obtained from an Agent.
