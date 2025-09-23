@@ -3,7 +3,24 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, Legend, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+  Legend,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import TestSetupPopup from "../../components/TestSetupPopup";
 
 interface User {
   _id: string;
@@ -15,6 +32,10 @@ interface User {
 export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPopup, setShowPopup] = useState(false);
+  const [activeTestType, setActiveTestType] = useState<
+    "reading" | "listening" | "speaking" | "writing" | null
+  >(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -82,7 +103,13 @@ export default function Dashboard() {
 
         {/* Practice Sections Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Link href="/listening" className="group">
+          <button
+            onClick={() => {
+              setActiveTestType("listening");
+              setShowPopup(true);
+            }}
+            className="group w-full text-left"
+          >
             <div className="bg-gray-900 rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300 cursor-pointer border border-gray-700 hover:border-gray-600">
               <div className="w-16 h-16 bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-800 transition-colors">
                 <svg
@@ -110,9 +137,15 @@ export default function Dashboard() {
               </h3>
               <p className="text-gray-300">Practice IELTS listening skills</p>
             </div>
-          </Link>
+          </button>
 
-          <Link href="/reading" className="group">
+          <button
+            onClick={() => {
+              setActiveTestType("reading");
+              setShowPopup(true);
+            }}
+            className="group w-full text-left"
+          >
             <div className="bg-gray-900 rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300 cursor-pointer border border-gray-700 hover:border-gray-600">
               <div className="w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-800 transition-colors">
                 <svg
@@ -132,9 +165,15 @@ export default function Dashboard() {
               <h3 className="text-xl font-semibold text-white mb-2">Reading</h3>
               <p className="text-gray-300">Improve reading comprehension</p>
             </div>
-          </Link>
+          </button>
 
-          <Link href="/writing" className="group">
+          <button
+            onClick={() => {
+              setActiveTestType("writing");
+              setShowPopup(true);
+            }}
+            className="group w-full text-left"
+          >
             <div className="bg-gray-900 rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300 cursor-pointer border border-gray-700 hover:border-gray-600">
               <div className="w-16 h-16 bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-800 transition-colors">
                 <svg
@@ -154,9 +193,15 @@ export default function Dashboard() {
               <h3 className="text-xl font-semibold text-white mb-2">Writing</h3>
               <p className="text-gray-300">Master essay writing skills</p>
             </div>
-          </Link>
+          </button>
 
-          <Link href="/speaking" className="group">
+          <button
+            onClick={() => {
+              setActiveTestType("speaking");
+              setShowPopup(true);
+            }}
+            className="group w-full text-left"
+          >
             <div className="bg-gray-900 rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300 cursor-pointer border border-gray-700 hover:border-gray-600">
               <div className="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-red-800 transition-colors">
                 <svg
@@ -178,27 +223,42 @@ export default function Dashboard() {
               </h3>
               <p className="text-gray-300">Practice speaking exercises</p>
             </div>
-          </Link>
+          </button>
         </div>
 
         {/* Performance Analytics Section */}
         <div className="mb-8">
-          <h3 className="text-2xl font-bold text-white mb-6">Performance Overview</h3>
-          
+          <h3 className="text-2xl font-bold text-white mb-6">
+            Performance Overview
+          </h3>
+
           {/* Skills Performance Cards */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-lg font-semibold text-white">Listening</h4>
                 <div className="w-8 h-8 bg-green-900 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728" />
+                  <svg
+                    className="w-4 h-4 text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728"
+                    />
                   </svg>
                 </div>
               </div>
               <div className="text-3xl font-bold text-green-400 mb-2">78%</div>
               <div className="w-full bg-gray-700 rounded-full h-2">
-                <div className="bg-green-400 h-2 rounded-full" style={{width: '78%'}}></div>
+                <div
+                  className="bg-green-400 h-2 rounded-full"
+                  style={{ width: "78%" }}
+                ></div>
               </div>
               <p className="text-sm text-gray-400 mt-2">+5% from last week</p>
             </div>
@@ -207,14 +267,27 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-lg font-semibold text-white">Reading</h4>
                 <div className="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  <svg
+                    className="w-4 h-4 text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
                   </svg>
                 </div>
               </div>
               <div className="text-3xl font-bold text-blue-400 mb-2">85%</div>
               <div className="w-full bg-gray-700 rounded-full h-2">
-                <div className="bg-blue-400 h-2 rounded-full" style={{width: '85%'}}></div>
+                <div
+                  className="bg-blue-400 h-2 rounded-full"
+                  style={{ width: "85%" }}
+                ></div>
               </div>
               <p className="text-sm text-gray-400 mt-2">+8% from last week</p>
             </div>
@@ -223,14 +296,27 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-lg font-semibold text-white">Writing</h4>
                 <div className="w-8 h-8 bg-purple-900 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  <svg
+                    className="w-4 h-4 text-purple-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
                   </svg>
                 </div>
               </div>
               <div className="text-3xl font-bold text-purple-400 mb-2">72%</div>
               <div className="w-full bg-gray-700 rounded-full h-2">
-                <div className="bg-purple-400 h-2 rounded-full" style={{width: '72%'}}></div>
+                <div
+                  className="bg-purple-400 h-2 rounded-full"
+                  style={{ width: "72%" }}
+                ></div>
               </div>
               <p className="text-sm text-gray-400 mt-2">+3% from last week</p>
             </div>
@@ -239,14 +325,27 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-lg font-semibold text-white">Speaking</h4>
                 <div className="w-8 h-8 bg-red-900 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  <svg
+                    className="w-4 h-4 text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                    />
                   </svg>
                 </div>
               </div>
               <div className="text-3xl font-bold text-red-400 mb-2">69%</div>
               <div className="w-full bg-gray-700 rounded-full h-2">
-                <div className="bg-red-400 h-2 rounded-full" style={{width: '69%'}}></div>
+                <div
+                  className="bg-red-400 h-2 rounded-full"
+                  style={{ width: "69%" }}
+                ></div>
               </div>
               <p className="text-sm text-gray-400 mt-2">+2% from last week</p>
             </div>
@@ -256,24 +355,28 @@ export default function Dashboard() {
           <div className="grid lg:grid-cols-2 gap-8 mb-8">
             {/* Skills Comparison Bar Chart */}
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-              <h4 className="text-xl font-semibold text-white mb-4">Skills Comparison</h4>
+              <h4 className="text-xl font-semibold text-white mb-4">
+                Skills Comparison
+              </h4>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={[
-                  { skill: 'Listening', score: 78, color: '#10b981' },
-                  { skill: 'Reading', score: 85, color: '#3b82f6' },
-                  { skill: 'Writing', score: 72, color: '#8b5cf6' },
-                  { skill: 'Speaking', score: 69, color: '#ef4444' }
-                ]}>
+                <BarChart
+                  data={[
+                    { skill: "Listening", score: 78, color: "#10b981" },
+                    { skill: "Reading", score: 85, color: "#3b82f6" },
+                    { skill: "Writing", score: 72, color: "#8b5cf6" },
+                    { skill: "Speaking", score: 69, color: "#ef4444" },
+                  ]}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="skill" tick={{ fill: '#9ca3af' }} />
-                  <YAxis tick={{ fill: '#9ca3af' }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1f2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#ffffff'
-                    }} 
+                  <XAxis dataKey="skill" tick={{ fill: "#9ca3af" }} />
+                  <YAxis tick={{ fill: "#9ca3af" }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #374151",
+                      borderRadius: "8px",
+                      color: "#ffffff",
+                    }}
                   />
                   <Bar dataKey="score" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -282,30 +385,84 @@ export default function Dashboard() {
 
             {/* Progress Over Time Line Chart */}
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-              <h4 className="text-xl font-semibold text-white mb-4">Progress Over Time</h4>
+              <h4 className="text-xl font-semibold text-white mb-4">
+                Progress Over Time
+              </h4>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={[
-                  { week: 'Week 1', Listening: 65, Reading: 70, Writing: 60, Speaking: 58 },
-                  { week: 'Week 2', Listening: 68, Reading: 74, Writing: 63, Speaking: 61 },
-                  { week: 'Week 3', Listening: 72, Reading: 78, Writing: 67, Speaking: 64 },
-                  { week: 'Week 4', Listening: 75, Reading: 81, Writing: 69, Speaking: 67 },
-                  { week: 'Week 5', Listening: 78, Reading: 85, Writing: 72, Speaking: 69 }
-                ]}>
+                <LineChart
+                  data={[
+                    {
+                      week: "Week 1",
+                      Listening: 65,
+                      Reading: 70,
+                      Writing: 60,
+                      Speaking: 58,
+                    },
+                    {
+                      week: "Week 2",
+                      Listening: 68,
+                      Reading: 74,
+                      Writing: 63,
+                      Speaking: 61,
+                    },
+                    {
+                      week: "Week 3",
+                      Listening: 72,
+                      Reading: 78,
+                      Writing: 67,
+                      Speaking: 64,
+                    },
+                    {
+                      week: "Week 4",
+                      Listening: 75,
+                      Reading: 81,
+                      Writing: 69,
+                      Speaking: 67,
+                    },
+                    {
+                      week: "Week 5",
+                      Listening: 78,
+                      Reading: 85,
+                      Writing: 72,
+                      Speaking: 69,
+                    },
+                  ]}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="week" tick={{ fill: '#9ca3af' }} />
-                  <YAxis tick={{ fill: '#9ca3af' }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1f2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#ffffff'
-                    }} 
+                  <XAxis dataKey="week" tick={{ fill: "#9ca3af" }} />
+                  <YAxis tick={{ fill: "#9ca3af" }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #374151",
+                      borderRadius: "8px",
+                      color: "#ffffff",
+                    }}
                   />
-                  <Line type="monotone" dataKey="Listening" stroke="#10b981" strokeWidth={2} />
-                  <Line type="monotone" dataKey="Reading" stroke="#3b82f6" strokeWidth={2} />
-                  <Line type="monotone" dataKey="Writing" stroke="#8b5cf6" strokeWidth={2} />
-                  <Line type="monotone" dataKey="Speaking" stroke="#ef4444" strokeWidth={2} />
+                  <Line
+                    type="monotone"
+                    dataKey="Listening"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="Reading"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="Writing"
+                    stroke="#8b5cf6"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="Speaking"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -313,15 +470,33 @@ export default function Dashboard() {
 
           {/* Overall Performance Radial Chart */}
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-            <h4 className="text-xl font-semibold text-white mb-4">Overall IELTS Performance</h4>
+            <h4 className="text-xl font-semibold text-white mb-4">
+              Overall IELTS Performance
+            </h4>
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <ResponsiveContainer width="100%" height={300}>
-                  <RadialBarChart cx="50%" cy="50%" innerRadius="20%" outerRadius="80%" data={[
-                    { name: 'Overall Score', value: 76, fill: '#3b82f6' }
-                  ]}>
-                    <RadialBar dataKey="value" cornerRadius={10} fill="#3b82f6" />
-                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-white text-2xl font-bold">
+                  <RadialBarChart
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="20%"
+                    outerRadius="80%"
+                    data={[
+                      { name: "Overall Score", value: 76, fill: "#3b82f6" },
+                    ]}
+                  >
+                    <RadialBar
+                      dataKey="value"
+                      cornerRadius={10}
+                      fill="#3b82f6"
+                    />
+                    <text
+                      x="50%"
+                      y="50%"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="fill-white text-2xl font-bold"
+                    >
                       76%
                     </text>
                   </RadialBarChart>
@@ -330,8 +505,12 @@ export default function Dashboard() {
               <div className="flex-1 pl-8">
                 <div className="space-y-4">
                   <div className="text-center">
-                    <h5 className="text-lg font-semibold text-white mb-2">IELTS Band Equivalent</h5>
-                    <div className="text-4xl font-bold text-blue-400 mb-2">6.5</div>
+                    <h5 className="text-lg font-semibold text-white mb-2">
+                      IELTS Band Equivalent
+                    </h5>
+                    <div className="text-4xl font-bold text-blue-400 mb-2">
+                      6.5
+                    </div>
                     <p className="text-gray-400">Competent User</p>
                   </div>
                   <div className="space-y-2">
@@ -361,9 +540,7 @@ export default function Dashboard() {
               Tests Completed
             </h4>
             <p className="text-3xl font-bold text-blue-400">12</p>
-            <p className="text-sm text-gray-400">
-              Great progress this month!
-            </p>
+            <p className="text-sm text-gray-400">Great progress this month!</p>
           </div>
 
           <div className="bg-gray-900 rounded-lg shadow p-6 border border-gray-700">
@@ -371,9 +548,7 @@ export default function Dashboard() {
               Average Score
             </h4>
             <p className="text-3xl font-bold text-green-400">76%</p>
-            <p className="text-sm text-gray-400">
-              Improved by 8% this week
-            </p>
+            <p className="text-sm text-gray-400">Improved by 8% this week</p>
           </div>
 
           <div className="bg-gray-900 rounded-lg shadow p-6 border border-gray-700">
@@ -392,6 +567,18 @@ export default function Dashboard() {
           </button>
         </div>
       </main>
+
+      {/* Test Setup Popup */}
+      {showPopup && activeTestType && (
+        <TestSetupPopup
+          isOpen={showPopup}
+          onClose={() => {
+            setShowPopup(false);
+            setActiveTestType(null);
+          }}
+          testType={activeTestType}
+        />
+      )}
     </div>
   );
 }

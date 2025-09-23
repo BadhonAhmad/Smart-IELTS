@@ -1,9 +1,21 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import VoiceAssistant from "@/components/VoiceAssistant";
 
 export default function SpeakingPage() {
+  const [userPrompt, setUserPrompt] = useState<string>("");
+
+  // Get user prompt from localStorage on component mount
+  useEffect(() => {
+    const prompt = localStorage.getItem("speakingTestPrompt");
+    if (prompt) {
+      setUserPrompt(prompt);
+      // Clear it after use
+      localStorage.removeItem("speakingTestPrompt");
+    }
+  }, []);
   return (
     <div className="min-h-screen bg-black">
       {/* Header */}
@@ -35,6 +47,37 @@ export default function SpeakingPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* User Prompt Display */}
+        {userPrompt && (
+          <div className="mb-6 bg-blue-900/20 border border-blue-600/30 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-5 h-5 text-blue-400 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-blue-300 mb-1">
+                  Your Test Request:
+                </h3>
+                <p className="text-gray-300 text-sm italic">
+                  &quot;{userPrompt}&quot;
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-white mb-4">
             AI-Powered Speaking Practice

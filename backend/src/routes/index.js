@@ -5,6 +5,8 @@ const router = express.Router();
 const authRoutes = require('./auth');
 const questionRoutes = require('./questions');
 const listeningRoutes = require('./listening');
+const geminiRoutes = require('./gemini');
+const readingRoutes = require('./reading');
 
 // Import controller modules
 const { exampleController, healthController } = require('../controllers/index');
@@ -21,6 +23,12 @@ router.use('/questions', questionRoutes);
 // Listening exercise routes
 router.use('/listening', listeningRoutes);
 
+// Gemini AI routes
+router.use('/gemini', geminiRoutes);
+
+// Reading test routes
+router.use('/reading', readingRoutes);
+
 // API version
 router.get('/', (req, res) => {
   res.json({
@@ -31,6 +39,8 @@ router.get('/', (req, res) => {
       auth: '/auth',
       questions: '/questions',
       listening: '/listening',
+      gemini: '/gemini',
+      reading: '/reading',
       example: '/example'
     }
   });
