@@ -54,6 +54,7 @@ export default function WritingTest() {
   const [uploadedAnswers, setUploadedAnswers] = useState<UploadedAnswer[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [expandedInstructions, setExpandedInstructions] = useState<Set<number>>(new Set());
 
   // Mock writing questions from MCP server
   const writingQuestions: WritingQuestion[] = [
@@ -119,6 +120,18 @@ export default function WritingTest() {
 
   const handleQuestionSelect = (questionId: number) => {
     setSelectedQuestion(questionId);
+  };
+
+  const toggleInstructionsExpanded = (questionId: number) => {
+    setExpandedInstructions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(questionId)) {
+        newSet.delete(questionId);
+      } else {
+        newSet.add(questionId);
+      }
+      return newSet;
+    });
   };
 
   const handleImageUpload = (
@@ -336,25 +349,32 @@ export default function WritingTest() {
   return (
     <div className="min-h-screen bg-black">
       {/* Header */}
-      <header className="bg-gray-900 shadow-sm border-b border-gray-700">
+      <header className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 shadow-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <Link
                 href="/dashboard"
-                className="text-blue-400 hover:text-blue-300"
+                className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-2"
               >
-                ← Back to Dashboard
+                <span>←</span>
+                <span>Back to Dashboard</span>
               </Link>
-              <h1 className="text-2xl font-bold text-white">
-                IELTS Writing Test
-              </h1>
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">✍️</span>
+                <h1 className="text-3xl font-bold text-white">
+                  IELTS Writing Test
+                </h1>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-300">MCP Questions:</span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-800 text-green-200">
-                Loaded
-              </span>
+              <div className="text-right">
+                <span className="text-sm text-gray-300 block">MCP Questions:</span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-800 text-green-200">
+                  <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                  Active & Loaded
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -362,16 +382,42 @@ export default function WritingTest() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Instructions */}
-        <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-bold text-blue-300 mb-3">
-            📋 Writing Test Instructions
-          </h2>
-          <div className="text-gray-300 space-y-2">
-            <p>• Choose a writing task from the questions below</p>
-            <p>• Write your answer on paper using pen/pencil</p>
-            <p>• Take a clear photo of your written answer</p>
-            <p>• Upload the photo for AI evaluation and feedback</p>
-            <p>• Ensure good lighting and legible handwriting</p>
+        <div className="bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-600 rounded-xl p-6 mb-8 shadow-lg">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="text-2xl">📋</div>
+            <h2 className="text-xl font-bold text-blue-300">
+              Writing Test Instructions
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">1.</span>
+                <p className="text-gray-300 text-sm">Choose a writing task from the questions below</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">2.</span>
+                <p className="text-gray-300 text-sm">Write your answer on paper using pen/pencil</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">3.</span>
+                <p className="text-gray-300 text-sm">Take a clear photo of your written answer</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">4.</span>
+                <p className="text-gray-300 text-sm">Upload the photo using the upload button on the right</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">5.</span>
+                <p className="text-gray-300 text-sm">Get instant AI evaluation and detailed feedback</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">💡</span>
+                <p className="text-yellow-300 text-sm font-medium">Ensure good lighting and legible handwriting for best results</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -380,7 +426,7 @@ export default function WritingTest() {
           <h2 className="text-2xl font-bold text-white mb-6">
             Select a Writing Task
           </h2>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-6">
             {writingQuestions.map((question) => {
               const uploadedAnswer = getUploadedAnswer(question.id);
               const isSelected = selectedQuestion === question.id;
@@ -388,59 +434,200 @@ export default function WritingTest() {
               return (
                 <div
                   key={question.id}
-                  className={`bg-gray-900 rounded-lg shadow-lg border-2 transition-all duration-300 cursor-pointer ${
+                  className={`bg-gray-900 rounded-lg shadow-lg border-2 transition-all duration-300 ${
                     isSelected
                       ? "border-blue-500 shadow-xl"
                       : "border-gray-600 hover:border-gray-500"
                   }`}
-                  onClick={() => handleQuestionSelect(question.id)}
                 >
                   <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-2xl">
-                          {getQuestionIcon(question.type)}
-                        </span>
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">
-                            {question.title}
-                          </h3>
-                          <p className="text-sm text-gray-300">
-                            {question.description}
-                          </p>
+                    <div className="flex flex-col lg:flex-row gap-6">
+                      {/* Left Side - Task Information */}
+                      <div 
+                        className="flex-1 cursor-pointer"
+                        onClick={() => handleQuestionSelect(question.id)}
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-3xl">
+                              {getQuestionIcon(question.type)}
+                            </span>
+                            <div>
+                              <h3 className="text-xl font-semibold text-white">
+                                {question.title}
+                              </h3>
+                              <p className="text-sm text-gray-300">
+                                {question.description}
+                              </p>
+                            </div>
+                          </div>
+                          {uploadedAnswer && getStatusBadge(uploadedAnswer.status)}
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
+                          <span>⏱️ {question.timeLimit}</span>
+                          <span>📝 {question.wordCount}</span>
+                        </div>
+
+                        {question.diagram && (
+                          <div className="bg-gray-700 border border-gray-600 rounded p-3 mb-4">
+                            <p className="text-sm text-gray-300">
+                              <span className="font-medium">Diagram:</span>{" "}
+                              {question.diagram}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          {question.instructions.map((instruction, index) => (
+                              <p key={index} className="text-sm text-gray-300">
+                                • {instruction}
+                              </p>
+                            ))}
+                        </div>
+
+                        {isSelected && (
+                          <div className="mt-4 p-3 bg-blue-900/30 border border-blue-500/50 rounded-lg">
+                            <p className="text-sm text-blue-300">
+                              ✓ Selected - Click the upload area to submit your answer
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Side - Photo Upload Section */}
+                      <div className="w-full lg:w-80 xl:w-96">
+                        <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
+                          <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                            <span>📷</span>
+                            Upload Your Answer
+                          </h4>
+
+                          {!uploadedAnswer ? (
+                            <div className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center hover:border-blue-400 transition-colors bg-gray-700/50">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(e, question.id)}
+                                className="hidden"
+                                id={`upload-${question.id}`}
+                                disabled={isUploading}
+                              />
+                              <label
+                                htmlFor={`upload-${question.id}`}
+                                className="cursor-pointer block"
+                              >
+                                <div className="text-3xl text-gray-400 mb-3">📸</div>
+                                <h5 className="text-sm font-medium text-white mb-2">
+                                  {isUploading && selectedQuestion === question.id
+                                    ? "Uploading..."
+                                    : "Click to Upload Photo"}
+                                </h5>
+                                <p className="text-xs text-gray-300 mb-2">
+                                  Take a clear photo of your written answer
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  JPG, PNG, HEIC (Max 5MB)
+                                </p>
+                              </label>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {/* Preview Image */}
+                              <div className="relative">
+                                <img
+                                  src={uploadedAnswer.imageUrl}
+                                  alt="Uploaded answer"
+                                  className="w-full h-32 object-cover rounded border border-gray-600"
+                                />
+                                <div className="absolute top-2 right-2">
+                                  {getStatusBadge(uploadedAnswer.status)}
+                                </div>
+                              </div>
+
+                              {/* Upload Info */}
+                              <div className="bg-green-900/30 border border-green-600/50 rounded p-3">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-green-400 text-sm">✓</span>
+                                  <span className="text-sm font-medium text-green-300">
+                                    Answer Uploaded
+                                  </span>
+                                </div>
+                                <p className="text-xs text-green-400">
+                                  {uploadedAnswer.uploadTime}
+                                </p>
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex gap-2">
+                                <label
+                                  htmlFor={`replace-${question.id}`}
+                                  className="flex-1 text-center text-xs px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded cursor-pointer transition-colors"
+                                >
+                                  Replace Image
+                                </label>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleImageUpload(e, question.id)}
+                                  className="hidden"
+                                  id={`replace-${question.id}`}
+                                />
+                                {uploadedAnswer.evaluation && (
+                                  <button
+                                    onClick={() => handleQuestionSelect(question.id)}
+                                    className="flex-1 text-xs px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                                  >
+                                    View Results
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Score Preview */}
+                              {uploadedAnswer.evaluation && (
+                                <div className="bg-blue-900/30 border border-blue-600/50 rounded p-3">
+                                  <div className="text-center">
+                                    <p className="text-xs text-blue-300 mb-1">Overall Score</p>
+                                    <p className="text-lg font-bold text-blue-200">
+                                      {uploadedAnswer.evaluation.overallScore}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Upload Progress (only for currently uploading question) */}
+                          {isUploading && selectedQuestion === question.id && (
+                            <div className="mt-3">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-gray-300">
+                                  Processing...
+                                </span>
+                                <span className="text-xs text-gray-300">
+                                  {Math.round(uploadProgress)}%
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-600 rounded-full h-1.5">
+                                <div
+                                  className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                                  style={{ width: `${uploadProgress}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Quick Task Info */}
+                        <div className="mt-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+                          <div className="flex items-center justify-between text-xs text-gray-400">
+                            <span>Type: {question.type.toUpperCase()}</span>
+                            <span>
+                              {question.type === 'essay' ? '🎯' : question.type === 'diagram' ? '📊' : '✉️'}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      {uploadedAnswer && getStatusBadge(uploadedAnswer.status)}
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
-                      <span>⏱️ {question.timeLimit}</span>
-                      <span>📝 {question.wordCount}</span>
-                    </div>
-
-                    {question.diagram && (
-                      <div className="bg-gray-700 border border-gray-600 rounded p-3 mb-4">
-                        <p className="text-sm text-gray-300">
-                          <span className="font-medium">Diagram:</span>{" "}
-                          {question.diagram}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      {question.instructions
-                        .slice(0, 2)
-                        .map((instruction, index) => (
-                          <p key={index} className="text-sm text-gray-300">
-                            • {instruction}
-                          </p>
-                        ))}
-                      {question.instructions.length > 2 && (
-                        <p className="text-sm text-blue-400">
-                          +{question.instructions.length - 2} more
-                          instructions...
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -837,10 +1024,16 @@ export default function WritingTest() {
 
         {/* Upload Summary */}
         {uploadedAnswers.length > 0 && (
-          <div className="bg-gray-900 rounded-lg shadow-lg p-6 border border-gray-700">
-            <h2 className="text-xl font-bold text-white mb-4">
-              📋 Uploaded Answers Summary
-            </h2>
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl shadow-lg p-6 border border-gray-700">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-2xl">📋</span>
+              <h2 className="text-xl font-bold text-white">
+                Uploaded Answers Summary
+              </h2>
+              <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                {uploadedAnswers.length} answer{uploadedAnswers.length > 1 ? 's' : ''}
+              </span>
+            </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {uploadedAnswers.map((answer) => {
                 const question = writingQuestions.find(
@@ -849,14 +1042,15 @@ export default function WritingTest() {
                 return (
                   <div
                     key={answer.questionId}
-                    className="border border-gray-600 rounded-lg p-4 bg-gray-800"
+                    className="border border-gray-600 rounded-lg p-4 bg-gray-800 hover:bg-gray-750 transition-colors cursor-pointer"
+                    onClick={() => handleQuestionSelect(answer.questionId)}
                   >
                     <div className="flex items-center space-x-3 mb-3">
                       <span className="text-xl">
                         {getQuestionIcon(question?.type || "")}
                       </span>
                       <div className="flex-1">
-                        <h4 className="font-medium text-white text-sm">
+                        <h4 className="font-medium text-white text-sm line-clamp-1">
                           {question?.title}
                         </h4>
                         <p className="text-xs text-gray-400">
@@ -865,11 +1059,23 @@ export default function WritingTest() {
                       </div>
                       {getStatusBadge(answer.status)}
                     </div>
-                    <img
-                      src={answer.imageUrl}
-                      alt="Answer preview"
-                      className="w-full h-20 object-cover rounded border"
-                    />
+                    <div className="relative">
+                      <img
+                        src={answer.imageUrl}
+                        alt="Answer preview"
+                        className="w-full h-20 object-cover rounded border border-gray-600"
+                      />
+                      {answer.evaluation && (
+                        <div className="absolute bottom-1 right-1 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                          Score: {answer.evaluation.overallScore}
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-xs text-blue-400 hover:text-blue-300">
+                        Click to view details
+                      </span>
+                    </div>
                   </div>
                 );
               })}
