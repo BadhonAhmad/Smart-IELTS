@@ -1,4 +1,4 @@
-const { generateMCQQuestions, generateIELTSQuestions, generatePassage, generateIELTSPassage, generateFillBlankQuestions, generateQuestionsFromPassage } = require('../services/geminiService');
+const { generateMCQQuestions, generateIELTSQuestions, generatePassage, generateIELTSPassage, generateFillBlankQuestions, generateQuestionsFromPassage, analyzeWritingImage } = require('../services/geminiService');
 
 /**
  * Generate general MCQ questions
@@ -390,6 +390,96 @@ const generateMCQFromPassage = async (req, res) => {
   }
 };
 
+/**
+ * Analyze writing image and provide IELTS scoring
+ * POST /api/gemini/analyze-writing-image
+ */
+const analyzeWriting = async (req, res) => {
+  try {
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image file uploaded'
+      });
+    }
+
+    // Get question details from request body
+    const { question } = req.body;
+    
+    if (!question) {
+      return res.status(400).json({
+        success: false,
+        message: 'Question details are required'
+      });
+    }
+
+    // Parse question if it's a string
+    let questionData;
+    try {
+      questionData = typeof question === 'string' ? JSON.parse(question) : question;
+    } catch (parseError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid question data format'
+      });
+    }
+
+    // Validate file type
+    if (!req.file.mimetype.startsWith('image/')) {
+      return res.status(400).json({
+        success: false,
+        message: 'File must be an image'
+      });
+    }
+
+    // Validate file size (max 10MB)
+    if (req.file.size > 10 * 1024 * 1024) {
+      return res.status(400).json({
+        success: false,
+        message: 'File size must be less than 10MB'
+      });
+    }
+
+    console.log('Analyzing writing image:', {
+      filename: req.file.filename,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      questionId: questionData.id
+    });
+
+    // Analyze the image using Gemini
+    const result = await analyzeWritingImage(req.file.buffer, questionData);
+
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to analyze writing image',
+        error: result.error
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Writing analysis completed successfully',
+      data: result.data,
+      metadata: {
+        filename: req.file.filename,
+        fileSize: req.file.size,
+        processedAt: new Date().toISOString(),
+        questionId: questionData.id
+      }
+    });
+  } catch (error) {
+    console.error('Error in analyzeWriting controller:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   generateMCQ,
   generateIELTS,
@@ -398,5 +488,6 @@ module.exports = {
   generateIELTSReadingPassage,
   generateFillBlank,
   generateMCQFromPassage,
-  handleChat
+  handleChat,
+  analyzeWriting
 };

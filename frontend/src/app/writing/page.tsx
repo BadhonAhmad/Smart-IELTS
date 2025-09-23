@@ -15,30 +15,44 @@ interface WritingQuestion {
   diagram?: string; // For diagram-based questions
 }
 
-interface SpellingError {
-  word: string;
-  suggestion: string;
-  position: number;
-}
 
-interface GrammarError {
-  text: string;
-  correction: string;
-  rule: string;
-  position: number;
-}
 
 interface WritingEvaluation {
-  overallScore: number;
-  taskAchievement: number;
-  coherenceCohesion: number;
-  lexicalResource: number;
-  grammaticalRange: number;
   extractedText: string;
   wordCount: number;
-  spellingErrors: SpellingError[];
-  grammarErrors: GrammarError[];
+  scores: {
+    overallScore: number;
+    taskAchievement: number;
+    coherenceCohesion: number;
+    lexicalResource: number;
+    grammaticalRange: number;
+  };
+  analysis: {
+    taskResponse: string;
+    organization: string;
+    vocabulary: string;
+    grammar: string;
+  };
+  errors: {
+    spelling: Array<{
+      word: string;
+      correction: string;
+      position: number;
+    }>;
+    grammar: Array<{
+      error: string;
+      correction: string;
+      explanation: string;
+      position: number;
+    }>;
+  };
   feedback: string;
+  bandDescriptors: {
+    taskAchievement: string;
+    coherenceCohesion: string;
+    lexicalResource: string;
+    grammaticalRange: string;
+  };
 }
 
 interface UploadedAnswer {
@@ -335,7 +349,7 @@ export default function WritingTest() {
     });
   };
 
-  const handleImageUpload = (
+  const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
     questionId: number
   ) => {
@@ -348,74 +362,100 @@ export default function WritingTest() {
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File size should be less than 5MB");
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size should be less than 10MB");
       return;
     }
 
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Simulate upload progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setIsUploading(false);
+    try {
+      // Find the question details
+      const question = displayedQuestions.find(q => q.id === questionId);
+      if (!question) {
+        throw new Error('Question not found');
+      }
 
-          // Create mock uploaded answer
-          const mockImageUrl = URL.createObjectURL(file);
-          const newUpload: UploadedAnswer = {
-            questionId,
-            imageUrl: mockImageUrl,
-            uploadTime: new Date().toLocaleString(),
-            status: "uploaded",
-          };
+      // Create form data
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('question', JSON.stringify(question));
 
-          setUploadedAnswers((prev) => {
-            // Remove any existing upload for this question
-            const filtered = prev.filter(
-              (answer) => answer.questionId !== questionId
-            );
-            return [...filtered, newUpload];
-          });
+      // Start upload progress simulation
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => Math.min(prev + Math.random() * 15, 90));
+      }, 200);
 
-          // Simulate processing after upload
-          setTimeout(() => {
-            setUploadedAnswers((prev) =>
-              prev.map((answer) =>
-                answer.questionId === questionId
-                  ? { ...answer, status: "processing" as const }
-                  : answer
-              )
-            );
+      // Create mock uploaded answer immediately for UI feedback
+      const mockImageUrl = URL.createObjectURL(file);
+      const newUpload: UploadedAnswer = {
+        questionId,
+        imageUrl: mockImageUrl,
+        uploadTime: new Date().toLocaleString(),
+        status: "uploaded",
+      };
 
-            // Generate mock evaluation after processing
-            setTimeout(() => {
-              const mockEvaluation = generateMockEvaluation(questionId);
-              setUploadedAnswers((prev) =>
-                prev.map((answer) =>
-                  answer.questionId === questionId
-                    ? {
-                        ...answer,
-                        status: "reviewed" as const,
-                        evaluation: mockEvaluation,
-                      }
-                    : answer
-                )
-              );
-            }, 3000); // 3 seconds of processing time
-          }, 1000);
-
-          return 100;
-        }
-        return prev + Math.random() * 20;
+      setUploadedAnswers((prev) => {
+        // Remove any existing upload for this question
+        const filtered = prev.filter(
+          (answer) => answer.questionId !== questionId
+        );
+        return [...filtered, newUpload];
       });
-    }, 150);
+
+      // Call the backend API
+      const response = await fetch('http://localhost:4000/api/gemini/analyze-writing-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to analyze image');
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Analysis failed');
+      }
+
+      // Update the upload status and add evaluation
+      setUploadedAnswers((prev) =>
+        prev.map((answer) =>
+          answer.questionId === questionId
+            ? {
+                ...answer,
+                status: "reviewed" as const,
+                evaluation: result.data,
+              }
+            : answer
+        )
+      );
+
+      setIsUploading(false);
+      console.log('Analysis completed:', result.data);
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      setIsUploading(false);
+      setUploadProgress(0);
+      
+      // Remove the failed upload
+      setUploadedAnswers((prev) =>
+        prev.filter((answer) => answer.questionId !== questionId)
+      );
+      
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
-  // Generate mock evaluation based on question type
+  // Generate mock evaluation based on question type (FALLBACK ONLY - TODO: Remove after real API integration)
   const generateMockEvaluation = (questionId: number): WritingEvaluation => {
     const question = allWritingQuestions.find((q) => q.id === questionId);
     const questionType = question?.type || "essay";
@@ -423,9 +463,9 @@ export default function WritingTest() {
     // Mock extracted text based on question type
     const mockTexts = {
       essay:
-        "Climate change is one of the most pressing issues of our time. Both individuals and governments have important roles to play in finding solutions. Individual actions such as reducing energy consumption, using public transportation, and recycling can make a significant impact. However, govenment policies are equally crucial. For example, investing in renewable energy sources and implementing carbon taxes can drive systemic change. In my opinion, a combination of both approaches is necesary to address this global challenge effectively.",
+        "Climate change is one of the most pressing issues of our time. Both individuals and governments have important roles to play in finding solutions. Individual actions such as reducing energy consumption, using public transportation, and recycling can make a significant impact. However, government policies are equally crucial. For example, investing in renewable energy sources and implementing carbon taxes can drive systemic change. In my opinion, a combination of both approaches is necessary to address this global challenge effectively.",
       diagram:
-        "The water cycle is a continuous process that involves several stages. First, water evaporates from oceans, lakes, and rivers due to solar energy. The evaporated water rises into the atmosphere as water vapor. Next, condensation occurs when the water vapor cools and forms clouds. Precipitaton then happens when the water droplets in clouds become too heavy and fall as rain, snow, or hail. Finally, the water collects in water bodies, completing the cycle.",
+        "The water cycle is a continuous process that involves several stages. First, water evaporates from oceans, lakes, and rivers due to solar energy. The evaporated water rises into the atmosphere as water vapor. Next, condensation occurs when the water vapor cools and forms clouds. Precipitation then happens when the water droplets in clouds become too heavy and fall as rain, snow, or hail. Finally, the water collects in water bodies, completing the cycle.",
       letter:
         "Dear Customer Service Manager, I am writing to express my dissatisfaction with a recent online purchase I made from your company. On March 15th, I ordered a laptop computer (Order #12345) for $899. However, when the package arrived three days later, I discovered that the screen was cracked and the keyboard was missing several keys. This is completely unacceptable for a brand new product. I would like you to replace the defective laptop with a new one and provide a prepaid shipping label for returning the damaged item. I expect this matter to be resolved within 10 business days. I look forward to your prompt response. Sincerely, John Smith",
     };
@@ -433,37 +473,26 @@ export default function WritingTest() {
     const extractedText = mockTexts[questionType];
 
     // Mock spelling errors
-    const spellingErrors: SpellingError[] = [
+    const spellingErrors = [
       {
         word: "govenment",
-        suggestion: "government",
+        correction: "government",
         position: extractedText.indexOf("govenment"),
       },
       {
         word: "necesary",
-        suggestion: "necessary",
+        correction: "necessary",
         position: extractedText.indexOf("necesary"),
-      },
-      {
-        word: "Precipitaton",
-        suggestion: "Precipitation",
-        position: extractedText.indexOf("Precipitaton"),
       },
     ].filter((error) => error.position !== -1);
 
     // Mock grammar errors
-    const grammarErrors: GrammarError[] = [
+    const grammarErrors = [
       {
-        text: "is necesary",
+        error: "is necesary",
         correction: "is necessary",
-        rule: "Subject-verb agreement",
+        explanation: "Spelling error in adjective",
         position: extractedText.indexOf("is necesary"),
-      },
-      {
-        text: "drive systemic",
-        correction: "drive systematic",
-        rule: "Word choice",
-        position: extractedText.indexOf("drive systemic"),
       },
     ].filter((error) => error.position !== -1);
 
@@ -492,16 +521,32 @@ export default function WritingTest() {
     };
 
     return {
-      overallScore,
-      taskAchievement: scores.task,
-      coherenceCohesion: scores.coherence,
-      lexicalResource: scores.lexical,
-      grammaticalRange: scores.grammar,
       extractedText,
       wordCount: extractedText.split(" ").length,
-      spellingErrors,
-      grammarErrors,
+      scores: {
+        overallScore,
+        taskAchievement: scores.task,
+        coherenceCohesion: scores.coherence,
+        lexicalResource: scores.lexical,
+        grammaticalRange: scores.grammar,
+      },
+      analysis: {
+        taskResponse: "Good understanding of the task requirements with adequate response.",
+        organization: "Well-structured with clear progression of ideas.",
+        vocabulary: "Appropriate vocabulary range with some inaccuracies.",
+        grammar: "Mix of simple and complex structures with minor errors."
+      },
+      errors: {
+        spelling: spellingErrors,
+        grammar: grammarErrors,
+      },
       feedback: feedbacks[questionType],
+      bandDescriptors: {
+        taskAchievement: "Addresses the task with relevant ideas",
+        coherenceCohesion: "Generally well organized with clear progression",
+        lexicalResource: "Adequate range of vocabulary with some inaccuracies",
+        grammaticalRange: "Mix of simple and complex sentences with some errors"
+      }
     };
   };
 
@@ -813,7 +858,7 @@ export default function WritingTest() {
                                   <div className="text-center">
                                     <p className="text-xs text-blue-300 mb-1">Overall Score</p>
                                     <p className="text-lg font-bold text-blue-200">
-                                      {uploadedAnswer.evaluation.overallScore}
+                                      {uploadedAnswer.evaluation.scores.overallScore}
                                     </p>
                                   </div>
                                 </div>
@@ -1048,7 +1093,7 @@ export default function WritingTest() {
                       <p className="text-2xl font-bold text-blue-200">
                         {
                           getUploadedAnswer(selectedQuestion)?.evaluation
-                            ?.overallScore
+                            ?.scores.overallScore
                         }
                       </p>
                     </div>
@@ -1059,7 +1104,7 @@ export default function WritingTest() {
                       <p className="text-lg font-bold text-white">
                         {
                           getUploadedAnswer(selectedQuestion)?.evaluation
-                            ?.taskAchievement
+                            ?.scores.taskAchievement
                         }
                       </p>
                     </div>
@@ -1070,7 +1115,7 @@ export default function WritingTest() {
                       <p className="text-lg font-bold text-white">
                         {
                           getUploadedAnswer(selectedQuestion)?.evaluation
-                            ?.coherenceCohesion
+                            ?.scores.coherenceCohesion
                         }
                       </p>
                     </div>
@@ -1081,7 +1126,7 @@ export default function WritingTest() {
                       <p className="text-lg font-bold text-white">
                         {
                           getUploadedAnswer(selectedQuestion)?.evaluation
-                            ?.lexicalResource
+                            ?.scores.lexicalResource
                         }
                       </p>
                     </div>
@@ -1092,7 +1137,7 @@ export default function WritingTest() {
                       <p className="text-lg font-bold text-white">
                         {
                           getUploadedAnswer(selectedQuestion)?.evaluation
-                            ?.grammaticalRange
+                            ?.scores.grammaticalRange
                         }
                       </p>
                     </div>
@@ -1123,7 +1168,7 @@ export default function WritingTest() {
 
                   {/* Spelling Errors */}
                   {(getUploadedAnswer(selectedQuestion)?.evaluation
-                    ?.spellingErrors?.length || 0) > 0 && (
+                    ?.errors.spelling?.length || 0) > 0 && (
                     <div className="mb-6">
                       <h5 className="text-lg font-semibold text-white mb-3">
                         🔤 Spelling Errors
@@ -1131,7 +1176,7 @@ export default function WritingTest() {
                       <div className="space-y-2">
                         {getUploadedAnswer(
                           selectedQuestion
-                        )?.evaluation?.spellingErrors.map((error, index) => (
+                        )?.evaluation?.errors.spelling.map((error: any, index: number) => (
                           <div
                             key={index}
                             className="bg-red-900 border border-red-600 rounded-lg p-3"
@@ -1143,7 +1188,7 @@ export default function WritingTest() {
                                 </span>
                                 <span className="text-gray-400 mx-2">→</span>
                                 <span className="text-green-300 font-medium">
-                                  &ldquo;{error.suggestion}&rdquo;
+                                  &ldquo;{error.correction}&rdquo;
                                 </span>
                               </div>
                               <span className="text-xs text-red-400">
@@ -1158,7 +1203,7 @@ export default function WritingTest() {
 
                   {/* Grammar Errors */}
                   {(getUploadedAnswer(selectedQuestion)?.evaluation
-                    ?.grammarErrors?.length || 0) > 0 && (
+                    ?.errors.grammar?.length || 0) > 0 && (
                     <div className="mb-6">
                       <h5 className="text-lg font-semibold text-white mb-3">
                         📝 Grammar Issues
@@ -1166,7 +1211,7 @@ export default function WritingTest() {
                       <div className="space-y-2">
                         {getUploadedAnswer(
                           selectedQuestion
-                        )?.evaluation?.grammarErrors.map((error, index) => (
+                        )?.evaluation?.errors.grammar.map((error: any, index: number) => (
                           <div
                             key={index}
                             className="bg-yellow-900 border border-yellow-600 rounded-lg p-3"
@@ -1175,7 +1220,7 @@ export default function WritingTest() {
                               <div className="flex-1">
                                 <div className="mb-1">
                                   <span className="text-yellow-300 font-medium">
-                                    &ldquo;{error.text}&rdquo;
+                                    &ldquo;{error.error}&rdquo;
                                   </span>
                                   <span className="text-gray-400 mx-2">→</span>
                                   <span className="text-green-300 font-medium">
@@ -1183,7 +1228,7 @@ export default function WritingTest() {
                                   </span>
                                 </div>
                                 <div className="text-xs text-yellow-400">
-                                  Rule: {error.rule}
+                                  {error.explanation}
                                 </div>
                               </div>
                               <span className="text-xs text-yellow-400 ml-2">
@@ -1278,7 +1323,7 @@ export default function WritingTest() {
                       />
                       {answer.evaluation && (
                         <div className="absolute bottom-1 right-1 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                          Score: {answer.evaluation.overallScore}
+                          Score: {answer.evaluation.scores.overallScore}
                         </div>
                       )}
                     </div>
