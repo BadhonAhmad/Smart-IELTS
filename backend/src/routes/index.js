@@ -1,11 +1,25 @@
 const express = require('express');
 const router = express.Router();
 
+// Import route modules
+const authRoutes = require('./auth');
+const questionRoutes = require('./questions');
+const listeningRoutes = require('./listening');
+
 // Import controller modules
 const { exampleController, healthController } = require('../controllers/index');
 
 // Import middleware
 const { validateRequest, authMiddleware } = require('../middleware/index');
+
+// Authentication routes
+router.use('/auth', authRoutes);
+
+// Question management routes
+router.use('/questions', questionRoutes);
+
+// Listening exercise routes
+router.use('/listening', listeningRoutes);
 
 // API version
 router.get('/', (req, res) => {
@@ -14,6 +28,9 @@ router.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       health: '/health',
+      auth: '/auth',
+      questions: '/questions',
+      listening: '/listening',
       example: '/example'
     }
   });

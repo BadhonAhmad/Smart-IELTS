@@ -1,594 +1,596 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-interface ListeningQuestion {
+interface Question {
   id: number;
-  type: "multiple-choice" | "fill-blank" | "matching" | "short-answer";
   question: string;
-  options?: string[];
+  options: string[];
   correctAnswer: string;
 }
 
 export default function ListeningPage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [pdfContent, setPdfContent] = useState<string>("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentProgress, setCurrentProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(90); // Fixed duration for demo
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [questions, setQuestions] = useState<ListeningQuestion[]>([]);
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
   const [showResults, setShowResults] = useState(false);
   const [testStarted, setTestStarted] = useState(false);
+  const [audioLoaded, setAudioLoaded] = useState(false);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [audioStatus, setAudioStatus] = useState("🔊 Ready to play");
 
-  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const timeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const router = useRouter();
 
-  // Mock PDF content for demonstration
-  const mockPdfContent = `
-    Climate Change and Global Warming
+  // Simplified conversation script
+  const conversationScript =
+    "Hi Sarah! I'm so excited about our upcoming vacation. We've been planning this for months! I know, Lisa! I can't believe we finally booked it. So we're definitely going for 7 days, right? Yes, exactly 7 days. And I'm so glad we decided to fly instead of driving. The airplane tickets were a good deal. Absolutely! Flying will save us so much time. And our budget of 1500 dollars should be perfect for everything we want to do. I think so too. I'm particularly excited about visiting Paris first. It's been my dream destination for years! Paris will be amazing! The Eiffel Tower, the Louvre, all that history and culture. This is going to be the best vacation ever!";
 
-    Climate change refers to long-term shifts in global or regional climate patterns. 
-    Since the mid-20th century, scientists have observed unprecedented changes in Earth's climate system, 
-    primarily attributed to increased levels of carbon dioxide and other greenhouse gases produced by human activities.
+  // Simple audio generation and playback
+  const playAudio = async () => {
+    try {
+      setIsGeneratingAudio(true);
+      setAudioStatus("🎤 Generating audio...");
 
-    The effects of climate change are far-reaching and include rising sea levels, more frequent extreme weather events, 
-    changes in precipitation patterns, and shifts in ecosystems. These changes pose significant challenges to 
-    agriculture, water resources, human health, and economic development worldwide.
+      // Cancel any existing speech
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
 
-    International cooperation is essential to address climate change effectively. The Paris Agreement, 
-    signed in 2015, represents a global effort to limit global warming to well below 2 degrees Celsius 
-    above pre-industrial levels. Countries are working together to reduce greenhouse gas emissions 
-    and develop sustainable energy solutions.
-  `;
-
-  // Mock AI-generated questions
-  const mockQuestions: ListeningQuestion[] = [
-    {
-      id: 1,
-      type: "multiple-choice",
-      question: "According to the passage, climate change refers to:",
-      options: [
-        "Short-term weather variations",
-        "Long-term shifts in climate patterns",
-        "Only temperature changes",
-        "Seasonal variations",
-      ],
-      correctAnswer: "Long-term shifts in climate patterns",
-    },
-    {
-      id: 2,
-      type: "fill-blank",
-      question:
-        "The Paris Agreement was signed in _____ to limit global warming.",
-      correctAnswer: "2015",
-    },
-    {
-      id: 3,
-      type: "multiple-choice",
-      question:
-        "Which of the following is NOT mentioned as an effect of climate change?",
-      options: [
-        "Rising sea levels",
-        "Extreme weather events",
-        "Changes in ecosystems",
-        "Increased oil production",
-      ],
-      correctAnswer: "Increased oil production",
-    },
-    {
-      id: 4,
-      type: "short-answer",
-      question:
-        "What type of cooperation is essential to address climate change effectively?",
-      correctAnswer: "International cooperation",
-    },
-    {
-      id: 5,
-      type: "fill-blank",
-      question:
-        "Climate change poses challenges to agriculture, water resources, human health, and _____ development.",
-      correctAnswer: "economic",
-    },
-  ];
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type === "application/pdf") {
-      setSelectedFile(file);
-      simulateFileUpload(file);
-    }
-  };
-
-  const simulateFileUpload = (file: File) => {
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsUploading(false);
-          // Simulate PDF text extraction
-          setPdfContent(mockPdfContent);
-          setQuestions(mockQuestions);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
-  };
-
-  const startVoicePlayback = () => {
-    if (!pdfContent) return;
-
-    if (speechSynthesis.speaking) {
-      speechSynthesis.cancel();
-    }
-
-    const utterance = new SpeechSynthesisUtterance(pdfContent);
-    utterance.rate = playbackSpeed;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-
-    utterance.onstart = () => {
-      setIsPlaying(true);
-      setIsPaused(false);
-      setTestStarted(true);
-    };
-
-    utterance.onend = () => {
-      setIsPlaying(false);
-      setCurrentProgress(100);
-    };
-
-    utterance.onerror = () => {
-      setIsPlaying(false);
-    };
-
-    speechRef.current = utterance;
-    speechSynthesis.speak(utterance);
-
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      if (!speechSynthesis.speaking) {
-        clearInterval(progressInterval);
+      // Check if speech synthesis is available
+      if (!window.speechSynthesis) {
+        alert(
+          "Text-to-speech is not supported in your browser. Please try Chrome, Firefox, or Edge."
+        );
+        setIsGeneratingAudio(false);
         return;
       }
-      setCurrentProgress((prev) => Math.min(prev + 1, 99));
+
+      // Wait for voices to load
+      await new Promise((resolve) => {
+        if (speechSynthesis.getVoices().length > 0) {
+          resolve(true);
+        } else {
+          speechSynthesis.onvoiceschanged = () => resolve(true);
+        }
+      });
+
+      const utterance = new SpeechSynthesisUtterance(conversationScript);
+      utterance.rate = 0.9 * playbackSpeed;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      // Get a good English voice
+      const voices = speechSynthesis.getVoices();
+      const englishVoice =
+        voices.find(
+          (voice) =>
+            voice.lang.startsWith("en") && !voice.name.includes("Google")
+        ) ||
+        voices.find((voice) => voice.lang.startsWith("en")) ||
+        voices[0];
+
+      if (englishVoice) {
+        utterance.voice = englishVoice;
+      }
+
+      utterance.onstart = () => {
+        setIsPlaying(true);
+        setIsGeneratingAudio(false);
+        setAudioLoaded(true);
+        setAudioStatus("🔊 Playing conversation...");
+        startTimer();
+      };
+
+      utterance.onend = () => {
+        setIsPlaying(false);
+        setIsPaused(false);
+        setCurrentTime(duration);
+        setAudioStatus("✅ Audio completed");
+        if (timeIntervalRef.current) {
+          clearInterval(timeIntervalRef.current);
+        }
+      };
+
+      utterance.onerror = (event) => {
+        console.error("Speech synthesis error:", event);
+        setIsGeneratingAudio(false);
+        setAudioStatus("❌ Audio error - try again");
+      };
+
+      speechUtteranceRef.current = utterance;
+      speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.error("Audio generation error:", error);
+      setIsGeneratingAudio(false);
+      setAudioStatus("❌ Failed to generate audio");
+    }
+  };
+
+  const startTimer = () => {
+    if (timeIntervalRef.current) {
+      clearInterval(timeIntervalRef.current);
+    }
+
+    setCurrentTime(0);
+    timeIntervalRef.current = setInterval(() => {
+      setCurrentTime((prev) => {
+        if (prev >= duration) {
+          if (timeIntervalRef.current) {
+            clearInterval(timeIntervalRef.current);
+          }
+          return duration;
+        }
+        return prev + 1;
+      });
     }, 1000);
   };
 
-  const pauseVoicePlayback = () => {
+  useEffect(() => {
+    // Initialize speech synthesis
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      // Trigger voices loading
+      speechSynthesis.getVoices();
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = () => {
+          console.log("Voices loaded:", speechSynthesis.getVoices().length);
+        };
+      }
+    }
+
+    return () => {
+      // Cleanup on component unmount
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        speechSynthesis.cancel();
+      }
+      if (timeIntervalRef.current) {
+        clearInterval(timeIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Demo questions
+  const questions: Question[] = [
+    {
+      id: 1,
+      question: "What is the main topic of the conversation?",
+      options: [
+        "Planning a vacation",
+        "Discussing work schedules",
+        "Talking about the weather",
+        "Arranging a meeting",
+      ],
+      correctAnswer: "Planning a vacation",
+    },
+    {
+      id: 2,
+      question: "How long will the trip last?",
+      options: ["3 days", "5 days", "7 days", "10 days"],
+      correctAnswer: "7 days",
+    },
+    {
+      id: 3,
+      question: "What mode of transportation will they use?",
+      options: ["Car", "Train", "Airplane", "Bus"],
+      correctAnswer: "Airplane",
+    },
+    {
+      id: 4,
+      question: "What is their budget for the trip?",
+      options: ["$500", "$1000", "$1500", "$2000"],
+      correctAnswer: "$1500",
+    },
+    {
+      id: 5,
+      question: "Which city will they visit first?",
+      options: ["Paris", "London", "Rome", "Madrid"],
+      correctAnswer: "Paris",
+    },
+  ];
+
+  const startDemo = () => {
+    setTestStarted(true);
+    setCurrentTime(0);
+    setAudioStatus("🎵 Starting audio...");
+    playAudio();
+  };
+
+  const pauseDemo = () => {
     if (speechSynthesis.speaking && !speechSynthesis.paused) {
       speechSynthesis.pause();
       setIsPaused(true);
+      setIsPlaying(false);
+      setAudioStatus("⏸️ Audio paused");
+      if (timeIntervalRef.current) {
+        clearInterval(timeIntervalRef.current);
+      }
     }
   };
 
-  const resumeVoicePlayback = () => {
+  const resumeDemo = () => {
     if (speechSynthesis.paused) {
       speechSynthesis.resume();
       setIsPaused(false);
+      setIsPlaying(true);
+      setAudioStatus("🔊 Audio resumed");
+      startTimer();
     }
   };
 
-  const stopVoicePlayback = () => {
+  const stopDemo = () => {
     speechSynthesis.cancel();
     setIsPlaying(false);
     setIsPaused(false);
-    setCurrentProgress(0);
+    setCurrentTime(0);
+    setAudioStatus("⏹️ Audio stopped");
+    if (timeIntervalRef.current) {
+      clearInterval(timeIntervalRef.current);
+    }
+  };
+
+  const changePlaybackSpeed = (speed: number) => {
+    setPlaybackSpeed(speed);
+    setAudioStatus(`🎛️ Speed changed to ${speed}x`);
+
+    // If audio is playing, restart with new speed
+    if (speechSynthesis.speaking) {
+      const wasPlaying = !speechSynthesis.paused;
+      speechSynthesis.cancel();
+
+      if (wasPlaying) {
+        setTimeout(() => {
+          playAudio();
+        }, 200);
+      }
+    }
   };
 
   const handleAnswerChange = (questionId: number, answer: string) => {
-    setAnswers({ ...answers, [questionId]: answer });
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: answer,
+    }));
   };
 
-  const submitTest = () => {
+  const submitAnswers = () => {
     setShowResults(true);
-    stopVoicePlayback();
+    speechSynthesis.cancel();
+    setAudioStatus("📝 Test submitted");
+    if (timeIntervalRef.current) {
+      clearInterval(timeIntervalRef.current);
+    }
   };
 
   const calculateScore = () => {
     let correct = 0;
     questions.forEach((question) => {
-      const userAnswer = answers[question.id]?.toLowerCase().trim();
-      const correctAnswer = question.correctAnswer.toLowerCase().trim();
-      if (userAnswer === correctAnswer) {
+      if (answers[question.id] === question.correctAnswer) {
         correct++;
       }
     });
-    return { correct, total: questions.length };
+    return {
+      correct,
+      total: questions.length,
+      percentage: Math.round((correct / questions.length) * 100),
+    };
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const resetTest = () => {
-    setSelectedFile(null);
-    setPdfContent("");
-    setQuestions([]);
-    setAnswers({});
-    setShowResults(false);
     setTestStarted(false);
-    setCurrentProgress(0);
-    stopVoicePlayback();
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    setShowResults(false);
+    setAnswers({});
+    setCurrentTime(0);
+    setIsPlaying(false);
+    setIsPaused(false);
+    setAudioLoaded(false);
+    setIsGeneratingAudio(false);
+    setAudioStatus("🔊 Ready to play");
+    speechSynthesis.cancel();
+    if (timeIntervalRef.current) {
+      clearInterval(timeIntervalRef.current);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Link
-            href="/dashboard"
-            className="text-blue-400 hover:text-blue-300 mb-4 inline-block"
-          >
-            ← Back to Dashboard
-          </Link>
-          <h1 className="text-3xl font-bold text-white mb-4">
-            IELTS Listening Test
-          </h1>
-          <p className="text-gray-300">
-            Upload a PDF passage and practice listening with AI-generated
-            questions.
-          </p>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <nav className="bg-gray-800 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <h1 className="text-xl font-bold">
+                Smart IELTS - Listening Practice
+              </h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Dashboard
+              </button>
+            </div>
+          </div>
         </div>
+      </nav>
 
-        {/* File Upload Section */}
-        {!pdfContent && (
-          <div className="bg-gray-900 rounded-lg shadow-md p-6 mb-6 border border-gray-700">
-            <h2 className="text-xl font-semibold mb-4 text-white">
-              Upload Listening Passage
-            </h2>
-            <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf"
-                onChange={handleFileSelect}
-                className="hidden"
-                id="pdf-upload"
-              />
-              <label
-                htmlFor="pdf-upload"
-                className="cursor-pointer flex flex-col items-center"
-              >
-                <svg
-                  className="w-12 h-12 text-gray-400 mb-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
-                <span className="text-lg font-medium text-gray-200">
-                  {selectedFile ? selectedFile.name : "Choose PDF file"}
-                </span>
-                <span className="text-sm text-gray-400 mt-1">
-                  Upload a PDF containing the listening passage
-                </span>
-              </label>
-            </div>
-
-            {isUploading && (
-              <div className="mt-4">
-                <div className="flex justify-between text-sm text-gray-300 mb-1">
-                  <span>Uploading and processing...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
+      <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {!testStarted && (
+          <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <h2 className="text-2xl font-bold mb-4">Listening Practice Test</h2>
+            <p className="text-gray-300 mb-6">
+              This is a demo listening test. You will hear a conversation about
+              vacation planning. Listen carefully and answer the questions
+              below.
+            </p>
+            <button
+              onClick={startDemo}
+              className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-md font-medium transition-colors"
+            >
+              Start Listening Test
+            </button>
           </div>
         )}
 
-        {/* Voice Player Section */}
-        {pdfContent && (
-          <div className="bg-gray-900 rounded-lg shadow-md p-6 mb-6 border border-gray-700">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-white">Audio Player</h2>
-              <button
-                onClick={resetTest}
-                className="text-sm text-gray-300 hover:text-gray-100"
-              >
-                Upload New PDF
-              </button>
-            </div>
+        {testStarted && !showResults && (
+          <div>
+            {/* Audio Player */}
+            <div className="bg-gray-800 rounded-lg p-6 mb-6">
+              <h3 className="text-xl font-bold mb-4">🎧 Audio Player</h3>
 
-            {/* Audio Controls */}
-            <div className="bg-gray-800 rounded-lg p-4 mb-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  {!isPlaying ? (
-                    <button
-                      onClick={startVoicePlayback}
-                      className="bg-green-600 hover:bg-green-700 text-white rounded-full p-3"
-                    >
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-10V7a3 3 0 11-6 0V4h6zM6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </button>
-                  ) : (
-                    <div className="flex space-x-2">
-                      {!isPaused ? (
-                        <button
-                          onClick={pauseVoicePlayback}
-                          className="bg-yellow-600 hover:bg-yellow-700 text-white rounded-full p-3"
-                        >
-                          <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M10 9v6m4-6v6"
-                            />
-                          </svg>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={resumeVoicePlayback}
-                          className="bg-green-600 hover:bg-green-700 text-white rounded-full p-3"
-                        >
-                          <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-10V7a3 3 0 11-6 0V4h6zM6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </button>
-                      )}
-                      <button
-                        onClick={stopVoicePlayback}
-                        className="bg-red-600 hover:bg-red-700 text-white rounded-full p-3"
-                      >
-                        <svg
-                          className="w-6 h-6"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 10h6v4H9z"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-300">Speed:</span>
-                    <select
-                      value={playbackSpeed}
-                      onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                      className="text-sm border border-gray-600 bg-gray-700 text-white rounded px-2 py-1"
-                    >
-                      <option value={0.5}>0.5x</option>
-                      <option value={0.75}>0.75x</option>
-                      <option value={1}>1x</option>
-                      <option value={1.25}>1.25x</option>
-                      <option value={1.5}>1.5x</option>
-                    </select>
-                  </div>
+              {/* Audio Status with Emoji */}
+              <div className="mb-6 p-4 bg-gray-700 rounded-lg text-center">
+                <div className="text-3xl mb-2">
+                  {isGeneratingAudio && "🎤"}
+                  {isPlaying && "🔊"}
+                  {isPaused && "⏸️"}
+                  {!isPlaying && !isPaused && !isGeneratingAudio && "🎵"}
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-300">
-                    {isPlaying ? (isPaused ? "Paused" : "Playing") : "Ready"}
-                  </span>
-                  {isPlaying && (
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    </div>
-                  )}
+                <p className="text-lg font-medium text-blue-200">
+                  {audioStatus}
+                </p>
+                <div className="mt-2 text-sm text-gray-400">
+                  Timer: {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
               </div>
 
-              {/* Progress Bar */}
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${currentProgress}%` }}
-                ></div>
-              </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>{Math.round(currentProgress)}%</span>
-                <span>Audio Progress</span>
-              </div>
-            </div>
-
-            {/* Instructions */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 mb-2">
-                Listening Instructions:
-              </h3>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>
-                  • Click play to start the audio narration of the passage
-                </li>
-                <li>• Answer the questions below while listening</li>
-                <li>• You can pause, resume, or adjust playback speed</li>
-                <li>• Submit your answers when the audio ends</li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* Questions Section */}
-        {questions.length > 0 && testStarted && (
-          <div className="bg-gray-900 rounded-lg shadow-md p-6 border border-gray-700">
-            <h2 className="text-xl font-semibold mb-6 text-white">
-              AI-Generated Listening Questions
-            </h2>
-
-            {questions.map((question, index) => (
-              <div
-                key={question.id}
-                className="mb-6 p-4 border border-gray-600 rounded-lg bg-gray-800"
-              >
-                <h3 className="font-medium mb-3 text-white">
-                  Question {index + 1}: {question.question}
-                </h3>
-
-                {question.type === "multiple-choice" && question.options && (
-                  <div className="space-y-2">
-                    {question.options.map((option, optionIndex) => (
-                      <label
-                        key={optionIndex}
-                        className="flex items-center space-x-2 cursor-pointer hover:bg-gray-700 p-2 rounded"
-                      >
-                        <input
-                          type="radio"
-                          name={`question-${question.id}`}
-                          value={option}
-                          onChange={(e) =>
-                            handleAnswerChange(question.id, e.target.value)
-                          }
-                          className="text-blue-500"
-                        />
-                        <span className="text-gray-200">{option}</span>
-                      </label>
-                    ))}
-                  </div>
+              {/* Controls */}
+              <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
+                {!isPlaying && !isPaused && !isGeneratingAudio && (
+                  <button
+                    onClick={startDemo}
+                    disabled={isGeneratingAudio}
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                  >
+                    🎵 Play Conversation
+                  </button>
                 )}
 
-                {(question.type === "fill-blank" ||
-                  question.type === "short-answer") && (
-                  <input
-                    type="text"
-                    placeholder="Type your answer..."
-                    value={answers[question.id] || ""}
-                    onChange={(e) =>
-                      handleAnswerChange(question.id, e.target.value)
-                    }
-                    className="w-full max-w-md px-3 py-2 border border-gray-600 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                {!isPlaying && !isPaused && audioLoaded && (
+                  <button
+                    onClick={playAudio}
+                    disabled={isGeneratingAudio}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    🔄 Replay
+                  </button>
+                )}
+
+                {isPlaying && (
+                  <button
+                    onClick={pauseDemo}
+                    className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    ⏸️ Pause
+                  </button>
+                )}
+
+                {isPaused && (
+                  <button
+                    onClick={resumeDemo}
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    ▶️ Resume
+                  </button>
+                )}
+
+                {(isPlaying || isPaused) && (
+                  <button
+                    onClick={stopDemo}
+                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    ⏹️ Stop
+                  </button>
                 )}
               </div>
-            ))}
 
-            <div className="flex justify-between mt-6">
-              <button
-                onClick={resetTest}
-                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg border border-gray-600"
-              >
-                Start Over
-              </button>
-              <button
-                onClick={submitTest}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg"
-              >
-                Submit Test
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Results Section */}
-        {showResults && (
-          <div className="bg-gray-900 rounded-lg shadow-md p-6 mt-6 border border-gray-700">
-            <h2 className="text-xl font-semibold mb-4 text-white">Test Results</h2>
-            <div className="bg-green-900 border border-green-700 rounded-lg p-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 mb-2">
-                  {calculateScore().correct}/{calculateScore().total}
-                </div>
-                <div className="text-green-700">
-                  Score:{" "}
-                  {Math.round(
-                    (calculateScore().correct / calculateScore().total) * 100
-                  )}
-                  %
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="font-semibold mb-3">Answer Review:</h3>
-              {questions.map((question, index) => {
-                const userAnswer = answers[question.id] || "No answer";
-                const isCorrect =
-                  userAnswer.toLowerCase().trim() ===
-                  question.correctAnswer.toLowerCase().trim();
-                return (
-                  <div
-                    key={question.id}
-                    className={`mb-4 p-3 rounded-lg ${
-                      isCorrect
-                        ? "bg-green-50 border border-green-200"
-                        : "bg-red-50 border border-red-200"
+              {/* Speed Controls */}
+              <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+                <span className="text-sm text-gray-400 mr-2">🎛️ Speed:</span>
+                {[0.75, 1, 1.25, 1.5].map((speed) => (
+                  <button
+                    key={speed}
+                    onClick={() => changePlaybackSpeed(speed)}
+                    disabled={isGeneratingAudio}
+                    className={`px-3 py-1 rounded text-sm transition-colors disabled:opacity-50 ${
+                      playbackSpeed === speed
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
                     }`}
                   >
-                    <p className="font-medium">
-                      Question {index + 1}: {question.question}
-                    </p>
-                    <p
-                      className={`text-sm ${
-                        isCorrect ? "text-green-700" : "text-red-700"
-                      }`}
-                    >
-                      Your answer: {userAnswer}
-                    </p>
-                    {!isCorrect && (
-                      <p className="text-sm text-green-700">
-                        Correct answer: {question.correctAnswer}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
+                    {speed}x
+                  </button>
+                ))}
+              </div>
+
+              {/* Audio Info */}
+              <div className="mt-4 p-3 bg-blue-900 rounded-lg">
+                <p className="text-sm text-blue-200">
+                  🗣️ <strong>Conversation Topic:</strong> Vacation Planning
+                </p>
+                <p className="text-xs text-blue-300 mt-1">
+                  Listen to two friends discussing their upcoming 7-day trip to
+                  Paris
+                </p>
+              </div>
             </div>
 
-            <button
-              onClick={resetTest}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg mt-4"
-            >
-              Take Another Test
-            </button>
+            {/* Questions */}
+            <div className="bg-gray-800 rounded-lg p-6 mb-6">
+              <h3 className="text-xl font-bold mb-6">Questions</h3>
+              <div className="space-y-6">
+                {questions.map((question, index) => (
+                  <div key={question.id} className="p-4 bg-gray-700 rounded-lg">
+                    <h4 className="text-lg font-medium text-white mb-3">
+                      {index + 1}. {question.question}
+                    </h4>
+                    <div className="space-y-2">
+                      {question.options.map((option, optionIndex) => (
+                        <label
+                          key={optionIndex}
+                          className="flex items-center text-gray-300"
+                        >
+                          <input
+                            type="radio"
+                            name={`question-${question.id}`}
+                            value={option}
+                            onChange={(e) =>
+                              handleAnswerChange(question.id, e.target.value)
+                            }
+                            className="mr-3 text-blue-600"
+                          />
+                          {option}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={submitAnswers}
+                className="w-full bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-md font-medium transition-colors mt-6"
+              >
+                Submit Answers
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showResults && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-2xl font-bold mb-6">Test Results</h2>
+
+            {(() => {
+              const score = calculateScore();
+              return (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-gray-700 rounded-lg p-4 text-center">
+                      <h3 className="text-lg font-medium text-gray-300">
+                        Score
+                      </h3>
+                      <p className="text-3xl font-bold text-green-400">
+                        {score.percentage}%
+                      </p>
+                    </div>
+                    <div className="bg-gray-700 rounded-lg p-4 text-center">
+                      <h3 className="text-lg font-medium text-gray-300">
+                        Correct Answers
+                      </h3>
+                      <p className="text-3xl font-bold text-blue-400">
+                        {score.correct}/{score.total}
+                      </p>
+                    </div>
+                    <div className="bg-gray-700 rounded-lg p-4 text-center">
+                      <h3 className="text-lg font-medium text-gray-300">
+                        Time Taken
+                      </h3>
+                      <p className="text-3xl font-bold text-purple-400">
+                        {formatTime(currentTime)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-medium">Answer Review</h3>
+                    {questions.map((question, index) => {
+                      const userAnswer = answers[question.id];
+                      const isCorrect = userAnswer === question.correctAnswer;
+
+                      return (
+                        <div
+                          key={question.id}
+                          className={`p-4 rounded-lg border-l-4 ${
+                            isCorrect
+                              ? "bg-green-900 border-green-500"
+                              : "bg-red-900 border-red-500"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-white mb-2">
+                                {index + 1}. {question.question}
+                              </h4>
+                              <div className="space-y-1 text-sm">
+                                <p className="text-gray-300">
+                                  <span className="font-medium">
+                                    Your answer:
+                                  </span>{" "}
+                                  {userAnswer || "No answer selected"}
+                                </p>
+                                <p className="text-gray-300">
+                                  <span className="font-medium">
+                                    Correct answer:
+                                  </span>{" "}
+                                  {question.correctAnswer}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-medium ${
+                                  isCorrect
+                                    ? "bg-green-600 text-white"
+                                    : "bg-red-600 text-white"
+                                }`}
+                              >
+                                {isCorrect ? "Correct" : "Incorrect"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
+
+            <div className="mt-6 flex space-x-4">
+              <button
+                onClick={resetTest}
+                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-md font-medium transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-md font-medium transition-colors"
+              >
+                Back to Dashboard
+              </button>
+            </div>
           </div>
         )}
       </div>
