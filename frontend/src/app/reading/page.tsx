@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import FloatingChatbot from "../../components/FloatingChatbot";
 
 interface MCQQuestion {
   id: number;
@@ -804,6 +805,9 @@ However, implementing these solutions requires significant financial investment 
           </div>
         )}
       </main>
+      
+      {/* Floating Chatbot */}
+      <FloatingChatbot />
     </div>
   );
 }

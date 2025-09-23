@@ -278,10 +278,57 @@ Requirements:
   }
 }
 
+/**
+ * Generate chat response using Gemini AI for IELTS assistance
+ * @param {string} message - User's message/question
+ * @returns {Promise<Object>} Response object with success status and data
+ */
+async function generateChatResponse(message) {
+  try {
+    // Get the generative model
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // Create the system prompt for IELTS assistance
+    const systemPrompt = `You are an expert IELTS tutor and study assistant. Your role is to help students with:
+    - IELTS test preparation and strategies
+    - Study materials and practice questions
+    - Exam tips and time management
+    - English language skills improvement
+    - Answering questions about IELTS format and requirements
+    - Providing motivation and study guidance
+    
+    Be helpful, encouraging, and provide clear, concise answers. Focus on IELTS-specific advice.
+    Keep responses under 200 words for better readability in a chat interface.
+    
+    User's question: ${message}`;
+
+    // Generate content
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Clean up the response
+    const cleanedResponse = text.trim();
+
+    return {
+      success: true,
+      data: cleanedResponse
+    };
+  } catch (error) {
+    console.error('Error generating chat response:', error);
+    return {
+      success: false,
+      error: error.message,
+      data: 'I\'m sorry, I\'m having trouble responding right now. Please try again.'
+    };
+  }
+}
+
 module.exports = {
   generateMCQQuestions,
   generateIELTSQuestions,
   generatePassage,
   generateIELTSPassage,
-  generateQuestionsFromPassage
+  generateQuestionsFromPassage,
+  generateChatResponse
 };

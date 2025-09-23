@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import FloatingChatbot from "../../components/FloatingChatbot";
 
 interface UploadedFile {
   id: string;
@@ -331,6 +332,7 @@ export default function QuestionBank() {
           </p>
         </div>
       </main>
+      <FloatingChatbot />
     </div>
   );
 }

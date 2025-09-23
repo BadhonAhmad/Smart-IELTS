@@ -235,10 +235,54 @@ const generateIELTSReadingPassage = async (req, res) => {
   }
 };
 
+/**
+ * Handle chat conversations with Gemini AI
+ * POST /api/gemini/chat
+ */
+const handleChat = async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        message: 'Message is required'
+      });
+    }
+
+    // Import the specific function for chat
+    const { generateChatResponse } = require('../services/geminiService');
+    
+    const result = await generateChatResponse(message);
+
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to generate response',
+        error: result.error
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Response generated successfully',
+      response: result.data
+    });
+  } catch (error) {
+    console.error('Error in handleChat controller:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   generateMCQ,
   generateIELTS,
   testGemini,
   generateReadingPassage,
-  generateIELTSReadingPassage
+  generateIELTSReadingPassage,
+  handleChat
 };

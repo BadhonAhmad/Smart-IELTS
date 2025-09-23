@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import FloatingChatbot from "../../components/FloatingChatbot";
 
 interface EvaluationResult {
   overallScore: number; // Out of 50
@@ -23,7 +24,8 @@ export default function SpeakingPage() {
   const [userPrompt, setUserPrompt] = useState<string>("");
   const [showEvaluation, setShowEvaluation] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
-  const [evaluationResult, setEvaluationResult] = useState<EvaluationResult | null>(null);
+  const [evaluationResult, setEvaluationResult] =
+    useState<EvaluationResult | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
 
   // Get user prompt from localStorage on component mount
@@ -42,23 +44,29 @@ export default function SpeakingPage() {
       }
     };
 
-    window.addEventListener('conversationUpdate', handleConversationUpdate as EventListener);
-    
+    window.addEventListener(
+      "conversationUpdate",
+      handleConversationUpdate as EventListener
+    );
+
     return () => {
-      window.removeEventListener('conversationUpdate', handleConversationUpdate as EventListener);
+      window.removeEventListener(
+        "conversationUpdate",
+        handleConversationUpdate as EventListener
+      );
     };
   }, []);
 
   const generateMockEvaluation = (): EvaluationResult => {
     // Generate score out of 50 - lower range for realistic beginner performance
     const totalScore = Math.floor(Math.random() * 8) + 18; // Score between 18-25
-    
+
     // Break down individual component scores - lower performance
     const componentScores = {
       fluencyCoherence: Math.floor(Math.random() * 3) + 4, // 4-7 out of 12.5
-      lexicalResource: Math.floor(Math.random() * 3) + 4, // 4-7 out of 12.5  
-      grammarRange: Math.floor(Math.random() * 3) + 4,    // 4-7 out of 12.5
-      pronunciation: Math.floor(Math.random() * 3) + 4,   // 4-7 out of 12.5
+      lexicalResource: Math.floor(Math.random() * 3) + 4, // 4-7 out of 12.5
+      grammarRange: Math.floor(Math.random() * 3) + 4, // 4-7 out of 12.5
+      pronunciation: Math.floor(Math.random() * 3) + 4, // 4-7 out of 12.5
     };
 
     // Generate personalized feedback based on score - focused on improvement
@@ -66,7 +74,7 @@ export default function SpeakingPage() {
       return {
         strengths: [
           "Shows effort to communicate in English",
-          "Attempts to answer questions despite difficulties"
+          "Attempts to answer questions despite difficulties",
         ],
         improvements: [
           "Significant improvement needed in fluency - too many long pauses and hesitations",
@@ -76,7 +84,7 @@ export default function SpeakingPage() {
           "Lacks confidence which affects overall performance",
           "Responses are too short and lack development",
           "Difficulty organizing thoughts coherently",
-          "Limited use of connecting words and phrases"
+          "Limited use of connecting words and phrases",
         ],
         specificAdvice: [
           "URGENT: Start with 10-15 minutes daily English speaking practice",
@@ -88,8 +96,8 @@ export default function SpeakingPage() {
           "Watch English movies/shows with subtitles to improve listening and pronunciation",
           "Practice answering common IELTS Speaking Part 1 questions (family, hobbies, work)",
           "Build confidence by starting with topics you know well",
-          "Use simple connecting words: 'and', 'but', 'because', 'first', 'then'"
-        ]
+          "Use simple connecting words: 'and', 'but', 'because', 'first', 'then'",
+        ],
       };
     };
 
@@ -98,16 +106,16 @@ export default function SpeakingPage() {
     return {
       overallScore: totalScore,
       scores: componentScores,
-      feedback
+      feedback,
     };
   };
 
   const handleEvaluateResult = async () => {
     setIsEvaluating(true);
-    
+
     // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
     const evaluation = generateMockEvaluation();
     setEvaluationResult(evaluation);
     setIsEvaluating(false);
@@ -257,19 +265,34 @@ export default function SpeakingPage() {
             {showEvaluation && evaluationResult && (
               <div className="mt-8 bg-gray-900 rounded-lg shadow-lg p-8 border border-gray-700">
                 <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-white mb-4">Your Speaking Test Evaluation</h2>
+                  <h2 className="text-3xl font-bold text-white mb-4">
+                    Your Speaking Test Evaluation
+                  </h2>
                   <div className="text-7xl font-bold mb-4">
-                    <span className={getBandColor(evaluationResult.overallScore)}>
+                    <span
+                      className={getBandColor(evaluationResult.overallScore)}
+                    >
                       {evaluationResult.overallScore}/50
                     </span>
                   </div>
-                  <p className="text-gray-300 text-lg">Overall Speaking Score</p>
+                  <p className="text-gray-300 text-lg">
+                    Overall Speaking Score
+                  </p>
                   <div className="mt-4 bg-gray-800 rounded-lg p-4 inline-block">
                     <p className="text-gray-300">
-                      Performance Level: <span className={`font-bold ${getBandColor(evaluationResult.overallScore)}`}>
-                        {evaluationResult.overallScore >= 40 ? 'Good' : 
-                         evaluationResult.overallScore >= 30 ? 'Fair' : 
-                         evaluationResult.overallScore >= 25 ? 'Poor' : 'Bad'}
+                      Performance Level:{" "}
+                      <span
+                        className={`font-bold ${getBandColor(
+                          evaluationResult.overallScore
+                        )}`}
+                      >
+                        {evaluationResult.overallScore >= 40
+                          ? "Good"
+                          : evaluationResult.overallScore >= 30
+                          ? "Fair"
+                          : evaluationResult.overallScore >= 25
+                          ? "Poor"
+                          : "Bad"}
                       </span>
                     </p>
                   </div>
@@ -278,25 +301,33 @@ export default function SpeakingPage() {
                 {/* Individual Component Scores */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="text-center bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-green-400 font-medium mb-2">Fluency & Coherence</h3>
+                    <h3 className="text-green-400 font-medium mb-2">
+                      Fluency & Coherence
+                    </h3>
                     <div className="text-2xl font-bold text-white">
                       {evaluationResult.scores.fluencyCoherence}/12.5
                     </div>
                   </div>
                   <div className="text-center bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-blue-400 font-medium mb-2">Lexical Resource</h3>
+                    <h3 className="text-blue-400 font-medium mb-2">
+                      Lexical Resource
+                    </h3>
                     <div className="text-2xl font-bold text-white">
                       {evaluationResult.scores.lexicalResource}/12.5
                     </div>
                   </div>
                   <div className="text-center bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-purple-400 font-medium mb-2">Grammar Range</h3>
+                    <h3 className="text-purple-400 font-medium mb-2">
+                      Grammar Range
+                    </h3>
                     <div className="text-2xl font-bold text-white">
                       {evaluationResult.scores.grammarRange}/12.5
                     </div>
                   </div>
                   <div className="text-center bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-orange-400 font-medium mb-2">Pronunciation</h3>
+                    <h3 className="text-orange-400 font-medium mb-2">
+                      Pronunciation
+                    </h3>
                     <div className="text-2xl font-bold text-white">
                       {evaluationResult.scores.pronunciation}/12.5
                     </div>
@@ -312,12 +343,17 @@ export default function SpeakingPage() {
                       Strengths
                     </h3>
                     <ul className="space-y-2">
-                      {evaluationResult.feedback.strengths.map((strength, index) => (
-                        <li key={index} className="text-gray-300 flex items-start">
-                          <span className="text-green-400 mr-2 mt-1">•</span>
-                          {strength}
-                        </li>
-                      ))}
+                      {evaluationResult.feedback.strengths.map(
+                        (strength, index) => (
+                          <li
+                            key={index}
+                            className="text-gray-300 flex items-start"
+                          >
+                            <span className="text-green-400 mr-2 mt-1">•</span>
+                            {strength}
+                          </li>
+                        )
+                      )}
                     </ul>
                   </div>
 
@@ -328,12 +364,17 @@ export default function SpeakingPage() {
                       Areas for Improvement
                     </h3>
                     <ul className="space-y-2">
-                      {evaluationResult.feedback.improvements.map((improvement, index) => (
-                        <li key={index} className="text-gray-300 flex items-start">
-                          <span className="text-orange-400 mr-2 mt-1">•</span>
-                          {improvement}
-                        </li>
-                      ))}
+                      {evaluationResult.feedback.improvements.map(
+                        (improvement, index) => (
+                          <li
+                            key={index}
+                            className="text-gray-300 flex items-start"
+                          >
+                            <span className="text-orange-400 mr-2 mt-1">•</span>
+                            {improvement}
+                          </li>
+                        )
+                      )}
                     </ul>
                   </div>
                 </div>
@@ -345,11 +386,13 @@ export default function SpeakingPage() {
                     Specific Practice Recommendations
                   </h3>
                   <div className="grid md:grid-cols-2 gap-4">
-                    {evaluationResult.feedback.specificAdvice.map((advice, index) => (
-                      <div key={index} className="bg-gray-800 rounded-lg p-4">
-                        <p className="text-gray-300 text-sm">{advice}</p>
-                      </div>
-                    ))}
+                    {evaluationResult.feedback.specificAdvice.map(
+                      (advice, index) => (
+                        <div key={index} className="bg-gray-800 rounded-lg p-4">
+                          <p className="text-gray-300 text-sm">{advice}</p>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -523,6 +566,7 @@ export default function SpeakingPage() {
           </div>
         </div>
       </main>
+      <FloatingChatbot />
     </div>
   );
 }

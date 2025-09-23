@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import FloatingChatbot from "../../components/FloatingChatbot";
 
 interface WritingQuestion {
   id: number;
@@ -876,6 +877,7 @@ export default function WritingTest() {
           </div>
         )}
       </main>
+      <FloatingChatbot />
     </div>
   );
 }

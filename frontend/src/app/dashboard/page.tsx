@@ -21,6 +21,7 @@ import {
   Cell,
 } from "recharts";
 import TestSetupPopup from "../../components/TestSetupPopup";
+import FloatingChatbot from "../../components/FloatingChatbot";
 
 interface User {
   _id: string;
@@ -251,10 +252,11 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <h4 className="text-2xl font-bold text-white mb-2">
-                    IELTS Study Chatbot
+                    IELTS SmythOs Agent to Learn
                   </h4>
                   <p className="text-indigo-200 text-lg">
-                    Get instant answers to your IELTS questions from our AI assistant trained on comprehensive study materials
+                    Get instant answers to your IELTS questions from our AI
+                    assistant trained on comprehensive study materials
                   </p>
                   <div className="mt-3 flex items-center space-x-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-900 text-green-300">
@@ -269,7 +271,11 @@ export default function Dashboard() {
               </div>
               <button
                 onClick={() => {
-                  window.open('https://cmfwa1ah7ycfcjxgthiwbjwr9.agent.pa.smyth.ai/chatBot', '_blank', 'noopener,noreferrer');
+                  window.open(
+                    "https://cmfwa1ah7ycfcjxgthiwbjwr9.agent.pa.smyth.ai/chatBot",
+                    "_blank",
+                    "noopener,noreferrer"
+                  );
                 }}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-2"
               >
@@ -291,19 +297,25 @@ export default function Dashboard() {
             </div>
             <div className="mt-6 grid md:grid-cols-3 gap-4">
               <div className="bg-indigo-800/50 rounded-lg p-4 border border-indigo-600/50">
-                <h5 className="font-semibold text-indigo-200 mb-2">📖 Study Materials</h5>
+                <h5 className="font-semibold text-indigo-200 mb-2">
+                  📖 Study Materials
+                </h5>
                 <p className="text-indigo-300 text-sm">
                   Ask about IELTS strategies, tips, and preparation methods
                 </p>
               </div>
               <div className="bg-indigo-800/50 rounded-lg p-4 border border-indigo-600/50">
-                <h5 className="font-semibold text-indigo-200 mb-2">❓ Question Help</h5>
+                <h5 className="font-semibold text-indigo-200 mb-2">
+                  ❓ Question Help
+                </h5>
                 <p className="text-indigo-300 text-sm">
                   Get explanations for practice questions and sample answers
                 </p>
               </div>
               <div className="bg-indigo-800/50 rounded-lg p-4 border border-indigo-600/50">
-                <h5 className="font-semibold text-indigo-200 mb-2">🎯 Exam Tips</h5>
+                <h5 className="font-semibold text-indigo-200 mb-2">
+                  🎯 Exam Tips
+                </h5>
                 <p className="text-indigo-300 text-sm">
                   Learn test-taking strategies and time management techniques
                 </p>
@@ -646,6 +658,69 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Coming Soon Section */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-yellow-900 to-orange-900 rounded-lg shadow-lg p-8 border border-yellow-700 text-center">
+            <div className="mb-4">
+              <div className="w-20 h-20 bg-yellow-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-10 h-10 text-yellow-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-4">
+                🚀 Up Coming Soon !!!
+              </h3>
+              <div className="space-y-2 mb-6">
+                <div className="text-4xl font-bold text-yellow-400 mb-2">
+                  GRE!! GMAT!!
+                </div>
+                <p className="text-yellow-200 text-lg">
+                  Expanding our platform to help you excel in more standardized
+                  tests
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4 mt-6">
+                <div className="bg-yellow-800/50 rounded-lg p-4 border border-yellow-600/50">
+                  <h4 className="font-bold text-yellow-200 mb-2">
+                    📚 GRE Prep
+                  </h4>
+                  <p className="text-yellow-300 text-sm">
+                    Complete Graduate Record Examination preparation with
+                    AI-powered practice tests
+                  </p>
+                </div>
+                <div className="bg-yellow-800/50 rounded-lg p-4 border border-yellow-600/50">
+                  <h4 className="font-bold text-yellow-200 mb-2">
+                    💼 GMAT Prep
+                  </h4>
+                  <p className="text-yellow-300 text-sm">
+                    Master the Graduate Management Admission Test with
+                    comprehensive study materials
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-700 text-yellow-200">
+                  <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></span>
+                  Platform Extensibility Showcase
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Action Button */}
         <div className="text-center">
           <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors duration-300">
@@ -665,6 +740,9 @@ export default function Dashboard() {
           testType={activeTestType}
         />
       )}
+
+      {/* Floating Chatbot */}
+      <FloatingChatbot />
     </div>
   );
 }
