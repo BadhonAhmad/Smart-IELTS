@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import FloatingChatbot from "../../components/FloatingChatbot";
 
 interface Question {
   id: number;
@@ -636,6 +637,7 @@ export default function ListeningPage() {
           </div>
         )}
       </div>
+      <FloatingChatbot />
     </div>
   );
 }
