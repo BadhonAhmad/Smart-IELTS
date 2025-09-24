@@ -628,8 +628,27 @@ export default function ReadingTest() {
               ))}
             </div>
 
-            {/* Submit Button */}
-            <div className="text-center">
+            {/* Navigation Buttons */}
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setCurrentStep("reading")}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-300 flex items-center space-x-2"
+              >
+                <svg 
+                  className="w-4 h-4" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M15 19l-7-7 7-7" 
+                  />
+                </svg>
+                <span>Back to Passage</span>
+              </button>
               <button
                 onClick={handleSubmit}
                 disabled={isLoading}

@@ -1,33 +1,24 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import ListeningVoiceAssistant from "@/components/ListeningVoiceAssistant";
 import FloatingChatbot from "../../components/FloatingChatbot";
 
-interface Question {
-  id: number;
-  question: string;
-  options: string[];
-  correctAnswer: string;
-}
-
 export default function ListeningPage() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(90); // Fixed duration for demo
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [answers, setAnswers] = useState<{ [key: number]: string }>({});
-  const [showResults, setShowResults] = useState(false);
-  const [testStarted, setTestStarted] = useState(false);
-  const [audioLoaded, setAudioLoaded] = useState(false);
-  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
-  const [audioStatus, setAudioStatus] = useState("🔊 Ready to play");
   const [userPrompt, setUserPrompt] = useState<string>("");
+  const [answers, setAnswers] = useState<{[key: string]: string}>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [score, setScore] = useState(0);
 
-  const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const timeIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const router = useRouter();
+  // Correct answers for the MCQ questions
+  const correctAnswers = {
+    question1: "B", // Human activities and greenhouse gas emissions
+    question2: "B", // 75%
+    question3: "A", // Renewable energy transition
+    question4: "B", // 2050
+    question5: "A"  // Small island nations in the Pacific
+  };
 
   // Get user prompt from localStorage on component mount
   useEffect(() => {
@@ -39,304 +30,59 @@ export default function ListeningPage() {
     }
   }, []);
 
-  // Simplified conversation script
-  const conversationScript =
-    "Hi Sarah! I'm so excited about our upcoming vacation. We've been planning this for months! I know, Lisa! I can't believe we finally booked it. So we're definitely going for 7 days, right? Yes, exactly 7 days. And I'm so glad we decided to fly instead of driving. The airplane tickets were a good deal. Absolutely! Flying will save us so much time. And our budget of 1500 dollars should be perfect for everything we want to do. I think so too. I'm particularly excited about visiting Paris first. It's been my dream destination for years! Paris will be amazing! The Eiffel Tower, the Louvre, all that history and culture. This is going to be the best vacation ever!";
-
-  // Simple audio generation and playback
-  const playAudio = async () => {
-    try {
-      setIsGeneratingAudio(true);
-      setAudioStatus("🎤 Generating audio...");
-
-      // Cancel any existing speech
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-
-      // Check if speech synthesis is available
-      if (!window.speechSynthesis) {
-        alert(
-          "Text-to-speech is not supported in your browser. Please try Chrome, Firefox, or Edge."
-        );
-        setIsGeneratingAudio(false);
-        return;
-      }
-
-      // Wait for voices to load
-      await new Promise((resolve) => {
-        if (speechSynthesis.getVoices().length > 0) {
-          resolve(true);
-        } else {
-          speechSynthesis.onvoiceschanged = () => resolve(true);
-        }
-      });
-
-      const utterance = new SpeechSynthesisUtterance(conversationScript);
-      utterance.rate = 0.9 * playbackSpeed;
-      utterance.pitch = 1;
-      utterance.volume = 1;
-
-      // Get a good English voice
-      const voices = speechSynthesis.getVoices();
-      const englishVoice =
-        voices.find(
-          (voice) =>
-            voice.lang.startsWith("en") && !voice.name.includes("Google")
-        ) ||
-        voices.find((voice) => voice.lang.startsWith("en")) ||
-        voices[0];
-
-      if (englishVoice) {
-        utterance.voice = englishVoice;
-      }
-
-      utterance.onstart = () => {
-        setIsPlaying(true);
-        setIsGeneratingAudio(false);
-        setAudioLoaded(true);
-        setAudioStatus("🔊 Playing conversation...");
-        startTimer();
-      };
-
-      utterance.onend = () => {
-        setIsPlaying(false);
-        setIsPaused(false);
-        setCurrentTime(duration);
-        setAudioStatus("✅ Audio completed");
-        if (timeIntervalRef.current) {
-          clearInterval(timeIntervalRef.current);
-        }
-      };
-
-      utterance.onerror = (event) => {
-        console.error("Speech synthesis error:", event);
-        setIsGeneratingAudio(false);
-        setAudioStatus("❌ Audio error - try again");
-      };
-
-      speechUtteranceRef.current = utterance;
-      speechSynthesis.speak(utterance);
-    } catch (error) {
-      console.error("Audio generation error:", error);
-      setIsGeneratingAudio(false);
-      setAudioStatus("❌ Failed to generate audio");
-    }
-  };
-
-  const startTimer = () => {
-    if (timeIntervalRef.current) {
-      clearInterval(timeIntervalRef.current);
-    }
-
-    setCurrentTime(0);
-    timeIntervalRef.current = setInterval(() => {
-      setCurrentTime((prev) => {
-        if (prev >= duration) {
-          if (timeIntervalRef.current) {
-            clearInterval(timeIntervalRef.current);
-          }
-          return duration;
-        }
-        return prev + 1;
-      });
-    }, 1000);
-  };
-
-  useEffect(() => {
-    // Initialize speech synthesis
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      // Trigger voices loading
-      speechSynthesis.getVoices();
-      if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = () => {
-          console.log("Voices loaded:", speechSynthesis.getVoices().length);
-        };
-      }
-    }
-
-    return () => {
-      // Cleanup on component unmount
-      if (typeof window !== "undefined" && window.speechSynthesis) {
-        speechSynthesis.cancel();
-      }
-      if (timeIntervalRef.current) {
-        clearInterval(timeIntervalRef.current);
-      }
-    };
-  }, []);
-
-  // Demo questions
-  const questions: Question[] = [
-    {
-      id: 1,
-      question: "What is the main topic of the conversation?",
-      options: [
-        "Planning a vacation",
-        "Discussing work schedules",
-        "Talking about the weather",
-        "Arranging a meeting",
-      ],
-      correctAnswer: "Planning a vacation",
-    },
-    {
-      id: 2,
-      question: "How long will the trip last?",
-      options: ["3 days", "5 days", "7 days", "10 days"],
-      correctAnswer: "7 days",
-    },
-    {
-      id: 3,
-      question: "What mode of transportation will they use?",
-      options: ["Car", "Train", "Airplane", "Bus"],
-      correctAnswer: "Airplane",
-    },
-    {
-      id: 4,
-      question: "What is their budget for the trip?",
-      options: ["$500", "$1000", "$1500", "$2000"],
-      correctAnswer: "$1500",
-    },
-    {
-      id: 5,
-      question: "Which city will they visit first?",
-      options: ["Paris", "London", "Rome", "Madrid"],
-      correctAnswer: "Paris",
-    },
-  ];
-
-  const startDemo = () => {
-    setTestStarted(true);
-    setCurrentTime(0);
-    setAudioStatus("🎵 Starting audio...");
-    playAudio();
-  };
-
-  const pauseDemo = () => {
-    if (speechSynthesis.speaking && !speechSynthesis.paused) {
-      speechSynthesis.pause();
-      setIsPaused(true);
-      setIsPlaying(false);
-      setAudioStatus("⏸️ Audio paused");
-      if (timeIntervalRef.current) {
-        clearInterval(timeIntervalRef.current);
-      }
-    }
-  };
-
-  const resumeDemo = () => {
-    if (speechSynthesis.paused) {
-      speechSynthesis.resume();
-      setIsPaused(false);
-      setIsPlaying(true);
-      setAudioStatus("🔊 Audio resumed");
-      startTimer();
-    }
-  };
-
-  const stopDemo = () => {
-    speechSynthesis.cancel();
-    setIsPlaying(false);
-    setIsPaused(false);
-    setCurrentTime(0);
-    setAudioStatus("⏹️ Audio stopped");
-    if (timeIntervalRef.current) {
-      clearInterval(timeIntervalRef.current);
-    }
-  };
-
-  const changePlaybackSpeed = (speed: number) => {
-    setPlaybackSpeed(speed);
-    setAudioStatus(`🎛️ Speed changed to ${speed}x`);
-
-    // If audio is playing, restart with new speed
-    if (speechSynthesis.speaking) {
-      const wasPlaying = !speechSynthesis.paused;
-      speechSynthesis.cancel();
-
-      if (wasPlaying) {
-        setTimeout(() => {
-          playAudio();
-        }, 200);
-      }
-    }
-  };
-
-  const handleAnswerChange = (questionId: number, answer: string) => {
-    setAnswers((prev) => ({
+  // Handle answer selection
+  const handleAnswerChange = (questionId: string, value: string) => {
+    setAnswers(prev => ({
       ...prev,
-      [questionId]: answer,
+      [questionId]: value
     }));
   };
 
-  const submitAnswers = () => {
-    setShowResults(true);
-    speechSynthesis.cancel();
-    setAudioStatus("📝 Test submitted");
-    if (timeIntervalRef.current) {
-      clearInterval(timeIntervalRef.current);
-    }
-  };
-
-  const calculateScore = () => {
-    let correct = 0;
-    questions.forEach((question) => {
-      if (answers[question.id] === question.correctAnswer) {
-        correct++;
+  // Calculate and submit score
+  const handleSubmit = () => {
+    let correctCount = 0;
+    Object.keys(correctAnswers).forEach(questionId => {
+      if (answers[questionId] === correctAnswers[questionId as keyof typeof correctAnswers]) {
+        correctCount++;
       }
     });
-    return {
-      correct,
-      total: questions.length,
-      percentage: Math.round((correct / questions.length) * 100),
-    };
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const resetTest = () => {
-    setTestStarted(false);
-    setShowResults(false);
-    setAnswers({});
-    setCurrentTime(0);
-    setIsPlaying(false);
-    setIsPaused(false);
-    setAudioLoaded(false);
-    setIsGeneratingAudio(false);
-    setAudioStatus("🔊 Ready to play");
-    speechSynthesis.cancel();
-    if (timeIntervalRef.current) {
-      clearInterval(timeIntervalRef.current);
-    }
+    
+    const finalScore = Math.round((correctCount / Object.keys(correctAnswers).length) * 100);
+    setScore(finalScore);
+    setIsSubmitted(true);
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 shadow-lg">
+    <div className="min-h-screen bg-black">
+      {/* Header */}
+      <header className="bg-gray-900 shadow-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold">
-                Smart IELTS - Listening Practice
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/dashboard"
+                className="text-blue-400 hover:text-blue-300"
+              >
+                ← Back to Dashboard
+              </Link>
+              <h1 className="text-2xl font-bold text-white">
+                IELTS Listening Practice
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Dashboard
-              </button>
+              <span className="text-sm text-gray-300">
+                AI Listening Assistant:
+              </span>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">
+                Active
+              </span>
             </div>
           </div>
         </div>
-      </nav>
+      </header>
 
-      <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* User Prompt Display */}
         {userPrompt && (
           <div className="mb-6 bg-blue-900/20 border border-blue-600/30 rounded-lg p-4">
@@ -368,275 +114,383 @@ export default function ListeningPage() {
           </div>
         )}
 
-        {!testStarted && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold mb-4">Listening Practice Test</h2>
-            <p className="text-gray-300 mb-6">
-              This is a demo listening test. You will hear a conversation about
-              vacation planning. Listen carefully and answer the questions
-              below.
-            </p>
-            <button
-              onClick={startDemo}
-              className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-md font-medium transition-colors"
-            >
-              Start Listening Test
-            </button>
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            AI-Powered Listening Practice
+          </h2>
+          <p className="text-gray-300 text-lg">
+            Practice your IELTS listening skills with our advanced AI voice
+            assistant.
+          </p>
+        </div>
+
+        {/* Main Listening Test Section - Centered */}
+        <div className="flex justify-center mb-12">
+          <div className="bg-gray-900 rounded-xl shadow-2xl p-12 border border-gray-700 max-w-4xl w-full">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg
+                  className="w-10 h-10 text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15.536 12.829c0 2.071-1.679 3.75-3.75 3.75s-3.75-1.679-3.75-3.75 1.679-3.75 3.75-3.75 3.75 1.679 3.75 3.75zM12 7v10m0 0l3-3m-3 3l-3-3"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-4">
+                IELTS Listening Test
+              </h3>
+              <p className="text-gray-300 text-lg mb-8">
+                Listen to the AI voice assistant and improve your IELTS listening
+                skills. Follow the instructions carefully.
+              </p>
+            </div>
+
+            {/* Voice Assistant Component - Centered */}
+            <div className="flex justify-center items-center">
+              <ListeningVoiceAssistant />
+            </div>
           </div>
-        )}
+        </div>
 
-        {testStarted && !showResults && (
-          <div>
-            {/* Audio Player */}
-            <div className="bg-gray-800 rounded-lg p-6 mb-6">
-              <h3 className="text-xl font-bold mb-4">🎧 Audio Player</h3>
+        {/* Climate Change MCQ Questions Section */}
+        <div className="bg-gray-900 rounded-xl shadow-2xl p-8 border border-gray-700 mb-8">
+          <div className="mb-6">
+            <h3 className="text-2xl font-bold text-white mb-2">
+              Listening Practice Questions - Climate Change
+            </h3>
+            <p className="text-gray-300">
+              Answer the following multiple choice questions based on what you heard.
+            </p>
+          </div>
 
-              {/* Audio Status with Emoji */}
-              <div className="mb-6 p-4 bg-gray-700 rounded-lg text-center">
-                <div className="text-3xl mb-2">
-                  {isGeneratingAudio && "🎤"}
-                  {isPlaying && "🔊"}
-                  {isPaused && "⏸️"}
-                  {!isPlaying && !isPaused && !isGeneratingAudio && "🎵"}
-                </div>
-                <p className="text-lg font-medium text-blue-200">
-                  {audioStatus}
-                </p>
-                <div className="mt-2 text-sm text-gray-400">
-                  Timer: {formatTime(currentTime)} / {formatTime(duration)}
-                </div>
-              </div>
-
-              {/* Controls */}
-              <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
-                {!isPlaying && !isPaused && !isGeneratingAudio && (
-                  <button
-                    onClick={startDemo}
-                    disabled={isGeneratingAudio}
-                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
-                  >
-                    🎵 Play Conversation
-                  </button>
-                )}
-
-                {!isPlaying && !isPaused && audioLoaded && (
-                  <button
-                    onClick={playAudio}
-                    disabled={isGeneratingAudio}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    🔄 Replay
-                  </button>
-                )}
-
-                {isPlaying && (
-                  <button
-                    onClick={pauseDemo}
-                    className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    ⏸️ Pause
-                  </button>
-                )}
-
-                {isPaused && (
-                  <button
-                    onClick={resumeDemo}
-                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    ▶️ Resume
-                  </button>
-                )}
-
-                {(isPlaying || isPaused) && (
-                  <button
-                    onClick={stopDemo}
-                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    ⏹️ Stop
-                  </button>
-                )}
-              </div>
-
-              {/* Speed Controls */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
-                <span className="text-sm text-gray-400 mr-2">🎛️ Speed:</span>
-                {[0.75, 1, 1.25, 1.5].map((speed) => (
-                  <button
-                    key={speed}
-                    onClick={() => changePlaybackSpeed(speed)}
-                    disabled={isGeneratingAudio}
-                    className={`px-3 py-1 rounded text-sm transition-colors disabled:opacity-50 ${
-                      playbackSpeed === speed
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-600 text-gray-300 hover:bg-gray-500"
-                    }`}
-                  >
-                    {speed}x
-                  </button>
-                ))}
-              </div>
-
-              {/* Audio Info */}
-              <div className="mt-4 p-3 bg-blue-900 rounded-lg">
-                <p className="text-sm text-blue-200">
-                  🗣️ <strong>Conversation Topic:</strong> Vacation Planning
-                </p>
-                <p className="text-xs text-blue-300 mt-1">
-                  Listen to two friends discussing their upcoming 7-day trip to
-                  Paris
-                </p>
+          <div className="space-y-8">
+            {/* Question 1 */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-600">
+              <h4 className="text-lg font-semibold text-white mb-4">
+                1. What is the primary cause of climate change mentioned in the recording?
+              </h4>
+              <div className="space-y-3">
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question1"
+                    value="A"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question1', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question1 === 'A' ? 'text-green-400 font-bold' : isSubmitted && answers.question1 === 'A' && correctAnswers.question1 !== 'A' ? 'text-red-400' : 'text-gray-300'}`}>A) Natural weather patterns</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question1"
+                    value="B"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question1', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question1 === 'B' ? 'text-green-400 font-bold' : isSubmitted && answers.question1 === 'B' && correctAnswers.question1 !== 'B' ? 'text-red-400' : 'text-gray-300'}`}>B) Human activities and greenhouse gas emissions</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question1"
+                    value="C"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question1', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question1 === 'C' ? 'text-green-400 font-bold' : isSubmitted && answers.question1 === 'C' && correctAnswers.question1 !== 'C' ? 'text-red-400' : 'text-gray-300'}`}>C) Solar radiation changes</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question1"
+                    value="D"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question1', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question1 === 'D' ? 'text-green-400 font-bold' : isSubmitted && answers.question1 === 'D' && correctAnswers.question1 !== 'D' ? 'text-red-400' : 'text-gray-300'}`}>D) Ocean currents</span>
+                </label>
               </div>
             </div>
 
-            {/* Questions */}
-            <div className="bg-gray-800 rounded-lg p-6 mb-6">
-              <h3 className="text-xl font-bold mb-6">Questions</h3>
-              <div className="space-y-6">
-                {questions.map((question, index) => (
-                  <div key={question.id} className="p-4 bg-gray-700 rounded-lg">
-                    <h4 className="text-lg font-medium text-white mb-3">
-                      {index + 1}. {question.question}
-                    </h4>
-                    <div className="space-y-2">
-                      {question.options.map((option, optionIndex) => (
-                        <label
-                          key={optionIndex}
-                          className="flex items-center text-gray-300"
-                        >
-                          <input
-                            type="radio"
-                            name={`question-${question.id}`}
-                            value={option}
-                            onChange={(e) =>
-                              handleAnswerChange(question.id, e.target.value)
-                            }
-                            className="mr-3 text-blue-600"
-                          />
-                          {option}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+            {/* Question 2 */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-600">
+              <h4 className="text-lg font-semibold text-white mb-4">
+                2. According to the recording, what percentage of global CO2 emissions come from burning fossil fuels?
+              </h4>
+              <div className="space-y-3">
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question2"
+                    value="A"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question2', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question2 === 'A' ? 'text-green-400 font-bold' : isSubmitted && answers.question2 === 'A' && correctAnswers.question2 !== 'A' ? 'text-red-400' : 'text-gray-300'}`}>A) 65%</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question2"
+                    value="B"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question2', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question2 === 'B' ? 'text-green-400 font-bold' : isSubmitted && answers.question2 === 'B' && correctAnswers.question2 !== 'B' ? 'text-red-400' : 'text-gray-300'}`}>B) 75%</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question2"
+                    value="C"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question2', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question2 === 'C' ? 'text-green-400 font-bold' : isSubmitted && answers.question2 === 'C' && correctAnswers.question2 !== 'C' ? 'text-red-400' : 'text-gray-300'}`}>C) 85%</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question2"
+                    value="D"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question2', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question2 === 'D' ? 'text-green-400 font-bold' : isSubmitted && answers.question2 === 'D' && correctAnswers.question2 !== 'D' ? 'text-red-400' : 'text-gray-300'}`}>D) 95%</span>
+                </label>
               </div>
+            </div>
 
-              <button
-                onClick={submitAnswers}
-                className="w-full bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-md font-medium transition-colors mt-6"
+            {/* Question 3 */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-600">
+              <h4 className="text-lg font-semibold text-white mb-4">
+                3. Which solution to climate change was mentioned as most effective in the short term?
+              </h4>
+              <div className="space-y-3">
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question3"
+                    value="A"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question3', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question3 === 'A' ? 'text-green-400 font-bold' : isSubmitted && answers.question3 === 'A' && correctAnswers.question3 !== 'A' ? 'text-red-400' : 'text-gray-300'}`}>A) Renewable energy transition</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question3"
+                    value="B"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question3', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question3 === 'B' ? 'text-green-400 font-bold' : isSubmitted && answers.question3 === 'B' && correctAnswers.question3 !== 'B' ? 'text-red-400' : 'text-gray-300'}`}>B) Reforestation programs</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question3"
+                    value="C"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question3', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question3 === 'C' ? 'text-green-400 font-bold' : isSubmitted && answers.question3 === 'C' && correctAnswers.question3 !== 'C' ? 'text-red-400' : 'text-gray-300'}`}>C) Carbon capture technology</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question3"
+                    value="D"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question3', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question3 === 'D' ? 'text-green-400 font-bold' : isSubmitted && answers.question3 === 'D' && correctAnswers.question3 !== 'D' ? 'text-red-400' : 'text-gray-300'}`}>D) International policy agreements</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Question 4 */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-600">
+              <h4 className="text-lg font-semibold text-white mb-4">
+                4. What year was mentioned as the target for achieving net-zero emissions?
+              </h4>
+              <div className="space-y-3">
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question4"
+                    value="A"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question4', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question4 === 'A' ? 'text-green-400 font-bold' : isSubmitted && answers.question4 === 'A' && correctAnswers.question4 !== 'A' ? 'text-red-400' : 'text-gray-300'}`}>A) 2040</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question4"
+                    value="B"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question4', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question4 === 'B' ? 'text-green-400 font-bold' : isSubmitted && answers.question4 === 'B' && correctAnswers.question4 !== 'B' ? 'text-red-400' : 'text-gray-300'}`}>B) 2050</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question4"
+                    value="C"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question4', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question4 === 'C' ? 'text-green-400 font-bold' : isSubmitted && answers.question4 === 'C' && correctAnswers.question4 !== 'C' ? 'text-red-400' : 'text-gray-300'}`}>C) 2060</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question4"
+                    value="D"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question4', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question4 === 'D' ? 'text-green-400 font-bold' : isSubmitted && answers.question4 === 'D' && correctAnswers.question4 !== 'D' ? 'text-red-400' : 'text-gray-300'}`}>D) 2070</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Question 5 */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-600">
+              <h4 className="text-lg font-semibold text-white mb-4">
+                5. Which region was mentioned as being most vulnerable to sea level rise?
+              </h4>
+              <div className="space-y-3">
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question5"
+                    value="A"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question5', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question5 === 'A' ? 'text-green-400 font-bold' : isSubmitted && answers.question5 === 'A' && correctAnswers.question5 !== 'A' ? 'text-red-400' : 'text-gray-300'}`}>A) Small island nations in the Pacific</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question5"
+                    value="B"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question5', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question5 === 'B' ? 'text-green-400 font-bold' : isSubmitted && answers.question5 === 'B' && correctAnswers.question5 !== 'B' ? 'text-red-400' : 'text-gray-300'}`}>B) Coastal cities in Europe</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question5"
+                    value="C"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question5', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question5 === 'C' ? 'text-green-400 font-bold' : isSubmitted && answers.question5 === 'C' && correctAnswers.question5 !== 'C' ? 'text-red-400' : 'text-gray-300'}`}>C) Arctic communities</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  <input
+                    type="radio"
+                    name="question5"
+                    value="D"
+                    className="text-blue-500 focus:ring-blue-500"
+                    onChange={(e) => handleAnswerChange('question5', e.target.value)}
+                    disabled={isSubmitted}
+                  />
+                  <span className={`${isSubmitted && correctAnswers.question5 === 'D' ? 'text-green-400 font-bold' : isSubmitted && answers.question5 === 'D' && correctAnswers.question5 !== 'D' ? 'text-red-400' : 'text-gray-300'}`}>D) Desert regions</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button and Score Display */}
+          <div className="mt-8 text-center">
+            {!isSubmitted ? (
+              <button 
+                onClick={handleSubmit}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200"
+                disabled={Object.keys(answers).length < 5}
               >
                 Submit Answers
               </button>
-            </div>
-          </div>
-        )}
-
-        {showResults && (
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-6">Test Results</h2>
-
-            {(() => {
-              const score = calculateScore();
-              return (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-gray-700 rounded-lg p-4 text-center">
-                      <h3 className="text-lg font-medium text-gray-300">
-                        Score
-                      </h3>
-                      <p className="text-3xl font-bold text-green-400">
-                        {score.percentage}%
-                      </p>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-gray-800 border border-gray-600 rounded-lg p-6">
+                  <h3 className="text-2xl font-bold text-white mb-4">Your Results</h3>
+                  <div className="flex items-center justify-center space-x-4 mb-4">
+                    <div className="text-4xl font-bold text-blue-400">
+                      {score}%
                     </div>
-                    <div className="bg-gray-700 rounded-lg p-4 text-center">
-                      <h3 className="text-lg font-medium text-gray-300">
-                        Correct Answers
-                      </h3>
-                      <p className="text-3xl font-bold text-blue-400">
-                        {score.correct}/{score.total}
-                      </p>
-                    </div>
-                    <div className="bg-gray-700 rounded-lg p-4 text-center">
-                      <h3 className="text-lg font-medium text-gray-300">
-                        Time Taken
-                      </h3>
-                      <p className="text-3xl font-bold text-purple-400">
-                        {formatTime(currentTime)}
-                      </p>
+                    <div className="text-gray-300">
+                      ({Object.keys(correctAnswers).filter(q => answers[q] === correctAnswers[q as keyof typeof correctAnswers]).length} out of {Object.keys(correctAnswers).length} correct)
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-medium">Answer Review</h3>
-                    {questions.map((question, index) => {
-                      const userAnswer = answers[question.id];
-                      const isCorrect = userAnswer === question.correctAnswer;
-
-                      return (
-                        <div
-                          key={question.id}
-                          className={`p-4 rounded-lg border-l-4 ${
-                            isCorrect
-                              ? "bg-green-900 border-green-500"
-                              : "bg-red-900 border-red-500"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h4 className="font-medium text-white mb-2">
-                                {index + 1}. {question.question}
-                              </h4>
-                              <div className="space-y-1 text-sm">
-                                <p className="text-gray-300">
-                                  <span className="font-medium">
-                                    Your answer:
-                                  </span>{" "}
-                                  {userAnswer || "No answer selected"}
-                                </p>
-                                <p className="text-gray-300">
-                                  <span className="font-medium">
-                                    Correct answer:
-                                  </span>{" "}
-                                  {question.correctAnswer}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <span
-                                className={`px-2 py-1 rounded text-xs font-medium ${
-                                  isCorrect
-                                    ? "bg-green-600 text-white"
-                                    : "bg-red-600 text-white"
-                                }`}
-                              >
-                                {isCorrect ? "Correct" : "Incorrect"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="w-full bg-gray-700 rounded-full h-4 mb-4">
+                    <div 
+                      className={`h-4 rounded-full transition-all duration-1000 ${
+                        score >= 80 ? 'bg-green-500' : 
+                        score >= 60 ? 'bg-yellow-500' : 
+                        'bg-red-500'
+                      }`}
+                      style={{ width: `${score}%` }}
+                    ></div>
                   </div>
-                </>
-              );
-            })()}
-
-            <div className="mt-6 flex space-x-4">
-              <button
-                onClick={resetTest}
-                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-md font-medium transition-colors"
-              >
-                Try Again
-              </button>
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-md font-medium transition-colors"
-              >
-                Back to Dashboard
-              </button>
-            </div>
+                  <p className="text-gray-300">
+                    {score >= 80 ? 'Excellent work! You have a strong understanding of the material.' :
+                     score >= 60 ? 'Good job! You have a decent grasp of the content with room for improvement.' :
+                     'Keep practicing! Review the material and try again to improve your score.'}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => {
+                    setIsSubmitted(false);
+                    setAnswers({});
+                    setScore(0);
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200"
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      </main>
+
       <FloatingChatbot />
     </div>
   );
