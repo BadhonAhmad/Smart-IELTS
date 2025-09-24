@@ -84,10 +84,10 @@ async function generateMCQQuestions(topic = 'General Knowledge', count = 5) {
  */
 async function generateIELTSQuestions(skill = 'reading', count = 5) {
   const skillTopics = {
-    listening: 'IELTS Listening comprehension with audio scenarios, conversations, and academic lectures',
-    reading: 'IELTS Reading comprehension with academic texts, articles, and passage analysis',
-    writing: 'IELTS Writing skills including task response, coherence, lexical resource, and grammatical accuracy',
-    speaking: 'IELTS Speaking skills including fluency, pronunciation, vocabulary, and grammar'
+    listening: 'IELTS Listening',
+    reading: 'IELTS Reading',
+    writing: 'IELTS Writing',
+    speaking: 'IELTS Speaking'
   };
 
   const topic = skillTopics[skill.toLowerCase()] || skillTopics.reading;
@@ -207,7 +207,7 @@ async function generateIELTSPassage(theme = 'science', level = 'intermediate') {
 async function generateQuestionsFromPassage(passageContent, level = 'intermediate') {
   try {
     // Get the generative model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Create the prompt for passage-based question generation
     const prompt = `Based on the following passage, generate exactly 5 multiple choice questions for IELTS reading comprehension at ${level} level:
@@ -279,6 +279,217 @@ Requirements:
 }
 
 /**
+ * Generate fill-in-the-blank questions based on a given passage
+ * @param {string} passageContent - The passage content
+ * @param {number} count - Number of fill-blank questions to generate
+ * @returns {Promise<Object>} Generated fill-blank questions response
+ */
+async function generateFillBlankQuestions(passageContent, count = 2) {
+  try {
+    // Get the generative model
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // Create the prompt for fill-blank question generation
+    const prompt = `Based on the following passage, generate exactly ${count} fill-in-the-blank questions for IELTS reading comprehension:
+
+PASSAGE:
+${passageContent}
+
+CRITICAL: Return ONLY valid JSON in this EXACT format with NO additional text, explanations, or formatting:
+
+{"questions":[{"id":1,"text":"The passage states that green infrastructure helps mitigate heat absorption while providing natural cooling through _____.","blanks":[{"position":0,"correctAnswer":"evapotranspiration","explanation":"Brief explanation of the answer"}]}]}
+
+Requirements:
+- Generate exactly ${count} fill-in-the-blank questions
+- Each question should have 1-2 blanks (represented by _____)
+- Blanks should test key vocabulary, concepts, or factual information from the passage
+- Provide position index for each blank (starting from 0)
+- Include brief explanations for each correct answer
+- Use information directly from the passage
+- Return ONLY the JSON object, no other text`;
+
+    // Generate content
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Clean and parse the JSON response
+    let cleanedText = text.trim();
+    
+    // Remove markdown code blocks if present
+    cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/\n?```/g, '');
+    
+    // Extract JSON part
+    const jsonStart = cleanedText.indexOf('{');
+    const jsonEnd = cleanedText.lastIndexOf('}');
+    
+    if (jsonStart === -1 || jsonEnd === -1) {
+      throw new Error('No valid JSON found in response');
+    }
+    
+    cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(cleanedText);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError.message);
+      console.error('Raw response:', text.substring(0, 500) + '...');
+      console.error('Cleaned text:', cleanedText.substring(0, 500) + '...');
+      throw new Error(`JSON parsing failed: ${parseError.message}`);
+    }
+    
+    // Validate that we have questions
+    if (!parsedResponse.questions || parsedResponse.questions.length === 0) {
+      throw new Error('No fill-blank questions generated');
+    }
+
+    return {
+      success: true,
+      data: parsedResponse.questions,
+      count: parsedResponse.questions.length
+    };
+  } catch (error) {
+    console.error('Error generating fill-blank questions:', error);
+    return {
+      success: false,
+      error: error.message,
+      data: []
+    };
+  }
+}
+
+/**
+ * Analyze handwritten writing answer from image and provide IELTS scoring
+ * @param {Buffer} imageBuffer - The image buffer
+ * @param {Object} question - The writing question details
+ * @returns {Promise<Object>} Analysis response with scores and feedback
+ */
+async function analyzeWritingImage(imageBuffer, question) {
+  try {
+    // Get the generative model that supports vision
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // Convert buffer to base64
+    const base64Image = imageBuffer.toString('base64');
+
+    // Create the analysis prompt
+    const prompt = `You are an expert IELTS examiner analyzing a handwritten writing answer. 
+
+WRITING TASK DETAILS:
+Type: ${question.type}
+Title: ${question.title}
+Description: ${question.description}
+Instructions: ${question.instructions ? question.instructions.join(', ') : 'N/A'}
+Time Limit: ${question.timeLimit || 'N/A'}
+Word Count Requirement: ${question.wordCount || 'N/A'}
+
+Please analyze this handwritten answer image and provide a comprehensive IELTS writing evaluation.
+
+CRITICAL: Return ONLY valid JSON in this EXACT format with NO additional text:
+
+{
+  "extractedText": "The full text extracted from the handwriting",
+  "wordCount": 250,
+  "scores": {
+    "overallScore": 6.5,
+    "taskAchievement": 7.0,
+    "coherenceCohesion": 6.5,
+    "lexicalResource": 6.0,
+    "grammaticalRange": 6.5
+  },
+  "analysis": {
+    "taskResponse": "Detailed analysis of how well the task was addressed",
+    "organization": "Analysis of coherence and cohesion",
+    "vocabulary": "Analysis of lexical resource usage",
+    "grammar": "Analysis of grammatical range and accuracy"
+  },
+  "errors": {
+    "spelling": [
+      {"word": "govenment", "correction": "government", "position": 45},
+      {"word": "necesary", "correction": "necessary", "position": 120}
+    ],
+    "grammar": [
+      {"error": "is necesary", "correction": "is necessary", "explanation": "Spelling error in adjective", "position": 115}
+    ]
+  },
+  "feedback": "Overall examiner feedback with specific suggestions for improvement",
+  "bandDescriptors": {
+    "taskAchievement": "Addresses the task with relevant ideas but may lack development",
+    "coherenceCohesion": "Generally well organized with clear progression",
+    "lexicalResource": "Adequate range of vocabulary with some inaccuracies",
+    "grammaticalRange": "Mix of simple and complex sentences with some errors"
+  }
+}
+
+Requirements:
+- Extract ALL readable text from the handwriting accurately
+- Provide IELTS band scores (1-9 scale, with 0.5 increments)
+- Calculate overall score as average of the 4 criteria
+- Identify spelling and grammar errors with positions
+- Give constructive feedback focusing on IELTS criteria
+- Analyze according to IELTS Task ${question.type === 'essay' ? '2' : '1'} requirements
+- Consider word count requirements in scoring
+- Return ONLY the JSON object`;
+
+    // Prepare the image data
+    const imagePart = {
+      inlineData: {
+        data: base64Image,
+        mimeType: 'image/jpeg'
+      }
+    };
+
+    // Generate content with image and prompt
+    const result = await model.generateContent([prompt, imagePart]);
+    const response = await result.response;
+    const text = response.text();
+
+    // Clean and parse the JSON response
+    let cleanedText = text.trim();
+    
+    // Remove markdown code blocks if present
+    cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/\n?```/g, '');
+    
+    // Extract JSON part
+    const jsonStart = cleanedText.indexOf('{');
+    const jsonEnd = cleanedText.lastIndexOf('}');
+    
+    if (jsonStart === -1 || jsonEnd === -1) {
+      throw new Error('No valid JSON found in response');
+    }
+    
+    cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(cleanedText);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError.message);
+      console.error('Raw response:', text.substring(0, 500) + '...');
+      throw new Error(`JSON parsing failed: ${parseError.message}`);
+    }
+
+    // Validate required fields
+    if (!parsedResponse.extractedText || !parsedResponse.scores) {
+      throw new Error('Invalid response format - missing required fields');
+    }
+
+    return {
+      success: true,
+      data: parsedResponse
+    };
+  } catch (error) {
+    console.error('Error analyzing writing image:', error);
+    return {
+      success: false,
+      error: error.message,
+      data: null
+    };
+  }
+}
+
+/**
  * Generate chat response using Gemini AI for IELTS assistance
  * @param {string} message - User's message/question
  * @returns {Promise<Object>} Response object with success status and data
@@ -330,5 +541,7 @@ module.exports = {
   generatePassage,
   generateIELTSPassage,
   generateQuestionsFromPassage,
-  generateChatResponse
+  generateFillBlankQuestions,
+  generateChatResponse,
+  analyzeWritingImage
 };

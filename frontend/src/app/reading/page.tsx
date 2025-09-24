@@ -35,9 +35,17 @@ export default function ReadingTest() {
   const [isLoading, setIsLoading] = useState(true);
   const [userPrompt, setUserPrompt] = useState<string>("");
   const [hasTestData, setHasTestData] = useState(false);
+  const [mcqQuestions, setMcqQuestions] = useState<MCQQuestion[]>([]);
+  const [fillBlankQuestions, setFillBlankQuestions] = useState<FillBlankQuestion[]>([]);
+  const [passage, setPassage] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [isClient, setIsClient] = useState(false);
 
   // Get user prompt from localStorage on component mount and check for test data
   useEffect(() => {
+    // Set client-side flag
+    setIsClient(true);
+    
     const prompt = localStorage.getItem("readingTestPrompt");
     const testData = localStorage.getItem("generatedReadingTest");
 
@@ -49,103 +57,196 @@ export default function ReadingTest() {
 
     // Check if we have test data from popup or just show mock data
     setHasTestData(true);
-    setIsLoading(false);
+    
+    // Generate MCQ questions using AI
+    generateQuestions();
   }, []);
 
-  // Mock passage from MCP server
-  const passage = `
-Climate Change and Urban Planning
-
-The relationship between climate change and urban planning has become increasingly critical in the 21st century. As global temperatures continue to rise, cities worldwide are experiencing unprecedented challenges that require innovative solutions and adaptive strategies.
-
-Urban areas are particularly vulnerable to climate change impacts due to their high population density and infrastructure complexity. The phenomenon known as the "urban heat island effect" exacerbates temperature increases in cities, where concrete and asphalt surfaces absorb and retain heat more effectively than natural landscapes. This creates localized temperature differences that can be 2-5 degrees Celsius higher than surrounding rural areas.
-
-Modern urban planners are now incorporating climate resilience into their designs through various approaches. Green infrastructure, including parks, green roofs, and urban forests, helps mitigate heat absorption while providing natural cooling through evapotranspiration. Additionally, sustainable transportation systems reduce greenhouse gas emissions and improve air quality.
-
-The integration of renewable energy sources into urban planning represents another crucial adaptation strategy. Solar panels on building rooftops, wind turbines in appropriate locations, and district cooling systems powered by renewable energy all contribute to reducing cities' carbon footprints.
-
-However, implementing these solutions requires significant financial investment and political commitment. Many developing cities face the challenge of balancing immediate economic needs with long-term environmental sustainability. The success of climate-adaptive urban planning ultimately depends on collaboration between government agencies, private sector stakeholders, and community organizations.
-  `;
-
-  // Mock MCQ questions from MCP server
-  const mcqQuestions: MCQQuestion[] = [
-    {
-      id: 1,
-      question:
-        "According to the passage, what is the primary cause of the urban heat island effect?",
-      options: [
-        "High population density in cities",
-        "Concrete and asphalt surfaces absorbing heat",
-        "Lack of green spaces in urban areas",
-        "Industrial activities in cities",
-      ],
-      correctAnswer: 1,
-      explanation:
-        "The passage states that concrete and asphalt surfaces absorb and retain heat more effectively than natural landscapes.",
-    },
-    {
-      id: 2,
-      question:
-        "How much higher can urban temperatures be compared to rural areas?",
-      options: [
-        "1-3 degrees Celsius",
-        "2-5 degrees Celsius",
-        "3-7 degrees Celsius",
-        "5-10 degrees Celsius",
-      ],
-      correctAnswer: 1,
-      explanation:
-        "The passage mentions that urban areas can be 2-5 degrees Celsius higher than surrounding rural areas.",
-    },
-    {
-      id: 3,
-      question:
-        "What challenge do developing cities face according to the passage?",
-      options: [
-        "Lack of renewable energy technology",
-        "Insufficient green infrastructure",
-        "Balancing economic needs with environmental sustainability",
-        "Political instability affecting planning",
-      ],
-      correctAnswer: 2,
-      explanation:
-        "The passage states that developing cities face the challenge of balancing immediate economic needs with long-term environmental sustainability.",
-    },
-  ];
-
-  // Mock fill-in-the-blanks questions from MCP server
-  const fillBlankQuestions: FillBlankQuestion[] = [
-    {
-      id: 1,
-      text: "Green infrastructure helps mitigate heat absorption while providing natural cooling through _____.",
-      blanks: [
-        {
-          position: 0,
-          correctAnswer: "evapotranspiration",
-          explanation:
-            "Evapotranspiration is the process by which plants release water vapor, providing natural cooling.",
+  // Function to generate all content: passage, MCQ questions, and fill-blank questions
+  const generateQuestions = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+      
+      // Use backend URL from environment or default to localhost:4000
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
+      
+      // Step 1: Generate passage
+      console.log('Generating passage...');
+      const passageResponse = await fetch(`${backendUrl}/api/gemini/generate-ielts-passage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      ],
-    },
-    {
-      id: 2,
-      text: "The success of climate-adaptive urban planning depends on collaboration between _____, private sector stakeholders, and _____.",
-      blanks: [
+        body: JSON.stringify({
+          theme: 'science',
+          level: 'intermediate'
+        }),
+      });
+
+      if (!passageResponse.ok) {
+        throw new Error(`Failed to generate passage: ${passageResponse.status}`);
+      }
+
+      const passageData = await passageResponse.json();
+      console.log('Passage generated:', passageData);
+
+      if (!passageData.success || !passageData.data.content) {
+        throw new Error('Failed to generate passage - invalid response');
+      }
+
+      const generatedPassage = passageData.data.content;
+      setPassage(generatedPassage);
+
+      // Step 2: Generate MCQ questions based on the passage
+      console.log('Generating MCQ questions from passage...');
+      const mcqResponse = await fetch(`${backendUrl}/api/gemini/generate-mcq-from-passage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          passage: generatedPassage,
+          count: 3,
+          level: 'intermediate'
+        }),
+      });
+
+      if (!mcqResponse.ok) {
+        throw new Error(`Failed to generate MCQ questions: ${mcqResponse.status}`);
+      }
+
+      const mcqData = await mcqResponse.json();
+      console.log('MCQ questions generated from passage:', mcqData);
+
+      if (mcqData.success && mcqData.data && mcqData.data.questions) {
+        // Transform the response to match our MCQQuestion interface
+        const transformedQuestions: MCQQuestion[] = mcqData.data.questions.map((q: any, index: number) => {
+          let correctAnswerIndex = 0;
+          
+          // Handle the response format from generateQuestionsFromPassage
+          if (q.options && typeof q.options === 'object') {
+            const optionsArray = [q.options.A, q.options.B, q.options.C, q.options.D];
+            // Find correct answer index by matching the letter
+            correctAnswerIndex = q.correctAnswer === 'A' ? 0 : 
+                               q.correctAnswer === 'B' ? 1 : 
+                               q.correctAnswer === 'C' ? 2 : 3;
+            
+            return {
+              id: index + 1,
+              question: q.questionText || q.question,
+              options: optionsArray,
+              correctAnswer: correctAnswerIndex,
+              explanation: q.explanation || 'No explanation provided'
+            };
+          }
+          
+          return {
+            id: index + 1,
+            question: q.questionText || q.question,
+            options: q.options || [],
+            correctAnswer: 0,
+            explanation: q.explanation || 'No explanation provided'
+          };
+        });
+        
+        console.log('Transformed MCQ questions:', transformedQuestions);
+        setMcqQuestions(transformedQuestions);
+      }
+
+      // Step 3: Generate fill-blank questions based on the passage
+      console.log('Generating fill-blank questions...');
+      console.log('Passage length:', generatedPassage.length);
+      console.log('Passage content:', generatedPassage.substring(0, 200) + '...');
+      
+      try {
+        const fillBlankResponse = await fetch(`${backendUrl}/api/gemini/generate-fill-blank`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            passage: generatedPassage,
+            count: 2
+          }),
+        });
+
+        if (!fillBlankResponse.ok) {
+          console.error('Fill-blank response not ok:', fillBlankResponse.status, fillBlankResponse.statusText);
+          const errorText = await fillBlankResponse.text();
+          console.error('Fill-blank error response:', errorText);
+          throw new Error(`Failed to generate fill-blank questions: ${fillBlankResponse.status}`);
+        }
+
+        const fillBlankData = await fillBlankResponse.json();
+        console.log('Fill-blank generated:', fillBlankData);
+
+        if (fillBlankData.success && fillBlankData.data && fillBlankData.data.questions) {
+          setFillBlankQuestions(fillBlankData.data.questions);
+        }
+      } catch (fillBlankError) {
+        console.error('Fill-blank generation failed:', fillBlankError);
+        // Continue without fill-blank questions, we still have passage and MCQ
+        setFillBlankQuestions([]);
+      }
+      
+      // Check if we have MCQ questions to consider success
+      if (!mcqData.success || !mcqData.data || !mcqData.data.questions || mcqData.data.questions.length === 0) {
+        throw new Error('Failed to generate MCQ questions - no questions received');
+      }
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      console.error('Error type:', typeof error);
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+      }
+      setError(`Failed to generate questions: ${error instanceof Error ? error.message : 'Unknown error'}. Using default questions.`);
+      
+      // Fallback to mock questions
+      const mockQuestions: MCQQuestion[] = [
         {
-          position: 0,
-          correctAnswer: "government agencies",
-          explanation:
-            "Government agencies are mentioned as one of the key stakeholders in collaboration.",
+          id: 1,
+          question: "What is the main cause of the urban heat island effect mentioned in the passage?",
+          options: [
+            "High population density in cities",
+            "Concrete and asphalt surfaces absorbing heat",
+            "Lack of green spaces in urban areas",
+            "Industrial activities in cities",
+          ],
+          correctAnswer: 1,
+          explanation: "The passage states that concrete and asphalt surfaces absorb and retain heat more effectively than natural landscapes.",
         },
         {
-          position: 1,
-          correctAnswer: "community organizations",
-          explanation:
-            "Community organizations are the third group mentioned for successful collaboration.",
+          id: 2,
+          question: "How much higher can urban temperatures be compared to rural areas?",
+          options: [
+            "1-3 degrees Celsius",
+            "2-5 degrees Celsius",
+            "3-7 degrees Celsius",
+            "5-10 degrees Celsius",
+          ],
+          correctAnswer: 1,
+          explanation: "The passage mentions that urban areas can be 2-5 degrees Celsius higher than surrounding rural areas.",
         },
-      ],
-    },
-  ];
+        {
+          id: 3,
+          question: "What challenge do developing cities face according to the passage?",
+          options: [
+            "Lack of renewable energy technology",
+            "Insufficient green infrastructure",
+            "Balancing economic needs with environmental sustainability",
+            "Political instability affecting planning",
+          ],
+          correctAnswer: 2,
+          explanation: "The passage states that developing cities face the challenge of balancing immediate economic needs with long-term environmental sustainability.",
+        },
+      ];
+      setMcqQuestions(mockQuestions);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleMCQAnswer = (questionId: number, selectedOption: number) => {
     setUserAnswers((prev) => ({
@@ -247,16 +348,26 @@ However, implementing these solutions requires significant financial investment 
 
   const scores = showResults ? calculateScore() : null;
 
-  // Show loading state initially
-  if (isLoading) {
+  // Show loading state initially or if not on client yet
+  if (isLoading || !isClient) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <h2 className="text-2xl font-semibold">Loading Reading Test...</h2>
+          <h2 className="text-2xl font-semibold">
+            {!isClient ? "Loading..." : "Generating AI Questions..."}
+          </h2>
           <p className="text-gray-400 mt-2">
-            Please wait while we prepare your test
+            {!isClient 
+              ? "Initializing the application..."
+              : "Please wait while we create personalized IELTS reading questions using AI"
+            }
           </p>
+          {isClient && (
+            <div className="mt-4 text-sm text-gray-500">
+              This may take a moment as we generate high-quality questions for you
+            </div>
+          )}
         </div>
       </div>
     );
@@ -315,6 +426,37 @@ However, implementing these solutions requires significant financial investment 
                 </h3>
                 <p className="text-gray-300 text-sm italic">
                   &quot;{userPrompt}&quot;
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 bg-red-900/20 border border-red-600/30 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-5 h-5 text-red-400 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-red-300 mb-1">
+                  Warning:
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  {error}
                 </p>
               </div>
             </div>
