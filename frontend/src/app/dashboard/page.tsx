@@ -34,10 +34,68 @@ export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
+  const [showBandScores, setShowBandScores] = useState(false);
   const [activeTestType, setActiveTestType] = useState<
     "reading" | "listening" | "speaking" | "writing" | null
   >(null);
   const router = useRouter();
+
+  // Mock band scores data
+  const mockBandScores = [
+    {
+      id: 1,
+      date: "2024-09-20",
+      testType: "Full Practice Test",
+      listening: 7.5,
+      reading: 8.0,
+      writing: 6.5,
+      speaking: 7.0,
+      overall: 7.25
+    },
+    {
+      id: 2,
+      date: "2024-09-15",
+      testType: "Academic Practice",
+      listening: 8.0,
+      reading: 7.5,
+      writing: 7.0,
+      speaking: 7.5,
+      overall: 7.5
+    },
+    {
+      id: 3,
+      date: "2024-09-10",
+      testType: "General Training",
+      listening: 6.5,
+      reading: 7.0,
+      writing: 6.0,
+      speaking: 6.5,
+      overall: 6.5
+    },
+    {
+      id: 4,
+      date: "2024-09-05",
+      testType: "Mock Test 1",
+      listening: 7.0,
+      reading: 7.5,
+      writing: 6.5,
+      speaking: 6.0,
+      overall: 6.75
+    },
+    {
+      id: 5,
+      date: "2024-08-30",
+      testType: "Practice Session",
+      listening: 6.0,
+      reading: 6.5,
+      writing: 5.5,
+      speaking: 6.0,
+      overall: 6.0
+    }
+  ];
+
+  // Calculate overall band score (average of all tests)
+  const overallBandScore = mockBandScores.reduce((sum, test) => sum + test.overall, 0) / mockBandScores.length;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -84,6 +142,15 @@ export default function Dashboard() {
               <span className="text-sm text-gray-300">
                 Welcome back, {currentUser?.name}!
               </span>
+              <button
+                onClick={() => setShowBandScores(true)}
+                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors duration-200"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>Band Scores</span>
+              </button>
               <button
                 onClick={handleLogout}
                 className="text-sm text-blue-400 hover:text-blue-300 font-medium"
@@ -730,6 +797,119 @@ export default function Dashboard() {
       </main>
 
       {/* Test Setup Popup */}
+      {/* Band Scores Modal */}
+      {showBandScores && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+              <h2 className="text-2xl font-bold text-white">Band Score History</h2>
+              <button
+                onClick={() => setShowBandScores(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Overall Band Score */}
+            <div className="p-6 border-b border-gray-700">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-300 mb-2">Overall Band Score</h3>
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-600 rounded-full mb-4">
+                  <span className="text-3xl font-bold text-white">{overallBandScore.toFixed(1)}</span>
+                </div>
+                <p className="text-gray-400">
+                  Based on {mockBandScores.length} completed tests
+                </p>
+              </div>
+            </div>
+
+            {/* Test History */}
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Test History</h3>
+              <div className="space-y-4">
+                {mockBandScores.map((test) => (
+                  <div key={test.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="text-white font-medium">{test.testType}</h4>
+                        <p className="text-gray-400 text-sm">{new Date(test.date).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-blue-400 mb-1">{test.overall}</div>
+                        <div className="text-gray-400 text-sm">Overall</div>
+                      </div>
+                    </div>
+                    
+                    {/* Individual Scores */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-white">{test.listening}</div>
+                        <div className="text-gray-400 text-sm">Listening</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-white">{test.reading}</div>
+                        <div className="text-gray-400 text-sm">Reading</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-white">{test.writing}</div>
+                        <div className="text-gray-400 text-sm">Writing</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-white">{test.speaking}</div>
+                        <div className="text-gray-400 text-sm">Speaking</div>
+                      </div>
+                    </div>
+
+                    {/* Band Level Indicator */}
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Band Level:</span>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          test.overall >= 8.5 ? 'bg-green-900 text-green-300' :
+                          test.overall >= 7.5 ? 'bg-blue-900 text-blue-300' :
+                          test.overall >= 6.5 ? 'bg-yellow-900 text-yellow-300' :
+                          test.overall >= 5.5 ? 'bg-orange-900 text-orange-300' :
+                          'bg-red-900 text-red-300'
+                        }`}>
+                          {test.overall >= 8.5 ? 'Expert User' :
+                           test.overall >= 7.5 ? 'Very Good User' :
+                           test.overall >= 6.5 ? 'Good User' :
+                           test.overall >= 5.5 ? 'Modest User' :
+                           'Limited User'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-700 bg-gray-800 rounded-b-xl">
+              <div className="text-center">
+                <p className="text-gray-400 text-sm mb-3">
+                  Band scores range from 0-9, with 9 being the highest level of English proficiency.
+                </p>
+                <button
+                  onClick={() => setShowBandScores(false)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition-colors duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showPopup && activeTestType && (
         <TestSetupPopup
           isOpen={showPopup}
