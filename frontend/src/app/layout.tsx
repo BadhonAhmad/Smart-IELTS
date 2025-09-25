@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import FloatingChatbotLeft from "@/components/FloatingChatbotLeft";
 
 export const metadata: Metadata = {
   title: "Smart IELTS",
@@ -13,7 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <FloatingChatbotLeft />
+      </body>
     </html>
   );
 }
