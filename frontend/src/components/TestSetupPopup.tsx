@@ -87,8 +87,8 @@ export default function TestSetupPopup({
           // Use mock data instead of API call
           setIsGenerating(true);
 
-          // Simulate loading time
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          // Reduced loading time for better UX
+          await new Promise((resolve) => setTimeout(resolve, 800));
 
           // Create mock test data that matches the expected format
           const mockTestData = {
@@ -178,7 +178,12 @@ However, implementing these solutions requires significant financial investment 
 
           router.push(config.route);
         } else {
-          // For other test types, use mock data for now
+          // For other test types, add a brief loading delay for better UX
+          setIsGenerating(true);
+          
+          // Brief delay to show loading state
+          await new Promise((resolve) => setTimeout(resolve, 600));
+          
           localStorage.setItem(`${testType}TestPrompt`, userInput);
           router.push(config.route);
         }
@@ -188,8 +193,10 @@ However, implementing these solutions requires significant financial investment 
       } catch (error) {
         console.error("Error generating test:", error);
         setIsGenerating(false);
-        // Show error message to user
-        alert("Failed to generate test. Please try again.");
+        
+        // Show better error feedback
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        alert(`❌ Failed to generate ${testType} test: ${errorMessage}\n\nPlease check your input and try again.`);
       }
     }
   };
@@ -202,6 +209,29 @@ However, implementing these solutions requires significant financial investment 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      {/* Full-screen loading overlay */}
+      {isGenerating && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-60">
+          <div className="bg-gray-900 rounded-lg p-8 border border-gray-700 text-center max-w-md w-full mx-4">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <h3 className="text-xl font-bold text-white">Generating Your Test</h3>
+              <p className="text-gray-300 text-sm">
+                {testType === 'reading' && 'Preparing reading passages and questions...'}
+                {testType === 'listening' && 'Setting up audio content and exercises...'}
+                {testType === 'speaking' && 'Configuring conversation topics...'}
+                {testType === 'writing' && 'Creating writing tasks and prompts...'}
+              </p>
+              <div className="flex items-center space-x-2 text-blue-400">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="bg-gray-900 rounded-lg shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -284,15 +314,20 @@ However, implementing these solutions requires significant financial investment 
             <button
               type="submit"
               disabled={!userInput.trim() || isGenerating}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors relative overflow-hidden"
             >
               {isGenerating ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Generating Test...</span>
+                  <span>Processing...</span>
                 </div>
               ) : (
-                "Generate Questions"
+                <div className="flex items-center justify-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>Generate Questions</span>
+                </div>
               )}
             </button>
           </div>
