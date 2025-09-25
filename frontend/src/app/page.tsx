@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
   const router = useRouter();
@@ -20,8 +20,8 @@ export default function Home() {
         router.push("/dashboard");
       }
     } else {
-      // Redirect to login if not authenticated
-      router.push("/login");
+      // Redirect to landing page for new visitors
+      router.push("/landing");
     }
   }, [router]);
 
