@@ -78,9 +78,18 @@ To democratize access to high-quality test preparation by leveraging artificial 
 
 ### 🔗 **Advanced MCP Server Integration**
 - **Model Context Protocol**: Seamless AI model communication and context sharing
+- **SmythOS Agent Integration**: Connected through MCP server for enhanced AI capabilities
 - **Multi-Agent Coordination**: Synchronized AI agents for comprehensive test preparation
 - **Context-Aware Responses**: Enhanced AI understanding through persistent context management
 - **Scalable AI Architecture**: Modular AI services with standardized communication protocols
+
+### 📚 **Intelligent Document Processing (RAG System)**
+- **Dedicated SmythOS RAG Agent**: Specialized agent for document analysis and question answering
+- **Pinecone Vector Database**: High-performance vector storage for semantic document search
+- **PDF Processing Pipeline**: Automated extraction and indexing of IELTS preparation materials
+- **Intelligent Q&A System**: Students can ask questions about uploaded PDFs and receive contextual answers
+- **Semantic Search**: Advanced retrieval of relevant information from large document collections
+- **Real-time Document Analysis**: Instant processing and understanding of new educational materials
 
 ### 🌍 **Global Accessibility**
 - **24/7 Availability**: Practice anytime, anywhere with internet access
@@ -116,7 +125,20 @@ Node.js + Express.js
 AI Services
 ├── Google Gemini AI: Content evaluation & generation
 ├── ElevenLabs: Natural voice conversation
+├── SmythOS Agents: Advanced AI workflow automation
+├── MCP Server: Model Context Protocol integration
+├── Pinecone Vector DB: Semantic search & RAG system
 └── Custom NLP: Performance analysis algorithms
+```
+
+### **Document Processing & RAG**
+```
+RAG Infrastructure
+├── SmythOS RAG Agent: Dedicated document Q&A
+├── Pinecone Vector Database: High-performance vector storage
+├── PDF Processing Pipeline: Document extraction & indexing
+├── Semantic Search Engine: Context-aware information retrieval
+└── MCP Protocol: Agent communication & coordination
 ```
 
 ---
@@ -124,16 +146,17 @@ AI Services
 ## 🏗️ Architecture Overview
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Frontend      │    │     Backend      │    │   AI Services   │
-│   (Next.js)     │◄──►│   (Node.js)      │◄──►│   (Gemini AI)   │
-│                 │    │                  │    │   (ElevenLabs)  │
-├─────────────────┤    ├──────────────────┤    ├─────────────────┤
-│ • User Interface│    │ • REST API       │    │ • Content Eval  │
-│ • State Mgmt    │    │ • Authentication │    │ • Voice AI      │
-│ • Voice Client  │    │ • File Upload    │    │ • NLP Analysis  │
-│ • Progress UI   │    │ • Test Logic     │    │ • Score Predict │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │     Backend      │    │   AI Services   │    │   RAG System    │
+│   (Next.js)     │◄──►│   (Node.js)      │◄──►│   (Gemini AI)   │◄──►│  (SmythOS RAG)  │
+│                 │    │                  │    │   (ElevenLabs)  │    │  (Pinecone DB)  │
+├─────────────────┤    ├──────────────────┤    ├─────────────────┤    ├─────────────────┤
+│ • User Interface│    │ • REST API       │    │ • Content Eval  │    │ • PDF Processing│
+│ • State Mgmt    │    │ • Authentication │    │ • Voice AI      │    │ • Vector Search │
+│ • Voice Client  │    │ • File Upload    │    │ • NLP Analysis  │    │ • Q&A System   │
+│ • Progress UI   │    │ • Test Logic     │    │ • Score Predict │    │ • Doc Analysis  │
+│ • PDF Q&A UI    │    │ • MCP Server     │    │ • SmythOS Agents│    │ • Semantic Ret  │
+└─────────────────┘    └──────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ---

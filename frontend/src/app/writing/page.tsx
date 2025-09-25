@@ -15,8 +15,6 @@ interface WritingQuestion {
   diagram?: string; // For diagram-based questions
 }
 
-
-
 interface WritingEvaluation {
   extractedText: string;
   wordCount: number;
@@ -68,8 +66,12 @@ export default function WritingTest() {
   const [uploadedAnswers, setUploadedAnswers] = useState<UploadedAnswer[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [expandedInstructions, setExpandedInstructions] = useState<Set<number>>(new Set());
-  const [displayedQuestions, setDisplayedQuestions] = useState<WritingQuestion[]>([]);
+  const [expandedInstructions, setExpandedInstructions] = useState<Set<number>>(
+    new Set()
+  );
+  const [displayedQuestions, setDisplayedQuestions] = useState<
+    WritingQuestion[]
+  >([]);
 
   // Full pool of 16 writing questions from MCP server
   const allWritingQuestions: WritingQuestion[] = [
@@ -232,8 +234,7 @@ export default function WritingTest() {
       ],
       timeLimit: "20 minutes",
       wordCount: "At least 150 words",
-      diagram:
-        "Town Development Maps - showing changes from 1990 to 2020",
+      diagram: "Town Development Maps - showing changes from 1990 to 2020",
     },
     {
       id: 12,
@@ -310,10 +311,13 @@ export default function WritingTest() {
   ];
 
   // Function to randomly select 3 questions from the pool of 16 and renumber them as 1, 2, 3
-  const getRandomQuestions = (questions: WritingQuestion[], count: number = 3): WritingQuestion[] => {
+  const getRandomQuestions = (
+    questions: WritingQuestion[],
+    count: number = 3
+  ): WritingQuestion[] => {
     const shuffled = [...questions].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, count);
-    
+
     // Renumber the selected questions as Task 1, Task 2, Task 3
     return selected.map((question, index) => ({
       ...question,
@@ -338,7 +342,7 @@ export default function WritingTest() {
   };
 
   const toggleInstructionsExpanded = (questionId: number) => {
-    setExpandedInstructions(prev => {
+    setExpandedInstructions((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(questionId)) {
         newSet.delete(questionId);
@@ -373,28 +377,39 @@ export default function WritingTest() {
 
     try {
       // Find the question details
-      const question = displayedQuestions.find(q => q.id === questionId);
+      const question = displayedQuestions.find((q) => q.id === questionId);
       if (!question) {
-        throw new Error('Question not found');
+        throw new Error("Question not found");
       }
+
+      console.log(
+        "Starting image analysis for question:",
+        question.id,
+        question.title
+      );
+      console.log("File details:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
 
       // Create form data
       const formData = new FormData();
-      formData.append('image', file);
-      formData.append('question', JSON.stringify(question));
+      formData.append("image", file);
+      formData.append("question", JSON.stringify(question));
 
       // Start upload progress simulation
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => Math.min(prev + Math.random() * 15, 90));
       }, 200);
 
-      // Create mock uploaded answer immediately for UI feedback
-      const mockImageUrl = URL.createObjectURL(file);
+      // Create uploaded answer for UI feedback with processing state
+      const imageUrl = URL.createObjectURL(file);
       const newUpload: UploadedAnswer = {
         questionId,
-        imageUrl: mockImageUrl,
+        imageUrl: imageUrl,
         uploadTime: new Date().toLocaleString(),
-        status: "uploaded",
+        status: "processing",
       };
 
       setUploadedAnswers((prev) => {
@@ -405,24 +420,41 @@ export default function WritingTest() {
         return [...filtered, newUpload];
       });
 
-      // Call the backend API
-      const response = await fetch('http://localhost:4000/api/gemini/analyze-writing-image', {
-        method: 'POST',
-        body: formData,
-      });
+      // Call the backend API for image analysis
+      const apiUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+      const response = await fetch(
+        `${apiUrl}/api/gemini/analyze-writing-image`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
+      console.log("Response status:", response.status, response.statusText);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to analyze image');
+        let errorMessage = "Failed to analyze image";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error("API Error:", errorData);
+        } catch (parseError) {
+          console.error("Failed to parse error response:", parseError);
+          const errorText = await response.text();
+          console.error("Raw error response:", errorText);
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
+      console.log("Analysis result:", result);
 
       if (!result.success) {
-        throw new Error(result.message || 'Analysis failed');
+        throw new Error(result.message || "Analysis failed");
       }
 
       // Update the upload status and add evaluation
@@ -439,19 +471,36 @@ export default function WritingTest() {
       );
 
       setIsUploading(false);
-      console.log('Analysis completed:', result.data);
+      console.log("✅ Image analysis completed successfully!");
+      console.log(
+        "Extracted text length:",
+        result.data?.extractedText?.length || 0
+      );
+      console.log("Overall score:", result.data?.scores?.overallScore || "N/A");
 
+      // Show success message
+      alert(
+        "✅ Your writing has been analyzed successfully! Check the results below."
+      );
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error("❌ Image analysis failed:", error);
       setIsUploading(false);
       setUploadProgress(0);
-      
-      // Remove the failed upload
+
+      // Update status to show error or remove failed upload
       setUploadedAnswers((prev) =>
-        prev.filter((answer) => answer.questionId !== questionId)
+        prev.map((answer) =>
+          answer.questionId === questionId
+            ? { ...answer, status: "uploaded" as const }
+            : answer
+        )
       );
-      
-      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      alert(
+        `❌ Analysis failed: ${errorMessage}\n\nPlease try again or check if the backend server is running on port 4000.`
+      );
     }
   };
 
@@ -531,10 +580,11 @@ export default function WritingTest() {
         grammaticalRange: scores.grammar,
       },
       analysis: {
-        taskResponse: "Good understanding of the task requirements with adequate response.",
+        taskResponse:
+          "Good understanding of the task requirements with adequate response.",
         organization: "Well-structured with clear progression of ideas.",
         vocabulary: "Appropriate vocabulary range with some inaccuracies.",
-        grammar: "Mix of simple and complex structures with minor errors."
+        grammar: "Mix of simple and complex structures with minor errors.",
       },
       errors: {
         spelling: spellingErrors,
@@ -545,8 +595,9 @@ export default function WritingTest() {
         taskAchievement: "Addresses the task with relevant ideas",
         coherenceCohesion: "Generally well organized with clear progression",
         lexicalResource: "Adequate range of vocabulary with some inaccuracies",
-        grammaticalRange: "Mix of simple and complex sentences with some errors"
-      }
+        grammaticalRange:
+          "Mix of simple and complex sentences with some errors",
+      },
     };
   };
 
@@ -615,7 +666,9 @@ export default function WritingTest() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <span className="text-sm text-gray-300 block">Question Pool: 16 Questions</span>
+                <span className="text-sm text-gray-300 block">
+                  Question Pool: 16 Questions
+                </span>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-800 text-green-200">
                   <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
                   3 Random Tasks Loaded
@@ -638,44 +691,80 @@ export default function WritingTest() {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <span className="text-blue-400 font-bold text-sm mt-0.5">1.</span>
-                <p className="text-gray-300 text-sm">Choose a writing task from the questions below</p>
+                <span className="text-blue-400 font-bold text-sm mt-0.5">
+                  1.
+                </span>
+                <p className="text-gray-300 text-sm">
+                  Choose a writing task from the questions below
+                </p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-blue-400 font-bold text-sm mt-0.5">2.</span>
-                <p className="text-gray-300 text-sm">Write your answer clearly on paper using pen/pencil</p>
+                <span className="text-blue-400 font-bold text-sm mt-0.5">
+                  2.
+                </span>
+                <p className="text-gray-300 text-sm">
+                  Write your answer clearly on paper using pen/pencil
+                </p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-blue-400 font-bold text-sm mt-0.5">3.</span>
-                <p className="text-gray-300 text-sm">Use proper paragraphing and structure</p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <span className="text-blue-400 font-bold text-sm mt-0.5">4.</span>
-                <p className="text-gray-300 text-sm">Check your word count meets the minimum requirement</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-blue-400 font-bold text-sm mt-0.5">5.</span>
-                <p className="text-gray-300 text-sm">Review your work before taking the photo</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-blue-400 font-bold text-sm mt-0.5">6.</span>
-                <p className="text-gray-300 text-sm">Take a clear photo of your written answer</p>
+                <span className="text-blue-400 font-bold text-sm mt-0.5">
+                  3.
+                </span>
+                <p className="text-gray-300 text-sm">
+                  Use proper paragraphing and structure
+                </p>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <span className="text-blue-400 font-bold text-sm mt-0.5">7.</span>
-                <p className="text-gray-300 text-sm">Upload the photo using the upload button on the right</p>
+                <span className="text-blue-400 font-bold text-sm mt-0.5">
+                  4.
+                </span>
+                <p className="text-gray-300 text-sm">
+                  Check your word count meets the minimum requirement
+                </p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-blue-400 font-bold text-sm mt-0.5">8.</span>
-                <p className="text-gray-300 text-sm">Get instant AI evaluation and detailed feedback</p>
+                <span className="text-blue-400 font-bold text-sm mt-0.5">
+                  5.
+                </span>
+                <p className="text-gray-300 text-sm">
+                  Review your work before taking the photo
+                </p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-blue-400 font-bold text-sm mt-0.5">💡</span>
-                <p className="text-yellow-300 text-sm font-medium">Ensure good lighting and legible handwriting for best results</p>
+                <span className="text-blue-400 font-bold text-sm mt-0.5">
+                  6.
+                </span>
+                <p className="text-gray-300 text-sm">
+                  Take a clear photo of your written answer
+                </p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">
+                  7.
+                </span>
+                <p className="text-gray-300 text-sm">
+                  Upload the photo using the upload button on the right
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">
+                  8.
+                </span>
+                <p className="text-gray-300 text-sm">
+                  Get instant AI evaluation and detailed feedback
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-sm mt-0.5">
+                  💡
+                </span>
+                <p className="text-yellow-300 text-sm font-medium">
+                  Ensure good lighting and legible handwriting for best results
+                </p>
               </div>
             </div>
           </div>
@@ -712,7 +801,7 @@ export default function WritingTest() {
                   <div className="p-6">
                     <div className="flex flex-col lg:flex-row gap-6">
                       {/* Left Side - Task Information */}
-                      <div 
+                      <div
                         className="flex-1 cursor-pointer"
                         onClick={() => handleQuestionSelect(question.id)}
                       >
@@ -730,7 +819,8 @@ export default function WritingTest() {
                               </p>
                             </div>
                           </div>
-                          {uploadedAnswer && getStatusBadge(uploadedAnswer.status)}
+                          {uploadedAnswer &&
+                            getStatusBadge(uploadedAnswer.status)}
                         </div>
 
                         <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
@@ -749,16 +839,17 @@ export default function WritingTest() {
 
                         <div className="space-y-2">
                           {question.instructions.map((instruction, index) => (
-                              <p key={index} className="text-sm text-gray-300">
-                                • {instruction}
-                              </p>
-                            ))}
+                            <p key={index} className="text-sm text-gray-300">
+                              • {instruction}
+                            </p>
+                          ))}
                         </div>
 
                         {isSelected && (
                           <div className="mt-4 p-3 bg-blue-900/30 border border-blue-500/50 rounded-lg">
                             <p className="text-sm text-blue-300">
-                              ✓ Selected - Click the upload area to submit your answer
+                              ✓ Selected - Click the upload area to submit your
+                              answer
                             </p>
                           </div>
                         )}
@@ -777,7 +868,9 @@ export default function WritingTest() {
                               <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => handleImageUpload(e, question.id)}
+                                onChange={(e) =>
+                                  handleImageUpload(e, question.id)
+                                }
                                 className="hidden"
                                 id={`upload-${question.id}`}
                                 disabled={isUploading}
@@ -786,9 +879,12 @@ export default function WritingTest() {
                                 htmlFor={`upload-${question.id}`}
                                 className="cursor-pointer block"
                               >
-                                <div className="text-3xl text-gray-400 mb-3">📸</div>
+                                <div className="text-3xl text-gray-400 mb-3">
+                                  📸
+                                </div>
                                 <h5 className="text-sm font-medium text-white mb-2">
-                                  {isUploading && selectedQuestion === question.id
+                                  {isUploading &&
+                                  selectedQuestion === question.id
                                     ? "Uploading..."
                                     : "Click to Upload Photo"}
                                 </h5>
@@ -817,7 +913,9 @@ export default function WritingTest() {
                               {/* Upload Info */}
                               <div className="bg-green-900/30 border border-green-600/50 rounded p-3">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-green-400 text-sm">✓</span>
+                                  <span className="text-green-400 text-sm">
+                                    ✓
+                                  </span>
                                   <span className="text-sm font-medium text-green-300">
                                     Answer Uploaded
                                   </span>
@@ -838,13 +936,17 @@ export default function WritingTest() {
                                 <input
                                   type="file"
                                   accept="image/*"
-                                  onChange={(e) => handleImageUpload(e, question.id)}
+                                  onChange={(e) =>
+                                    handleImageUpload(e, question.id)
+                                  }
                                   className="hidden"
                                   id={`replace-${question.id}`}
                                 />
                                 {uploadedAnswer.evaluation && (
                                   <button
-                                    onClick={() => handleQuestionSelect(question.id)}
+                                    onClick={() =>
+                                      handleQuestionSelect(question.id)
+                                    }
                                     className="flex-1 text-xs px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
                                   >
                                     View Results
@@ -856,9 +958,14 @@ export default function WritingTest() {
                               {uploadedAnswer.evaluation && (
                                 <div className="bg-blue-900/30 border border-blue-600/50 rounded p-3">
                                   <div className="text-center">
-                                    <p className="text-xs text-blue-300 mb-1">Overall Score</p>
+                                    <p className="text-xs text-blue-300 mb-1">
+                                      Overall Score
+                                    </p>
                                     <p className="text-lg font-bold text-blue-200">
-                                      {uploadedAnswer.evaluation.scores.overallScore}
+                                      {
+                                        uploadedAnswer.evaluation.scores
+                                          .overallScore
+                                      }
                                     </p>
                                   </div>
                                 </div>
@@ -892,7 +999,11 @@ export default function WritingTest() {
                           <div className="flex items-center justify-between text-xs text-gray-400">
                             <span>Type: {question.type.toUpperCase()}</span>
                             <span>
-                              {question.type === 'essay' ? '🎯' : question.type === 'diagram' ? '📊' : '✉️'}
+                              {question.type === "essay"
+                                ? "🎯"
+                                : question.type === "diagram"
+                                ? "📊"
+                                : "✉️"}
                             </span>
                           </div>
                         </div>
@@ -927,15 +1038,17 @@ export default function WritingTest() {
                     <span className="text-sm text-gray-300">
                       ⏱️{" "}
                       {
-                        allWritingQuestions.find((q) => q.id === selectedQuestion)
-                          ?.timeLimit
+                        allWritingQuestions.find(
+                          (q) => q.id === selectedQuestion
+                        )?.timeLimit
                       }
                     </span>
                     <span className="text-sm text-gray-400">
                       📝{" "}
                       {
-                        allWritingQuestions.find((q) => q.id === selectedQuestion)
-                          ?.wordCount
+                        allWritingQuestions.find(
+                          (q) => q.id === selectedQuestion
+                        )?.wordCount
                       }
                     </span>
                   </div>
@@ -996,8 +1109,6 @@ export default function WritingTest() {
                 </div>
               </div>
             )}
-
-
 
             {/* Photo Upload Section */}
             <div className="border-t border-gray-600 pt-6">
@@ -1167,8 +1278,8 @@ export default function WritingTest() {
                   </div>
 
                   {/* Spelling Errors */}
-                  {(getUploadedAnswer(selectedQuestion)?.evaluation
-                    ?.errors.spelling?.length || 0) > 0 && (
+                  {(getUploadedAnswer(selectedQuestion)?.evaluation?.errors
+                    .spelling?.length || 0) > 0 && (
                     <div className="mb-6">
                       <h5 className="text-lg font-semibold text-white mb-3">
                         🔤 Spelling Errors
@@ -1176,34 +1287,36 @@ export default function WritingTest() {
                       <div className="space-y-2">
                         {getUploadedAnswer(
                           selectedQuestion
-                        )?.evaluation?.errors.spelling.map((error: any, index: number) => (
-                          <div
-                            key={index}
-                            className="bg-red-900 border border-red-600 rounded-lg p-3"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <span className="text-red-300 font-medium">
-                                  &ldquo;{error.word}&rdquo;
-                                </span>
-                                <span className="text-gray-400 mx-2">→</span>
-                                <span className="text-green-300 font-medium">
-                                  &ldquo;{error.correction}&rdquo;
+                        )?.evaluation?.errors.spelling.map(
+                          (error: any, index: number) => (
+                            <div
+                              key={index}
+                              className="bg-red-900 border border-red-600 rounded-lg p-3"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="text-red-300 font-medium">
+                                    &ldquo;{error.word}&rdquo;
+                                  </span>
+                                  <span className="text-gray-400 mx-2">→</span>
+                                  <span className="text-green-300 font-medium">
+                                    &ldquo;{error.correction}&rdquo;
+                                  </span>
+                                </div>
+                                <span className="text-xs text-red-400">
+                                  Misspelled
                                 </span>
                               </div>
-                              <span className="text-xs text-red-400">
-                                Misspelled
-                              </span>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     </div>
                   )}
 
                   {/* Grammar Errors */}
-                  {(getUploadedAnswer(selectedQuestion)?.evaluation
-                    ?.errors.grammar?.length || 0) > 0 && (
+                  {(getUploadedAnswer(selectedQuestion)?.evaluation?.errors
+                    .grammar?.length || 0) > 0 && (
                     <div className="mb-6">
                       <h5 className="text-lg font-semibold text-white mb-3">
                         📝 Grammar Issues
@@ -1211,32 +1324,36 @@ export default function WritingTest() {
                       <div className="space-y-2">
                         {getUploadedAnswer(
                           selectedQuestion
-                        )?.evaluation?.errors.grammar.map((error: any, index: number) => (
-                          <div
-                            key={index}
-                            className="bg-yellow-900 border border-yellow-600 rounded-lg p-3"
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="mb-1">
-                                  <span className="text-yellow-300 font-medium">
-                                    &ldquo;{error.error}&rdquo;
-                                  </span>
-                                  <span className="text-gray-400 mx-2">→</span>
-                                  <span className="text-green-300 font-medium">
-                                    &ldquo;{error.correction}&rdquo;
-                                  </span>
+                        )?.evaluation?.errors.grammar.map(
+                          (error: any, index: number) => (
+                            <div
+                              key={index}
+                              className="bg-yellow-900 border border-yellow-600 rounded-lg p-3"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="mb-1">
+                                    <span className="text-yellow-300 font-medium">
+                                      &ldquo;{error.error}&rdquo;
+                                    </span>
+                                    <span className="text-gray-400 mx-2">
+                                      →
+                                    </span>
+                                    <span className="text-green-300 font-medium">
+                                      &ldquo;{error.correction}&rdquo;
+                                    </span>
+                                  </div>
+                                  <div className="text-xs text-yellow-400">
+                                    {error.explanation}
+                                  </div>
                                 </div>
-                                <div className="text-xs text-yellow-400">
-                                  {error.explanation}
-                                </div>
+                                <span className="text-xs text-yellow-400 ml-2">
+                                  Grammar
+                                </span>
                               </div>
-                              <span className="text-xs text-yellow-400 ml-2">
-                                Grammar
-                              </span>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     </div>
                   )}
@@ -1287,7 +1404,8 @@ export default function WritingTest() {
                 Uploaded Answers Summary
               </h2>
               <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-                {uploadedAnswers.length} answer{uploadedAnswers.length > 1 ? 's' : ''}
+                {uploadedAnswers.length} answer
+                {uploadedAnswers.length > 1 ? "s" : ""}
               </span>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
