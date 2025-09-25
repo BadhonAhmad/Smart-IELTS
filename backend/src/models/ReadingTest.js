@@ -63,7 +63,7 @@ const readingTestSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  passage: {
+  passages: [{
     title: {
       type: String,
       required: true,
@@ -76,33 +76,53 @@ const readingTestSchema = new mongoose.Schema({
     wordCount: {
       type: Number,
       required: true,
-      min: 100
+      min: 500 // More flexible word count
     },
     readingTime: {
       type: Number, // in minutes
       default: function() {
-        return Math.ceil(this.passage.wordCount / 200); // Average reading speed
+        return Math.ceil(this.wordCount / 200); // Average reading speed
       }
     },
     summary: {
       type: String,
       required: true,
       trim: true
+    },
+    passageNumber: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 3
     }
-  },
+  }],
   questions: {
     type: [mcqQuestionSchema],
     validate: {
       validator: function(questions) {
-        return questions.length >= 1;
+        return questions.length >= 1; // Allow flexible question count
       },
       message: 'Reading test must have at least 1 question'
+    }
+  },
+  questionsByPassage: {
+    passage1: {
+      type: [Number], // Array of question numbers for passage 1
+      default: []
+    },
+    passage2: {
+      type: [Number], // Array of question numbers for passage 2
+      default: []
+    },
+    passage3: {
+      type: [Number], // Array of question numbers for passage 3
+      default: []
     }
   },
   metadata: {
     theme: {
       type: String,
-      enum: ['science', 'environment', 'education', 'culture', 'business', 'health', 'technology', 'history', 'society', 'arts'],
+      enum: ['science', 'environment', 'education', 'culture', 'business', 'health', 'technology', 'history', 'society', 'arts', 'mixed'],
       required: true
     },
     level: {
@@ -123,15 +143,15 @@ const readingTestSchema = new mongoose.Schema({
   scoring: {
     totalMarks: {
       type: Number,
-      default: 10
+      default: 40
     },
     passingScore: {
       type: Number,
-      default: 6
+      default: 24
     },
     timeLimit: {
       type: Number, // in minutes
-      default: 20
+      default: 60 // 60 minutes for 3 passages
     }
   },
   statistics: {
@@ -230,7 +250,7 @@ readingTestSchema.statics.getRandomTest = function(level = null) {
 
 // Pre-save middleware to ensure question numbers are sequential
 readingTestSchema.pre('save', function(next) {
-  if (this.questions && this.questions.length === 10) {
+  if (this.questions && this.questions.length >= 40) {
     this.questions.forEach((question, index) => {
       question.questionNumber = index + 1;
     });
@@ -238,10 +258,14 @@ readingTestSchema.pre('save', function(next) {
   next();
 });
 
-// Pre-save middleware to calculate reading time
+// Pre-save middleware to calculate reading time for each passage
 readingTestSchema.pre('save', function(next) {
-  if (this.passage && this.passage.wordCount) {
-    this.passage.readingTime = Math.ceil(this.passage.wordCount / 200);
+  if (this.passages && this.passages.length === 3) {
+    this.passages.forEach((passage) => {
+      if (passage.wordCount) {
+        passage.readingTime = Math.ceil(passage.wordCount / 200);
+      }
+    });
   }
   next();
 });

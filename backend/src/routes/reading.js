@@ -1,5 +1,6 @@
 const express = require('express');
 const {
+  generateReadingRound,
   generateReadingTest,
   getAllReadingTests,
   getReadingTestById,
@@ -9,6 +10,9 @@ const {
 const { protect } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Generate a single passage and questions for a specific round
+router.get('/generate-round/:roundNumber', generateReadingRound);
 
 // Generate a complete reading test with passage and MCQs
 router.get('/generate-test', generateReadingTest);

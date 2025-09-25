@@ -98,10 +98,10 @@ async function generateIELTSQuestions(skill = 'reading', count = 5) {
  * Generate a large passage for IELTS reading practice
  * @param {string} topic - The topic for the passage
  * @param {string} level - Difficulty level (beginner, intermediate, advanced)
- * @param {number} wordCount - Approximate word count (default: 500)
+ * @param {number} wordCount - Approximate word count (default: 750)
  * @returns {Promise<Object>} Generated passage response
  */
-async function generatePassage(topic = 'Academic Research', level = 'intermediate') {
+async function generatePassage(topic = 'Academic Research', level = 'intermediate', wordCount = 750) {
   try {
     // Get the generative model
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -111,11 +111,13 @@ async function generatePassage(topic = 'Academic Research', level = 'intermediat
 
     Requirements:
     - Level: ${level}
+    - Word count: Approximately ${wordCount} words (700-800 words)
     - Academic style appropriate for IELTS
     - Include complex sentence structures and academic vocabulary
     - Should be informative and engaging
     - Include different paragraph structures (introduction, body paragraphs, conclusion)
     - Use formal tone suitable for academic reading
+    - Include specific details, statistics, examples, and data that can form the basis for 12-14 questions
 
     The passage should be suitable for creating multiple choice questions later.
 
@@ -199,18 +201,19 @@ async function generateIELTSPassage(theme = 'science', level = 'intermediate') {
 }
 
 /**
- * Generate 10 MCQ questions based on a given passage
+ * Generate 12-14 MCQ questions based on a given passage
  * @param {string} passageContent - The passage content
  * @param {string} level - Difficulty level
+ * @param {number} questionCount - Number of questions to generate (default: 13)
  * @returns {Promise<Object>} Generated questions response
  */
-async function generateQuestionsFromPassage(passageContent, level = 'intermediate') {
+async function generateQuestionsFromPassage(passageContent, level = 'intermediate', questionCount = 13) {
   try {
     // Get the generative model
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Create the prompt for passage-based question generation
-    const prompt = `Based on the following passage, generate exactly 5 multiple choice questions for IELTS reading comprehension at ${level} level:
+    const prompt = `Based on the following passage, generate exactly ${questionCount} multiple choice questions for IELTS reading comprehension at ${level} level:
 
 PASSAGE:
 ${passageContent}
@@ -220,11 +223,13 @@ CRITICAL: Return ONLY valid JSON in this EXACT format with NO additional text, e
 {"questions":[{"questionText":"What is the main purpose of the passage?","options":{"A":"Option A text","B":"Option B text","C":"Option C text","D":"Option D text"},"correctAnswer":"A","explanation":"Brief explanation","difficulty":"medium","questionType":"main_idea"}]}
 
 Requirements:
-- Generate exactly 5 questions
+- Generate exactly ${questionCount} questions
 - Each question must have exactly 4 options (A, B, C, D)
 - Only one correct answer per question
 - Use difficulty: easy, medium, hard
 - Use question types: detail, main_idea, inference, vocabulary, reference
+- Cover different parts of the passage (beginning, middle, end)
+- Include questions about specific details, main ideas, inferences, and vocabulary
 - Return ONLY the JSON object, no other text`;
 
     // Generate content
@@ -248,6 +253,22 @@ Requirements:
     
     cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
 
+    // Additional JSON cleaning to fix common issues
+    cleanedText = cleanedText
+      .replace(/,\s*}/g, '}') // Remove trailing commas before closing braces
+      .replace(/,\s*]/g, ']') // Remove trailing commas before closing brackets
+      .replace(/(\w+):\s*"([^"]*)"\s*,?\s*}/g, '$1: "$2"}') // Fix malformed object endings
+      .replace(/"\s*,?\s*}/g, '"}') // Fix quotes before closing braces
+      .replace(/"\s*,?\s*]/g, '"]') // Fix quotes before closing brackets
+      .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+      .replace(/"\s*,\s*"([A-D])":/g, '", "$1":') // Fix malformed option separators
+      .replace(/"\s*,\s*"correctAnswer":/g, '", "correctAnswer":') // Fix before correctAnswer
+      .replace(/"\s*,\s*"explanation":/g, '", "explanation":') // Fix before explanation
+      .replace(/"\s*,\s*"difficulty":/g, '", "difficulty":') // Fix before difficulty
+      .replace(/"\s*,\s*"questionType":/g, '", "questionType":') // Fix before questionType
+      .replace(/"\s*,\s*"questionNumber":/g, '", "questionNumber":') // Fix before questionNumber
+      .replace(/"\s*,\s*"passageNumber":/g, '", "passageNumber":'); // Fix before passageNumber
+
     let parsedResponse;
     try {
       parsedResponse = JSON.parse(cleanedText);
@@ -255,7 +276,25 @@ Requirements:
       console.error('JSON Parse Error:', parseError.message);
       console.error('Raw response:', text.substring(0, 500) + '...');
       console.error('Cleaned text:', cleanedText.substring(0, 500) + '...');
-      throw new Error(`JSON parsing failed: ${parseError.message}`);
+      
+      // Try to fix common JSON issues
+      try {
+        // Attempt to fix common JSON syntax errors
+        const fixedJson = cleanedText
+          .replace(/"\s*,\s*"([A-D])":/g, '", "$1":') // Fix malformed option separators
+          .replace(/"\s*,\s*"correctAnswer":/g, '", "correctAnswer":') // Fix before correctAnswer
+          .replace(/"\s*,\s*"explanation":/g, '", "explanation":') // Fix before explanation
+          .replace(/"\s*,\s*"difficulty":/g, '", "difficulty":') // Fix before difficulty
+          .replace(/"\s*,\s*"questionType":/g, '", "questionType":') // Fix before questionType
+          .replace(/"\s*,\s*"questionNumber":/g, '", "questionNumber":') // Fix before questionNumber
+          .replace(/"\s*,\s*"passageNumber":/g, '", "passageNumber":') // Fix before passageNumber
+          .replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
+        
+        parsedResponse = JSON.parse(fixedJson);
+        console.log('Successfully parsed after fixing JSON syntax');
+      } catch (secondError) {
+        throw new Error(`JSON parsing failed: ${parseError.message}`);
+      }
     }
     
     // Validate that we have questions
@@ -535,6 +574,194 @@ async function generateChatResponse(message) {
   }
 }
 
+/**
+ * Generate a complete 3-passage IELTS reading test
+ * @param {string} level - Difficulty level (intermediate, advanced)
+ * @returns {Promise<Object>} Generated reading test response
+ */
+async function generateCompleteReadingTest(level = 'intermediate') {
+  try {
+    const themes = ['science', 'environment', 'education', 'culture', 'business', 'health', 'technology', 'history', 'society', 'arts'];
+    const selectedThemes = themes.sort(() => 0.5 - Math.random()).slice(0, 3); // Randomly select 3 themes
+    
+    const themeDescriptions = {
+      science: 'Scientific discoveries and technological innovations',
+      environment: 'Environmental issues and climate change',
+      education: 'Educational systems and learning methodologies',
+      culture: 'Cultural diversity and social anthropology',
+      business: 'Business management and economic development',
+      health: 'Healthcare systems and medical research',
+      technology: 'Digital technology and artificial intelligence',
+      history: 'Historical events and archaeological discoveries',
+      society: 'Social issues and community development',
+      arts: 'Arts, literature and creative expression'
+    };
+
+    const passages = [];
+    const allQuestions = [];
+    const questionsByPassage = { passage1: [], passage2: [], passage3: [] };
+    let questionNumber = 1;
+
+    // Generate 3 passages with 12-14 questions each
+    for (let i = 0; i < 3; i++) {
+      const theme = selectedThemes[i];
+      const passageTitle = `${theme.charAt(0).toUpperCase() + theme.slice(1)} Reading Passage ${i + 1}`;
+      
+      console.log(`Generating passage ${i + 1} for theme: ${theme}`);
+      
+      // Generate passage (700-800 words)
+      const passageResult = await generatePassage(themeDescriptions[theme], level, 750);
+      
+      if (!passageResult.success) {
+        throw new Error(`Failed to generate passage ${i + 1}: ${passageResult.error}`);
+      }
+
+      // Generate 12-14 questions for this passage
+      const questionCount = 12 + Math.floor(Math.random() * 3); // 12-14 questions
+      const questionsResult = await generateQuestionsFromPassage(passageResult.data.content, level, questionCount);
+      
+      if (!questionsResult.success) {
+        throw new Error(`Failed to generate questions for passage ${i + 1}: ${questionsResult.error}`);
+      }
+
+      // Create passage object
+      const passage = {
+        title: passageTitle,
+        content: passageResult.data.content,
+        wordCount: passageResult.data.content.split(/\s+/).length,
+        readingTime: Math.ceil(passageResult.data.content.split(/\s+/).length / 200),
+        summary: passageResult.data.summary || `A comprehensive passage about ${theme}`,
+        passageNumber: i + 1
+      };
+
+      // Process questions and assign question numbers
+      const passageQuestions = questionsResult.data.map((q, index) => {
+        const questionNumber = allQuestions.length + index + 1;
+        questionsByPassage[`passage${i + 1}`].push(questionNumber);
+        
+        return {
+          questionNumber: questionNumber,
+          questionText: q.questionText,
+          options: {
+            A: q.options.A,
+            B: q.options.B,
+            C: q.options.C,
+            D: q.options.D
+          },
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          difficulty: q.difficulty || 'medium',
+          questionType: q.questionType || 'detail',
+          passageNumber: i + 1
+        };
+      });
+
+      passages.push(passage);
+      allQuestions.push(...passageQuestions);
+    }
+
+    return {
+      success: true,
+      data: {
+        passages,
+        questions: allQuestions,
+        questionsByPassage,
+        metadata: {
+          totalQuestions: allQuestions.length,
+          totalPassages: 3,
+          level,
+          themes: selectedThemes
+        }
+      }
+    };
+  } catch (error) {
+    console.error('Error generating complete reading test:', error);
+    return {
+      success: false,
+      error: error.message,
+      data: null
+    };
+  }
+}
+
+/**
+ * Generate a single passage and questions for a specific round
+ * @param {number} roundNumber - Round number (1, 2, or 3)
+ * @param {string} level - Difficulty level (intermediate, advanced)
+ * @returns {Promise<Object>} Generated round response
+ */
+async function generateSinglePassageRound(roundNumber, level = 'intermediate') {
+  try {
+    const themes = ['science', 'environment', 'education', 'culture', 'business', 'health', 'technology', 'history', 'society', 'arts'];
+    const selectedTheme = themes[Math.floor(Math.random() * themes.length)];
+    
+    const themeDescriptions = {
+      science: 'Scientific discoveries and technological innovations',
+      environment: 'Environmental issues and climate change',
+      education: 'Educational systems and learning methodologies',
+      culture: 'Cultural practices and social traditions',
+      business: 'Economic systems and business practices',
+      health: 'Medical research and healthcare systems',
+      technology: 'Digital technology and artificial intelligence',
+      history: 'Historical events and their impact',
+      society: 'Social issues and community development',
+      arts: 'Artistic movements and creative expression'
+    };
+
+    console.log(`Generating passage ${roundNumber} for theme: ${selectedTheme}`);
+    
+    // Generate passage (700-800 words, but flexible)
+    const passageResult = await generatePassage(themeDescriptions[selectedTheme], level, 750);
+    
+    if (!passageResult.success) {
+      throw new Error(`Failed to generate passage: ${passageResult.error}`);
+    }
+
+    // Generate 12-14 questions for this passage
+    const questionCount = 12 + Math.floor(Math.random() * 3); // 12-14 questions
+    const questionsResult = await generateQuestionsFromPassage(passageResult.data.content, level, questionCount);
+    
+    if (!questionsResult.success) {
+      throw new Error(`Failed to generate questions: ${questionsResult.error}`);
+    }
+
+    // Add passage number to questions
+    const questionsWithPassageNumber = questionsResult.data.map((question, index) => ({
+      ...question,
+      questionNumber: index + 1,
+      passageNumber: roundNumber
+    }));
+
+    return {
+      success: true,
+      data: {
+        passage: {
+          title: passageResult.data.title,
+          content: passageResult.data.content,
+          wordCount: passageResult.data.wordCount,
+          readingTime: Math.ceil(passageResult.data.wordCount / 200),
+          summary: passageResult.data.summary,
+          passageNumber: roundNumber
+        },
+        questions: questionsWithPassageNumber,
+        metadata: {
+          theme: selectedTheme,
+          level: level,
+          roundNumber: roundNumber,
+          questionCount: questionsWithPassageNumber.length
+        }
+      }
+    };
+
+  } catch (error) {
+    console.error(`Error generating round ${roundNumber}:`, error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
 module.exports = {
   generateMCQQuestions,
   generateIELTSQuestions,
@@ -543,5 +770,7 @@ module.exports = {
   generateQuestionsFromPassage,
   generateFillBlankQuestions,
   generateChatResponse,
-  analyzeWritingImage
+  analyzeWritingImage,
+  generateCompleteReadingTest,
+  generateSinglePassageRound
 };

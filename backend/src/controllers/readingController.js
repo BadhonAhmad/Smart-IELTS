@@ -1,101 +1,100 @@
 const ReadingTest = require('../models/ReadingTest');
 const ReadingTestAttempt = require('../models/ReadingTestAttempt');
-const { generatePassage, generateQuestionsFromPassage } = require('../services/geminiService');
+const { generatePassage, generateQuestionsFromPassage, generateCompleteReadingTest, generateSinglePassageRound } = require('../services/geminiService');
 
 /**
- * Generate a complete reading test with passage and 10 MCQs
+ * Generate a single passage and questions for a specific round
+ * GET /api/reading/generate-round/:roundNumber
+ */
+const generateReadingRound = async (req, res) => {
+  try {
+    const roundNumber = parseInt(req.params.roundNumber);
+    const level = req.query.level || 'intermediate';
+    
+    if (roundNumber < 1 || roundNumber > 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Round number must be between 1 and 3'
+      });
+    }
+
+    console.log(`Generating reading test round ${roundNumber} at ${level} level...`);
+    
+    // Generate single passage and questions
+    const roundData = await generateSinglePassageRound(roundNumber, level);
+    
+    if (!roundData.success) {
+      return res.status(500).json({
+        success: false,
+        message: `Failed to generate round ${roundNumber}`,
+        error: roundData.error
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Round ${roundNumber} generated successfully`,
+      data: {
+        roundNumber,
+        passage: roundData.data.passage,
+        questions: roundData.data.questions,
+        metadata: roundData.data.metadata
+      }
+    });
+
+  } catch (error) {
+    console.error(`Error generating reading round ${req.params.roundNumber}:`, error);
+    res.status(500).json({
+      success: false,
+      message: `Failed to generate round ${req.params.roundNumber}`,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Generate a complete 3-passage reading test with 40 questions
  * GET /api/reading/generate-test
  */
 const generateReadingTest = async (req, res) => {
   try {
-    // Use implicit/random parameters - no user input dependency
-    const themes = ['science', 'environment', 'education', 'culture', 'business', 'health', 'technology', 'history', 'society', 'arts'];
     const levels = ['intermediate', 'advanced'];
-    
-    // Randomly select theme and level
-    const theme = themes[Math.floor(Math.random() * themes.length)];
     const level = levels[Math.floor(Math.random() * levels.length)];
-    const title = `${theme.charAt(0).toUpperCase() + theme.slice(1)} Reading Test`;
+    const title = `IELTS Academic Reading Test - 3 Passages`;
 
-    // Step 1: Generate passage
-    const themeDescriptions = {
-      science: 'Scientific discoveries and technological innovations',
-      environment: 'Environmental issues and climate change',
-      education: 'Educational systems and learning methodologies',
-      culture: 'Cultural diversity and social anthropology',
-      business: 'Business management and economic development',
-      health: 'Healthcare systems and medical research',
-      technology: 'Digital technology and artificial intelligence',
-      history: 'Historical events and archaeological discoveries',
-      society: 'Social issues and community development',
-      arts: 'Arts, literature and creative expression'
-    };
+    console.log(`Generating 3-passage reading test at ${level} level...`);
 
-    const passageResult = await generatePassage(themeDescriptions[theme], level);
+    // Generate complete 3-passage test
+    const testResult = await generateCompleteReadingTest(level);
 
-    if (!passageResult.success) {
+    if (!testResult.success) {
       return res.status(500).json({
         success: false,
-        message: 'Failed to generate passage',
-        error: passageResult.error
+        message: 'Failed to generate reading test',
+        error: testResult.error
       });
     }
 
-    // Step 2: Generate 10 MCQ questions based on the passage
-    const questionsResult = await generateQuestionsFromPassage(passageResult.data.content, level);
-
-    if (!questionsResult.success) {
-      console.error('Questions generation failed:', questionsResult.error);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to generate questions',
-        error: questionsResult.error,
-        details: 'The AI service encountered an issue generating questions from the passage. Please try again.'
-      });
-    }
-
-    // Step 3: Create reading test object
-    const passageContent = passageResult.data.content;
-    const calculatedWordCount = passageContent ? passageContent.split(/\s+/).length : 0;
-    const calculatedReadingTime = Math.ceil(calculatedWordCount / 200); // Average reading speed: 200 words/minute
-
+    // Create reading test object
     const readingTest = new ReadingTest({
-      title: title || passageResult.data.title || `${theme.charAt(0).toUpperCase() + theme.slice(1)} Reading Test`,
-      passage: {
-        title: passageResult.data.title || `${theme.charAt(0).toUpperCase() + theme.slice(1)} Passage`,
-        content: passageContent,
-        wordCount: calculatedWordCount,
-        readingTime: calculatedReadingTime,
-        summary: passageResult.data.summary || 'AI-generated passage for IELTS reading practice'
-      },
-      questions: questionsResult.data.map((q, index) => ({
-        questionNumber: index + 1,
-        questionText: q.questionText,
-        options: {
-          A: q.options.A,
-          B: q.options.B,
-          C: q.options.C,
-          D: q.options.D
-        },
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        difficulty: q.difficulty || 'medium',
-        questionType: q.questionType || 'detail'
-      })),
+      title: title,
+      passages: testResult.data.passages,
+      questions: testResult.data.questions,
+      questionsByPassage: testResult.data.questionsByPassage,
       metadata: {
-        theme,
-        level,
-        tags: [theme, level, 'ai-generated']
+        theme: 'mixed',
+        level: level,
+        tags: [...testResult.data.metadata.themes, level, 'ai-generated', '3-passages']
       },
       generatedBy: 'ai'
     });
 
-    // Step 4: Save to database
+    // Save to database
     const savedTest = await readingTest.save();
 
     res.status(201).json({
       success: true,
-      message: 'Reading test generated successfully',
+      message: '3-passage reading test generated successfully',
       data: savedTest
     });
 
@@ -365,6 +364,7 @@ const getUserAttempts = async (req, res) => {
 };
 
 module.exports = {
+  generateReadingRound,
   generateReadingTest,
   getAllReadingTests,
   getReadingTestById,
