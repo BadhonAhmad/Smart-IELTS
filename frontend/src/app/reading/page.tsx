@@ -181,6 +181,22 @@ export default function ReadingTest() {
     }));
   };
 
+  // IELTS Band Score Calculator based on correct answers
+  const calculateBandScore = (correctAnswers: number): { band: number; description: string } => {
+    if (correctAnswers >= 39) return { band: 9.0, description: "Expert User" };
+    if (correctAnswers >= 37) return { band: 8.5, description: "Very Good User" };
+    if (correctAnswers >= 35) return { band: 8.0, description: "Very Good User" };
+    if (correctAnswers >= 33) return { band: 7.5, description: "Good User" };
+    if (correctAnswers >= 30) return { band: 7.0, description: "Good User" };
+    if (correctAnswers >= 27) return { band: 6.5, description: "Competent User" };
+    if (correctAnswers >= 23) return { band: 6.0, description: "Competent User" };
+    if (correctAnswers >= 19) return { band: 5.5, description: "Modest User" };
+    if (correctAnswers >= 15) return { band: 5.0, description: "Modest User" };
+    if (correctAnswers >= 13) return { band: 4.5, description: "Limited User" };
+    if (correctAnswers >= 10) return { band: 4.0, description: "Limited User" };
+    return { band: 3.5, description: "Extremely Limited User" };
+  };
+
   const calculateScore = () => {
     let totalQuestions = 0;
     let correctAnswers = 0;
@@ -209,10 +225,14 @@ export default function ReadingTest() {
       };
     });
 
+    const bandScore = calculateBandScore(correctAnswers);
+
     return {
       correct: correctAnswers,
       total: totalQuestions,
       percentage: totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0,
+      bandScore: bandScore.band,
+      bandDescription: bandScore.description,
       roundScores
     };
   };
@@ -427,26 +447,55 @@ export default function ReadingTest() {
         {/* Results Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-gray-900 rounded-xl shadow-2xl p-8 border border-gray-700">
-            {/* Overall Score */}
+            {/* IELTS Band Score Display */}
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-6">
+              <div className="inline-flex items-center justify-center w-40 h-40 bg-gradient-to-r from-green-600 to-blue-600 rounded-full mb-6 shadow-2xl">
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-white mb-2">
-                    {score.percentage}%
+                  <div className="text-5xl font-bold text-white mb-1">
+                    {score.bandScore}
+                  </div>
+                  <div className="text-green-200 text-sm font-medium">IELTS Band</div>
+                </div>
               </div>
-                  <div className="text-blue-200 text-sm">Overall Score</div>
+              
+              <h2 className="text-3xl font-bold text-white mb-2">
+                {score.bandScore >= 8.0 ? '🎉 Outstanding Performance!' : 
+                 score.bandScore >= 7.0 ? '👏 Excellent Work!' : 
+                 score.bandScore >= 6.0 ? '👍 Good Achievement!' : 
+                 score.bandScore >= 5.0 ? '💪 Keep Improving!' : 
+                 '📚 More Practice Needed!'}
+              </h2>
+              
+              <div className="bg-gray-800 rounded-lg p-4 mb-4 inline-block">
+                <p className="text-lg font-semibold text-blue-400 mb-2">{score.bandDescription}</p>
+                <p className="text-gray-300">
+                  {score.correct} out of {score.total} questions correct ({score.percentage}%)
+                </p>
+              </div>
+              
+              {/* Band Score Context */}
+              <div className="bg-gray-800 rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold text-white mb-4">IELTS Reading Band Score Guide</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="text-center">
+                    <div className="font-bold text-green-400">Band 9</div>
+                    <div className="text-gray-400">39-40 correct</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-blue-400">Band 8</div>
+                    <div className="text-gray-400">35-38 correct</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-yellow-400">Band 7</div>
+                    <div className="text-gray-400">30-34 correct</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-orange-400">Band 6</div>
+                    <div className="text-gray-400">23-29 correct</div>
+                  </div>
+                </div>
               </div>
             </div>
-              <h2 className="text-3xl font-bold text-white mb-4">
-                {score.percentage >= 80 ? '🎉 Excellent!' : 
-                 score.percentage >= 70 ? '👏 Great Job!' : 
-                 score.percentage >= 60 ? '👍 Good Work!' : 
-                 '💪 Keep Practicing!'}
-              </h2>
-              <p className="text-xl text-gray-300 mb-6">
-                {score.correct} out of {score.total} questions correct
-              </p>
-          </div>
 
             {/* Round Breakdown */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -493,6 +542,60 @@ export default function ReadingTest() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Detailed Performance Analysis */}
+            <div className="bg-gray-800 rounded-lg p-6 mb-8">
+              <h3 className="text-xl font-semibold text-white mb-6">Performance Analysis</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-lg font-medium text-blue-400 mb-3">Your Achievement</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-700 rounded">
+                      <span className="text-gray-300">IELTS Band Score</span>
+                      <span className="font-bold text-green-400 text-lg">{score.bandScore}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-700 rounded">
+                      <span className="text-gray-300">Proficiency Level</span>
+                      <span className="font-medium text-blue-400">{score.bandDescription}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-700 rounded">
+                      <span className="text-gray-300">Correct Answers</span>
+                      <span className="font-bold text-white">{score.correct}/{score.total}</span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-lg font-medium text-blue-400 mb-3">Next Steps</h4>
+                  <div className="space-y-2 text-sm text-gray-300">
+                    {score.bandScore >= 8.0 ? (
+                      <>
+                        <p>🎯 Excellent! You&apos;re ready for advanced English programs</p>
+                        <p>📚 Consider focusing on specialized vocabulary</p>
+                        <p>🎓 You meet requirements for most universities</p>
+                      </>
+                    ) : score.bandScore >= 7.0 ? (
+                      <>
+                        <p>🎯 Great work! You have good English proficiency</p>
+                        <p>📚 Practice complex text comprehension</p>
+                        <p>🎓 Most university programs accept this level</p>
+                      </>
+                    ) : score.bandScore >= 6.0 ? (
+                      <>
+                        <p>🎯 Good foundation! Keep practicing regularly</p>
+                        <p>📚 Focus on vocabulary building and reading speed</p>
+                        <p>🎓 Some programs may accept this level</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>🎯 Keep practicing! Focus on basic comprehension</p>
+                        <p>📚 Build vocabulary and reading habits</p>
+                        <p>🎓 More preparation needed for most programs</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Action Buttons */}
