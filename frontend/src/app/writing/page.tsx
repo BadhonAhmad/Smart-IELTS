@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import FloatingChatbot from "../../components/FloatingChatbot";
 
@@ -73,268 +73,54 @@ export default function WritingTest() {
     WritingQuestion[]
   >([]);
 
-  // Full pool of 16 writing questions from MCP server
-  const allWritingQuestions: WritingQuestion[] = [
-    {
-      id: 1,
-      type: "diagram",
-      title: "Task 1: Process Diagram Analysis",
-      description: "Diagram Description Task",
-      instructions: [
-        "Describe the process shown in the diagram below.",
-        "Summarize the main stages in logical order.",
-        "Include specific details and technical vocabulary.",
-        "Do not give your personal opinion.",
-      ],
-      timeLimit: "20 minutes",
-      wordCount: "At least 150 words",
-      diagram:
-        "Water Cycle Process - showing evaporation, condensation, precipitation, and collection stages",
-    },
-    {
-      id: 2,
-      type: "letter",
-      title: "Task 2: Formal Letter Writing",
-      description: "Complaint Letter Task",
-      instructions: [
-        "Write a formal letter to complain about a recent online purchase.",
-        "Explain what you bought and what the problem is.",
-        "Say what action you would like the company to take.",
-        "Use appropriate formal letter format and tone.",
-      ],
-      timeLimit: "20 minutes",
-      wordCount: "At least 150 words",
-    },
-    {
-      id: 3,
-      type: "essay",
-      title: "Task 3: Climate Change Solutions",
-      description: "Essay Writing Task",
-      instructions: [
-        "Write an essay discussing both individual and governmental solutions to climate change.",
-        "Present a well-structured argument with clear examples.",
-        "Express your own opinion in the conclusion.",
-        "Use formal academic language throughout.",
-      ],
-      timeLimit: "40 minutes",
-      wordCount: "At least 250 words",
-    },
-    {
-      id: 4,
-      type: "essay",
-      title: "Task 4: Technology and Education",
-      description: "Argumentative Essay",
-      instructions: [
-        "Some people believe that technology has made learning easier, while others think it has made students lazy.",
-        "Discuss both views and give your own opinion.",
-        "Support your arguments with relevant examples.",
-        "Structure your essay with clear introduction, body paragraphs, and conclusion.",
-      ],
-      timeLimit: "40 minutes",
-      wordCount: "At least 250 words",
-    },
-    {
-      id: 5,
-      type: "diagram",
-      title: "Task 5: Manufacturing Process",
-      description: "Process Description Task",
-      instructions: [
-        "Describe the manufacturing process shown in the diagram.",
-        "Explain each stage of production in chronological order.",
-        "Use appropriate technical vocabulary.",
-        "Write in a formal, objective style.",
-      ],
-      timeLimit: "20 minutes",
-      wordCount: "At least 150 words",
-      diagram:
-        "Chocolate Production Process - from cocoa beans to finished chocolate bars",
-    },
-    {
-      id: 6,
-      type: "letter",
-      title: "Task 6: Job Application Letter",
-      description: "Formal Application Letter",
-      instructions: [
-        "Write a formal letter applying for a part-time job at a local bookstore.",
-        "Mention your relevant experience and qualifications.",
-        "Explain why you are interested in this position.",
-        "Use appropriate formal letter structure and tone.",
-      ],
-      timeLimit: "20 minutes",
-      wordCount: "At least 150 words",
-    },
-    {
-      id: 7,
-      type: "essay",
-      title: "Task 7: Social Media Impact",
-      description: "Opinion Essay",
-      instructions: [
-        "Social media has both positive and negative effects on society.",
-        "Discuss the advantages and disadvantages of social media.",
-        "Give your own opinion with supporting examples.",
-        "Organize your essay with clear paragraphs and logical flow.",
-      ],
-      timeLimit: "40 minutes",
-      wordCount: "At least 250 words",
-    },
-    {
-      id: 8,
-      type: "diagram",
-      title: "Task 8: Life Cycle Analysis",
-      description: "Biological Process Task",
-      instructions: [
-        "Describe the life cycle shown in the diagram.",
-        "Explain each stage of development clearly.",
-        "Use scientific terminology appropriately.",
-        "Present information in a logical sequence.",
-      ],
-      timeLimit: "20 minutes",
-      wordCount: "At least 150 words",
-      diagram:
-        "Butterfly Life Cycle - egg, larva, pupa, adult butterfly stages",
-    },
-    {
-      id: 9,
-      type: "letter",
-      title: "Task 9: Invitation Letter",
-      description: "Formal Invitation Task",
-      instructions: [
-        "Write a formal letter inviting a guest speaker to your university.",
-        "Explain the purpose of the event and audience details.",
-        "Mention the proposed date, time, and venue.",
-        "Include information about accommodation and travel arrangements.",
-      ],
-      timeLimit: "20 minutes",
-      wordCount: "At least 150 words",
-    },
-    {
-      id: 10,
-      type: "essay",
-      title: "Task 10: Work-Life Balance",
-      description: "Discussion Essay",
-      instructions: [
-        "Many people struggle to maintain a healthy work-life balance in modern society.",
-        "What are the causes of this problem?",
-        "What solutions can you suggest?",
-        "Support your ideas with relevant examples and explanations.",
-      ],
-      timeLimit: "40 minutes",
-      wordCount: "At least 250 words",
-    },
-    {
-      id: 11,
-      type: "diagram",
-      title: "Task 11: Urban Planning Map",
-      description: "Map Description Task",
-      instructions: [
-        "Describe the changes in the town layout shown in the maps.",
-        "Compare the town in different time periods.",
-        "Highlight the most significant developments.",
-        "Use appropriate geographical and directional language.",
-      ],
-      timeLimit: "20 minutes",
-      wordCount: "At least 150 words",
-      diagram: "Town Development Maps - showing changes from 1990 to 2020",
-    },
-    {
-      id: 12,
-      type: "letter",
-      title: "Task 12: Recommendation Letter",
-      description: "Formal Recommendation Task",
-      instructions: [
-        "Write a letter recommending improvements to your local library.",
-        "Describe current problems or limitations.",
-        "Suggest specific improvements and their benefits.",
-        "Use a polite and constructive tone throughout.",
-      ],
-      timeLimit: "20 minutes",
-      wordCount: "At least 150 words",
-    },
-    {
-      id: 13,
-      type: "essay",
-      title: "Task 13: Transportation and Environment",
-      description: "Problem-Solution Essay",
-      instructions: [
-        "Increasing car ownership is causing environmental problems in many cities.",
-        "What are the main environmental impacts?",
-        "What measures can be taken to reduce these problems?",
-        "Provide specific examples and practical solutions.",
-      ],
-      timeLimit: "40 minutes",
-      wordCount: "At least 250 words",
-    },
-    {
-      id: 14,
-      type: "diagram",
-      title: "Task 14: Energy Production Flow",
-      description: "Technical Process Task",
-      instructions: [
-        "Describe how electricity is generated in the power plant shown.",
-        "Explain the energy conversion process step by step.",
-        "Include technical details and specific terminology.",
-        "Maintain an objective, factual writing style.",
-      ],
-      timeLimit: "20 minutes",
-      wordCount: "At least 150 words",
-      diagram:
-        "Solar Power Plant - photovoltaic panels to electrical grid distribution",
-    },
-    {
-      id: 15,
-      type: "letter",
-      title: "Task 15: Inquiry Letter",
-      description: "Information Request Task",
-      instructions: [
-        "Write a letter inquiring about English language courses at a college.",
-        "Ask about course duration, fees, and entry requirements.",
-        "Request information about accommodation options.",
-        "Mention your current English level and learning goals.",
-      ],
-      timeLimit: "20 minutes",
-      wordCount: "At least 150 words",
-    },
-    {
-      id: 16,
-      type: "essay",
-      title: "Task 16: Healthcare and Technology",
-      description: "Advantage-Disadvantage Essay",
-      instructions: [
-        "Technology is increasingly being used in healthcare and medical treatment.",
-        "What are the advantages and disadvantages of this development?",
-        "Do the benefits outweigh the drawbacks?",
-        "Use specific examples to support your arguments.",
-      ],
-      timeLimit: "40 minutes",
-      wordCount: "At least 250 words",
-    },
-  ];
+  // Official IELTS Writing Test - 2 Tasks Only
+  const officialWritingTasks: WritingQuestion[] = useMemo(
+    () => [
+      {
+        id: 1,
+        type: "diagram",
+        title: "Task 1: Academic Writing - Report",
+        description: "Data Analysis and Description Task",
+        instructions: [
+          "The diagram below shows the process of water purification in a modern treatment plant.",
+          "Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+          "Write at least 150 words.",
+          "You should spend about 20 minutes on this task.",
+          "Do not give your personal opinion - only describe what you see.",
+        ],
+        timeLimit: "20 minutes",
+        wordCount: "At least 150 words",
+        diagram:
+          "Water Treatment Process - Raw water → Screening → Coagulation → Sedimentation → Filtration → Chlorination → Clean water distribution",
+      },
+      {
+        id: 2,
+        type: "essay",
+        title: "Task 2: Academic Writing - Essay",
+        description: "Argumentative Essay Writing",
+        instructions: [
+          "Some people think that all university students should study whatever they like. Others believe that they should only be allowed to study subjects that will be useful in the future, such as those related to science and technology.",
+          "Discuss both these views and give your own opinion.",
+          "Give reasons for your answer and include any relevant examples from your own knowledge or experience.",
+          "Write at least 250 words.",
+          "You should spend about 40 minutes on this task.",
+        ],
+        timeLimit: "40 minutes",
+        wordCount: "At least 250 words",
+      },
+    ],
+    []
+  );
 
-  // Function to randomly select 3 questions from the pool of 16 and renumber them as 1, 2, 3
-  const getRandomQuestions = (
-    questions: WritingQuestion[],
-    count: number = 3
-  ): WritingQuestion[] => {
-    const shuffled = [...questions].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, count);
-
-    // Renumber the selected questions as Task 1, Task 2, Task 3
-    return selected.map((question, index) => ({
-      ...question,
-      id: index + 1, // Renumber as 1, 2, 3
-      title: question.title.replace(/Task \d+:/, `Task ${index + 1}:`), // Update title numbering
-    }));
-  };
-
-  // Initialize with 3 random questions from 16 on component mount
+  // Initialize with official IELTS 2-task format on component mount
   useEffect(() => {
-    setDisplayedQuestions(getRandomQuestions(allWritingQuestions, 3));
-  }, []);
+    setDisplayedQuestions(officialWritingTasks);
+  }, [officialWritingTasks]);
 
-  // Function to generate new random questions from the pool of 16
+  // Function to reset tasks (no randomization needed - always same 2 tasks)
   const generateNewQuestions = () => {
-    setDisplayedQuestions(getRandomQuestions(allWritingQuestions, 3));
-    setSelectedQuestion(null); // Reset selection when generating new questions
+    setDisplayedQuestions(officialWritingTasks);
+    setSelectedQuestion(null); // Reset selection when resetting tasks
   };
 
   const handleQuestionSelect = (questionId: number) => {
@@ -506,7 +292,7 @@ export default function WritingTest() {
 
   // Generate mock evaluation based on question type (FALLBACK ONLY - TODO: Remove after real API integration)
   const generateMockEvaluation = (questionId: number): WritingEvaluation => {
-    const question = allWritingQuestions.find((q) => q.id === questionId);
+    const question = officialWritingTasks.find((q) => q.id === questionId);
     const questionType = question?.type || "essay";
 
     // Mock extracted text based on question type
@@ -780,8 +566,8 @@ export default function WritingTest() {
               onClick={generateNewQuestions}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
             >
-              <span>🎲</span>
-              Generate New Questions
+              <span>🔄</span>
+              Reset Tasks
             </button>
           </div>
           <div className="space-y-6">
@@ -1023,22 +809,23 @@ export default function WritingTest() {
               <div className="flex items-center space-x-3 mb-4">
                 <span className="text-3xl">
                   {getQuestionIcon(
-                    allWritingQuestions.find((q) => q.id === selectedQuestion)
+                    officialWritingTasks.find((q) => q.id === selectedQuestion)
                       ?.type || ""
                   )}
                 </span>
                 <div>
                   <h2 className="text-2xl font-bold text-white">
                     {
-                      allWritingQuestions.find((q) => q.id === selectedQuestion)
-                        ?.title
+                      officialWritingTasks.find(
+                        (q) => q.id === selectedQuestion
+                      )?.title
                     }
                   </h2>
                   <div className="flex items-center space-x-6 mt-2">
                     <span className="text-sm text-gray-300">
                       ⏱️{" "}
                       {
-                        allWritingQuestions.find(
+                        officialWritingTasks.find(
                           (q) => q.id === selectedQuestion
                         )?.timeLimit
                       }
@@ -1046,7 +833,7 @@ export default function WritingTest() {
                     <span className="text-sm text-gray-400">
                       📝{" "}
                       {
-                        allWritingQuestions.find(
+                        officialWritingTasks.find(
                           (q) => q.id === selectedQuestion
                         )?.wordCount
                       }
@@ -1089,7 +876,7 @@ export default function WritingTest() {
             // </div> */}
 
             {/* Diagram Display (if applicable) */}
-            {allWritingQuestions.find((q) => q.id === selectedQuestion)
+            {officialWritingTasks.find((q) => q.id === selectedQuestion)
               ?.diagram && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-white mb-4">
@@ -1099,8 +886,9 @@ export default function WritingTest() {
                   <div className="text-4xl mb-4">📊</div>
                   <p className="text-gray-300 font-medium">
                     {
-                      allWritingQuestions.find((q) => q.id === selectedQuestion)
-                        ?.diagram
+                      officialWritingTasks.find(
+                        (q) => q.id === selectedQuestion
+                      )?.diagram
                     }
                   </p>
                   <p className="text-sm text-gray-400 mt-2">
@@ -1410,7 +1198,7 @@ export default function WritingTest() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {uploadedAnswers.map((answer) => {
-                const question = allWritingQuestions.find(
+                const question = officialWritingTasks.find(
                   (q) => q.id === answer.questionId
                 );
                 return (
