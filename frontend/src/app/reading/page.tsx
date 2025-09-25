@@ -742,8 +742,8 @@ export default function ReadingTest() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-200px)]">
-          {/* Passage Section */}
-          <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-700 flex flex-col">
+          {/* Passage Section - Independent Scroll */}
+          <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-700 flex flex-col h-full">
             <div className="bg-gradient-to-r from-blue-900 to-purple-900 px-6 py-4 border-b border-gray-700 flex-shrink-0">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-white">
@@ -757,29 +757,29 @@ export default function ReadingTest() {
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 scroll-smooth scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500" style={{maxHeight: 'calc(100vh - 300px)'}}>
               <div className="prose prose-invert max-w-none text-gray-300 leading-relaxed">
                 {currentRoundData.passage.content.split('\n').map((paragraph, index) => (
-                  <p key={index} className="mb-4 text-gray-300">
+                  <p key={index} className="mb-4 text-gray-300 hover:bg-gray-800 hover:bg-opacity-30 px-2 py-1 rounded transition-colors duration-200">
                     {paragraph}
                   </p>
                 ))}
               </div>
             </div>
-            </div>
+          </div>
 
-          {/* Questions Section */}
-          <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-700 flex flex-col">
+          {/* Questions Section - Independent Scroll */}
+          <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-700 flex flex-col h-full">
             <div className="bg-gradient-to-r from-green-900 to-blue-900 px-6 py-4 border-b border-gray-700 flex-shrink-0">
               <h3 className="text-xl font-semibold text-white">
                 Questions for Round {currentRound}
-                </h3>
+              </h3>
               <p className="text-sm text-green-200 mt-1">
                 Theme: {currentRoundData.metadata.theme} • {currentRoundData.questions.length} questions
-                </p>
-              </div>
+              </p>
+            </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 scroll-smooth scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500" style={{maxHeight: 'calc(100vh - 300px)'}}>
               <div className="space-y-6 pb-8">
                 {currentRoundData.questions.map((question) => (
                   <div key={question.questionNumber} className="bg-gray-800 rounded-lg p-5 border border-gray-700 hover:border-gray-600 transition-colors">
