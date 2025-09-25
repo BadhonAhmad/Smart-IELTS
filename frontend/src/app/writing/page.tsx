@@ -1183,6 +1183,257 @@ export default function WritingTest() {
           </div>
         )}
 
+        {/* Final IELTS Band Score Results */}
+        {uploadedAnswers.length === 2 &&
+          uploadedAnswers.every((answer) => answer.evaluation) && (
+            <div className="bg-gradient-to-r from-green-900 to-blue-900 rounded-xl shadow-lg p-8 border border-green-700 mb-8">
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <span className="text-3xl">🎓</span>
+                  <h2 className="text-2xl font-bold text-white">
+                    IELTS Writing Test - Final Results
+                  </h2>
+                  <span className="text-3xl">🎓</span>
+                </div>
+                <p className="text-gray-300">
+                  Official IELTS Band Score Calculation
+                </p>
+              </div>
+
+              {(() => {
+                const task1Answer = uploadedAnswers.find(
+                  (a) => a.questionId === 1
+                );
+                const task2Answer = uploadedAnswers.find(
+                  (a) => a.questionId === 2
+                );
+
+                if (!task1Answer?.evaluation || !task2Answer?.evaluation)
+                  return null;
+
+                // Calculate individual task scores (average of 4 criteria)
+                const task1Score =
+                  (task1Answer.evaluation.scores.taskAchievement +
+                    task1Answer.evaluation.scores.coherenceCohesion +
+                    task1Answer.evaluation.scores.lexicalResource +
+                    task1Answer.evaluation.scores.grammaticalRange) /
+                  4;
+
+                const task2Score =
+                  (task2Answer.evaluation.scores.taskAchievement +
+                    task2Answer.evaluation.scores.coherenceCohesion +
+                    task2Answer.evaluation.scores.lexicalResource +
+                    task2Answer.evaluation.scores.grammaticalRange) /
+                  4;
+
+                // Calculate weighted final score (Task 1: 1/3, Task 2: 2/3)
+                const weightedScore = (task1Score * 1 + task2Score * 2) / 3;
+
+                // Round to nearest half band
+                const finalBandScore = Math.round(weightedScore * 2) / 2;
+
+                return (
+                  <div className="space-y-6">
+                    {/* Individual Task Scores */}
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {/* Task 1 Results */}
+                      <div className="bg-gray-800 rounded-lg p-6 border border-gray-600">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">📊</span>
+                          <div>
+                            <h3 className="text-lg font-bold text-white">
+                              Task 1
+                            </h3>
+                            <p className="text-sm text-gray-400">
+                              Academic Writing - Report (1/3 weight)
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-gray-700 rounded p-3">
+                              <p className="text-xs text-gray-400">
+                                Task Achievement
+                              </p>
+                              <p className="text-lg font-bold text-white">
+                                {task1Answer.evaluation.scores.taskAchievement}
+                              </p>
+                            </div>
+                            <div className="bg-gray-700 rounded p-3">
+                              <p className="text-xs text-gray-400">
+                                Coherence & Cohesion
+                              </p>
+                              <p className="text-lg font-bold text-white">
+                                {
+                                  task1Answer.evaluation.scores
+                                    .coherenceCohesion
+                                }
+                              </p>
+                            </div>
+                            <div className="bg-gray-700 rounded p-3">
+                              <p className="text-xs text-gray-400">
+                                Lexical Resource
+                              </p>
+                              <p className="text-lg font-bold text-white">
+                                {task1Answer.evaluation.scores.lexicalResource}
+                              </p>
+                            </div>
+                            <div className="bg-gray-700 rounded p-3">
+                              <p className="text-xs text-gray-400">
+                                Grammar & Accuracy
+                              </p>
+                              <p className="text-lg font-bold text-white">
+                                {task1Answer.evaluation.scores.grammaticalRange}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="bg-blue-600 rounded p-3 text-center">
+                            <p className="text-sm text-blue-100">
+                              Task 1 Average Score
+                            </p>
+                            <p className="text-2xl font-bold text-white">
+                              {task1Score.toFixed(1)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Task 2 Results */}
+                      <div className="bg-gray-800 rounded-lg p-6 border border-gray-600">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">📝</span>
+                          <div>
+                            <h3 className="text-lg font-bold text-white">
+                              Task 2
+                            </h3>
+                            <p className="text-sm text-gray-400">
+                              Academic Writing - Essay (2/3 weight)
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-gray-700 rounded p-3">
+                              <p className="text-xs text-gray-400">
+                                Task Response
+                              </p>
+                              <p className="text-lg font-bold text-white">
+                                {task2Answer.evaluation.scores.taskAchievement}
+                              </p>
+                            </div>
+                            <div className="bg-gray-700 rounded p-3">
+                              <p className="text-xs text-gray-400">
+                                Coherence & Cohesion
+                              </p>
+                              <p className="text-lg font-bold text-white">
+                                {
+                                  task2Answer.evaluation.scores
+                                    .coherenceCohesion
+                                }
+                              </p>
+                            </div>
+                            <div className="bg-gray-700 rounded p-3">
+                              <p className="text-xs text-gray-400">
+                                Lexical Resource
+                              </p>
+                              <p className="text-lg font-bold text-white">
+                                {task2Answer.evaluation.scores.lexicalResource}
+                              </p>
+                            </div>
+                            <div className="bg-gray-700 rounded p-3">
+                              <p className="text-xs text-gray-400">
+                                Grammar & Accuracy
+                              </p>
+                              <p className="text-lg font-bold text-white">
+                                {task2Answer.evaluation.scores.grammaticalRange}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="bg-purple-600 rounded p-3 text-center">
+                            <p className="text-sm text-purple-100">
+                              Task 2 Average Score
+                            </p>
+                            <p className="text-2xl font-bold text-white">
+                              {task2Score.toFixed(1)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Final Calculation */}
+                    <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-lg p-6 text-center">
+                      <h3 className="text-xl font-bold text-white mb-4">
+                        Final Band Score Calculation
+                      </h3>
+                      <div className="bg-black bg-opacity-30 rounded-lg p-4 mb-4">
+                        <p className="text-white text-lg mb-2">
+                          ({task1Score.toFixed(1)} × 1) + (
+                          {task2Score.toFixed(1)} × 2) ÷ 3 ={" "}
+                          {weightedScore.toFixed(2)}
+                        </p>
+                        <p className="text-sm text-gray-200">
+                          Rounded to nearest half-band
+                        </p>
+                      </div>
+                      <div className="bg-white rounded-lg p-6 text-center">
+                        <p className="text-gray-600 text-lg mb-2">
+                          Your IELTS Writing Band Score
+                        </p>
+                        <p className="text-6xl font-bold text-green-600 mb-2">
+                          {finalBandScore}
+                        </p>
+                        <p className="text-gray-500">
+                          {finalBandScore >= 8.0
+                            ? "Excellent work! Very skilled user."
+                            : finalBandScore >= 7.0
+                            ? "Good work! Good user with operational command."
+                            : finalBandScore >= 6.0
+                            ? "Competent user with effective command."
+                            : finalBandScore >= 5.0
+                            ? "Modest user with partial command."
+                            : "Limited user - more practice needed."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Band Score Explanation */}
+                    <div className="bg-gray-800 rounded-lg p-6">
+                      <h4 className="text-lg font-bold text-white mb-4">
+                        📊 Understanding Your Score
+                      </h4>
+                      <div className="grid md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <h5 className="font-semibold text-blue-400 mb-2">
+                            Task Distribution:
+                          </h5>
+                          <ul className="space-y-1 text-gray-300">
+                            <li>• Task 1: 1/3 of total writing marks</li>
+                            <li>• Task 2: 2/3 of total writing marks</li>
+                            <li>
+                              • Task 2 is more important for your final score
+                            </li>
+                          </ul>
+                        </div>
+                        <div>
+                          <h5 className="font-semibold text-green-400 mb-2">
+                            Scoring Criteria (Equal Weight):
+                          </h5>
+                          <ul className="space-y-1 text-gray-300">
+                            <li>• Task Achievement/Response</li>
+                            <li>• Coherence and Cohesion</li>
+                            <li>• Lexical Resource</li>
+                            <li>• Grammatical Range and Accuracy</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
         {/* Upload Summary */}
         {uploadedAnswers.length > 0 && (
           <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl shadow-lg p-6 border border-gray-700">
