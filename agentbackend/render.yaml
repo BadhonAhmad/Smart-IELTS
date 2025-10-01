@@ -11,8 +11,6 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       # Smythos SDK Configuration
       - key: SMYTH_VAULT_PATH
         value: /tmp/.smyth/.sre/vault.json
