@@ -1,9 +1,19 @@
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
+import fetch from 'node-fetch';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import BookAssistantAgent, { skillGate } from '../agents/BookAssistant.agent.js';
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const SEND_EMAIL_URL = process.env.SEND_EMAIL_URL || 'https://cmfwa1ah7ycfcjxgthiwbjwr9.agent.pa.smyth.ai/api/send_email';
 
 // Middleware
 app.use(cors());
@@ -13,6 +23,54 @@ app.use(express.urlencoded({ extended: true }));
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Alias health endpoint to match availableAPIs mapping
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Get list of PDF files in data directory
+app.get('/api/documents/pdfs', (req, res) => {
+    try {
+        const dataDir = path.join(process.cwd(), 'data');
+        
+        // Check if data directory exists
+        if (!fs.existsSync(dataDir)) {
+            return res.status(404).json({
+                success: false,
+                error: 'Data directory not found'
+            });
+        }
+
+        // Read directory contents
+        const files = fs.readdirSync(dataDir);
+        
+        // Filter only PDF files
+        const pdfFiles = files.filter(file => 
+            file.toLowerCase().endsWith('.pdf')
+        ).map(file => ({
+            name: file,
+            path: `data/${file}`,
+            fullPath: path.join(dataDir, file)
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                totalPdfs: pdfFiles.length,
+                pdfs: pdfFiles,
+                dataDirectory: dataDir,
+                timestamp: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        console.error('[API] Error reading PDF files:', error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
 });
 
 // Get all available skills
@@ -39,6 +97,17 @@ app.get('/api/agent/skills', (req, res) => {
                 name: 'get_document_info',
                 description: 'Use this skill to get information about a document/book',
                 inputs: { document_name: { description: 'This need to be a name of a document/book, extract it from the user query', required: true } }
+            },
+            {
+                name: 'send_email',
+                description: 'Send an email to specified recipients with subject and body content. Supports CC and BCC recipients.',
+                inputs: { 
+                    to: { description: 'Email recipient address', required: true },
+                    subject: { description: 'Email subject', required: false },
+                    body: { description: 'Email body content', required: false },
+                    cc: { description: 'CC recipients', required: false },
+                    bcc: { description: 'BCC recipients', required: false }
+                }
             }
         ];
         
@@ -154,42 +223,163 @@ app.post('/api/agent/skills/execute-all', async (req, res) => {
     }
 });
 
-// Prompt the agent with natural language
-app.post('/api/agent/prompt', async (req, res) => {
+// Direct agent prompt endpoint
+app.post('/api/prompt', async (req: any, res: any) => {
     try {
-        const { message } = req.body;
+        const { prompt } = req.body;
         
-        if (!message) {
+        if (!prompt) {
             return res.status(400).json({
-                success: false,
-                error: 'message is required'
+                error: 'Prompt is required',
+                message: 'Please provide a prompt in the request body'
             });
         }
+
+        console.log('� Processing agent prompt:', prompt);
         
         // Generate a unique input ID for the skill execution gate
         const inputId = `api-prompt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         skillGate.startNewInput(inputId);
         
-        console.log(`[API] Processing prompt: ${message}`);
+        // Call the agent with the user prompt
+        console.log('📨 Sending prompt to agent...');
         
-        const result = await BookAssistantAgent.prompt(message);
+        let agentResponse;
+        try {
+            console.log('[DEBUG] Calling BookAssistantAgent.chat...');
+            agentResponse = await BookAssistantAgent.chat(prompt);
+            console.log('[DEBUG] Raw agent response type:', typeof agentResponse);
+            console.log('[DEBUG] Raw agent response:', agentResponse);
+        } catch (error) {
+            console.error('❌ Error calling agent:', error);
+            throw error;
+        }
         
-        res.json({
-            success: true,
-            data: {
-                prompt: message,
-                response: result,
-                timestamp: new Date().toISOString()
+        console.log('✅ Agent response received successfully');
+        
+        // Handle the response safely - extract and parse the content
+        let responseData;
+        let isSuccess = true;
+        
+        try {
+            if (typeof agentResponse === 'string') {
+                responseData = agentResponse;
+            } else if (agentResponse && typeof agentResponse === 'object') {
+                // Check if it's already a structured response
+                if (agentResponse.hasOwnProperty('success')) {
+                    responseData = agentResponse;
+                    isSuccess = agentResponse.success;
+                } else {
+                    // Try to extract text from the response object
+                    if (typeof (agentResponse as any).text === 'function') {
+                        responseData = await (agentResponse as any).text();
+                    } else {
+                        // Safely extract properties to avoid circular references
+                        responseData = {
+                            content: (agentResponse as any).content || 
+                                   (agentResponse as any).message || 
+                                   (agentResponse as any).response ||
+                                   'Agent response received',
+                            type: typeof agentResponse,
+                            hasText: typeof (agentResponse as any).text === 'function',
+                            hasContent: !!(agentResponse as any).content,
+                            hasMessage: !!(agentResponse as any).message
+                        };
+                    }
+                }
+            } else {
+                responseData = String(agentResponse);
             }
-        });
-    } catch (error) {
-        console.error('[API] Error processing prompt:', error);
+        } catch (error) {
+            console.error('❌ Error extracting response:', error);
+            responseData = { 
+                success: false, 
+                error: 'Error extracting response from agent',
+                details: error.message 
+            };
+            isSuccess = false;
+        }
+        
+        // Return structured response
+        const response = {
+            success: isSuccess,
+            prompt: prompt,
+            response: responseData,
+            timestamp: new Date().toISOString()
+        };
+        
+        console.log('📤 Sending response - success:', isSuccess);
+        console.log('📤 Response type:', typeof responseData);
+        res.json(response);
+        
+    } catch (error: any) {
+        console.error('❌ Agent prompt processing error:', error);
         res.status(500).json({
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: 'Failed to process agent prompt',
+            message: error.message,
+            details: error.stack
         });
     }
 });
+
+// // Chat endpoint using Smythos OpenAI-compatible API
+// app.post('/api/chat', async (req: any, res: any) => {
+//     try {
+//         const { message } = req.body;
+        
+//         if (!message) {
+//             return res.status(400).json({
+//                 error: 'Message is required',
+//                 message: 'Please provide a message in the request body'
+//             });
+//         }
+
+//         console.log('💬 Processing chat message:', message);
+        
+//         // Initialize OpenAI client with environment variables
+//         const apiKey = process.env.SMYTHOS_API_KEY;
+//         const baseURL = process.env.SMYTHOS_BASE_URL;
+//         const model = process.env.SMYTHOS_MODEL;
+        
+//         if (!apiKey || !baseURL || !model) {
+//             throw new Error('Missing required Smythos environment variables (SMYTHOS_API_KEY, SMYTHOS_BASE_URL, SMYTHOS_MODEL)');
+//         }
+        
+//         const openai = new OpenAI({
+//             apiKey: apiKey,
+//             baseURL: baseURL,
+//         });
+
+//         const response = await openai.chat.completions.create({
+//             model: model,
+//             messages: [{ role: 'user', content: message }],
+//             stream: false,
+//         });
+
+//         console.log('✅ Chat response received successfully');
+//         console.log('Response choices:', response?.choices);
+        
+//         res.json({
+//             success: true,
+//             response: response.choices[0].message.content,
+//             model: model,
+//             choices: response?.choices,
+//             usage: response?.usage,
+//             timestamp: new Date().toISOString()
+//         });
+        
+//     } catch (error: any) {
+//         console.error('❌ Smythos Chat API Error:', error);
+//         res.status(500).json({
+//             error: 'Failed to process chat message',
+//             message: error.message,
+//             details: error.response?.data || 'Internal server error'
+//         });
+//     }
+// });
+
+// Get list of skills available
+
 
 // Start server
 export const startServer = () => {
@@ -199,9 +389,13 @@ export const startServer = () => {
             console.log(`📚 Document Assistant Agent API is ready!`);
             console.log(`\nAvailable endpoints:`);
             console.log(`  GET  /health - Health check`);
+            console.log(`  GET  /api/documents/pdfs - List all PDF files in data directory`);
             console.log(`  GET  /api/agent/skills - List all available skills`);
             console.log(`  POST /api/agent/skills/:skillName - Execute a specific skill`);
             console.log(`  POST /api/agent/skills/execute-all - Execute multiple skills`);
+            console.log(`  GET  /api/prompt/test - Test Smythos API connection`);
+            console.log(`  POST /api/prompt - Direct Gemini AI prompt processing`);
+            console.log(`  POST /api/chat - Chat using Smythos OpenAI-compatible API`);
             console.log(`  POST /api/agent/prompt - Send natural language prompt to agent`);
             resolve();
         });

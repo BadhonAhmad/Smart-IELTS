@@ -1,11 +1,12 @@
 # Document Assistant Agent Backend
 
-A powerful AI-powered document processing and search system built with the Smythos SDK, featuring vector database integration, natural language processing, and RESTful API endpoints.
+A powerful AI-powered document processing and email system built with the Smythos SDK, featuring vector database integration, natural language processing, and RESTful API endpoints with email capabilities.
 
 ## 🚀 Features
 
 - **Document Indexing**: Upload and index PDF documents using vector embeddings
 - **Semantic Search**: Search through documents using natural language queries
+- **Email Integration**: Send emails via external Smyth API with full functionality
 - **AI Agent Integration**: Powered by Google's Gemini AI for intelligent responses
 - **Vector Database**: Pinecone integration for scalable document storage and retrieval
 - **RESTful API**: Complete API for programmatic access
@@ -17,6 +18,7 @@ A powerful AI-powered document processing and search system built with the Smyth
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [API Endpoints](#api-endpoints)
+- [Email API](#email-api)
 - [Usage Examples](#usage-examples)
 - [Chat Mode](#chat-mode)
 - [Deployment](#deployment)
@@ -108,6 +110,35 @@ GET /health
 }
 ```
 
+### List PDF Documents
+```http
+GET /api/documents/pdfs
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "totalPdfs": 7,
+    "pdfs": [
+      {
+        "name": "bitcoin.pdf",
+        "path": "data/bitcoin.pdf", 
+        "fullPath": "/absolute/path/to/data/bitcoin.pdf"
+      },
+      {
+        "name": "IELTS question.pdf",
+        "path": "data/IELTS question.pdf",
+        "fullPath": "/absolute/path/to/data/IELTS question.pdf"
+      }
+    ],
+    "dataDirectory": "/absolute/path/to/data",
+    "timestamp": "2025-09-25T12:00:00.000Z"
+  }
+}
+```
+
 ### List Skills
 ```http
 GET /api/agent/skills
@@ -122,12 +153,38 @@ GET /api/agent/skills
     "agentName": "Document Assistant", 
     "skills": [
       {
-        "name": "index_document",
-        "description": "Index a document in the vector database",
+        "name": "get_document_info",
+        "description": "Get information about a document/book",
         "inputs": {
-          "document_path": {
-            "description": "Path to the PDF document file",
+          "document_name": {
+            "description": "This need to be a name of a document/book, extract it from the user query",
             "required": true
+          }
+        }
+      },
+      {
+        "name": "send_email",
+        "description": "Send an email to specified recipients with subject and body content",
+        "inputs": {
+          "to": {
+            "description": "Email recipient address",
+            "required": true
+          },
+          "subject": {
+            "description": "Email subject",
+            "required": false
+          },
+          "body": {
+            "description": "Email body content",
+            "required": false
+          },
+          "cc": {
+            "description": "CC recipients",
+            "required": false
+          },
+          "bcc": {
+            "description": "BCC recipients",
+            "required": false
           }
         }
       }
@@ -168,7 +225,60 @@ Content-Type: application/json
 }
 ```
 
-#### 4. Purge All Documents
+#### 4. Send Email
+```http
+POST /api/agent/skills/send_email
+Content-Type: application/json
+
+{
+  "to": "recipient@example.com",
+  "subject": "Hello from Agent",
+  "body": "This is a test email sent via the agent's email skill."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "skill": "send_email",
+    "parameters": {
+      "to": "recipient@example.com",
+      "subject": "Hello from Agent", 
+      "body": "This is a test email sent via the agent's email skill."
+    },
+    "result": {
+      "success": true,
+      "message": "Email sent successfully to recipient@example.com",
+      "emailData": {
+        "to": "recipient@example.com",
+        "subject": "Hello from Agent",
+        "body": "This is a test email sent via the agent's email skill."
+      },
+      "apiResponse": {
+        "id": "M14EMAIL003",
+        "name": "APIOutput",
+        "result": {
+          "Output": {
+            "messageId": "199a01d739c1c82e",
+            "threadId": "199a01d739c1c82e",
+            "status": {
+              "id": "199a01d739c1c82e",
+              "threadId": "199a01d739c1c82e",
+              "labelIds": ["SENT"]
+            }
+          }
+        }
+      },
+      "timestamp": "2025-10-01T14:11:49.788Z"
+    },
+    "timestamp": "2025-10-01T14:11:49.789Z"
+  }
+}
+```
+
+#### 5. Purge All Documents
 ```http
 POST /api/agent/skills/purge_documents
 Content-Type: application/json
@@ -176,6 +286,93 @@ Content-Type: application/json
 {
   "confirmation": "yes"
 }
+```
+
+```http
+POST /api/agent/skills/purge_documents
+Content-Type: application/json
+
+{
+  "confirmation": "yes"
+}
+```
+
+## 📧 Email API
+
+### Send Email via Agent Skill
+
+The email functionality is integrated as an agent skill using an external Smyth email service.
+
+**Endpoint:**
+```http
+POST /api/agent/skills/send_email
+```
+
+**Parameters:**
+- `to` (required): Recipient email address
+- `subject` (optional): Email subject line
+- `body` (optional): Email body content  
+- `cc` (optional): CC recipients
+- `bcc` (optional): BCC recipients
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:5000/api/agent/skills/send_email \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "user@example.com",
+    "subject": "Test Email",
+    "body": "Hello from the Document Assistant Agent!",
+    "cc": "manager@example.com"
+  }'
+```
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "skill": "send_email",
+    "result": {
+      "success": true,
+      "message": "Email sent successfully to user@example.com",
+      "emailData": {
+        "to": "user@example.com",
+        "subject": "Test Email",
+        "body": "Hello from the Document Assistant Agent!"
+      },
+      "apiResponse": {
+        "messageId": "199a01d739c1c82e",
+        "status": {"labelIds": ["SENT"]}
+      }
+    }
+  }
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "data": {
+    "skill": "send_email", 
+    "result": {
+      "success": false,
+      "error": "Invalid email format for recipient: invalid-email",
+      "timestamp": "2025-10-01T14:23:09.267Z"
+    }
+  }
+}
+```
+
+### Natural Language Email
+
+You can also send emails using natural language through the prompt endpoint:
+
+```bash
+curl -X POST http://localhost:5000/api/prompt \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "send email to user@example.com with subject \"Meeting Reminder\" and body \"Don'\''t forget about our meeting tomorrow at 2 PM\""}'
 ```
 
 ### Natural Language Prompt
@@ -220,36 +417,65 @@ Content-Type: application/json
    curl http://localhost:5000/health
    ```
 
-2. **List Available Skills**
+2. **List Available PDF Documents**
+   ```bash
+   curl http://localhost:5000/api/documents/pdfs | jq
+   ```
+
+3. **List Available Skills**
    ```bash
    curl http://localhost:5000/api/agent/skills | jq
    ```
 
-3. **Index a Document**
+4. **Index a Document**
    ```bash
    curl -X POST http://localhost:5000/api/agent/skills/index_document \
      -H "Content-Type: application/json" \
      -d '{"document_path": "data/bitcoin.pdf"}' | jq
    ```
 
-4. **Search Documents**
+5. **Search Documents**
    ```bash
    curl -X POST http://localhost:5000/api/agent/skills/lookup_document \
      -H "Content-Type: application/json" \
      -d '{"user_query": "What is Bitcoin?"}' | jq
    ```
 
-5. **Natural Language Query**
+6. **Send Email**
+   ```bash
+   curl -X POST http://localhost:5000/api/agent/skills/send_email \
+     -H "Content-Type: application/json" \
+     -d '{
+       "to": "recipient@example.com",
+       "subject": "Hello from Agent",
+       "body": "This is a test email from the Document Assistant Agent!"
+     }' | jq
+   ```
+
+7. **Natural Language Query**
    ```bash
    curl -X POST http://localhost:5000/api/agent/prompt \
      -H "Content-Type: application/json" \
      -d '{"message": "Search for information about blockchain technology"}' | jq
    ```
 
+8. **Natural Language Email**
+   ```bash
+   curl -X POST http://localhost:5000/api/agent/prompt \
+     -H "Content-Type: application/json" \
+     -d '{"message": "send email to user@example.com saying hello and asking about the meeting"}' | jq
+   ```
+
 ### JavaScript/Node.js Examples
 
 ```javascript
 const API_BASE = 'http://localhost:5000';
+
+// Get list of available PDFs
+async function listPDFs() {
+  const response = await fetch(`${API_BASE}/api/documents/pdfs`);
+  return response.json();
+}
 
 // Index a document
 async function indexDocument(filePath) {
@@ -271,15 +497,39 @@ async function searchDocuments(query) {
   return response.json();
 }
 
+// Send email
+async function sendEmail(to, subject, body) {
+  const response = await fetch(`${API_BASE}/api/agent/skills/send_email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ to, subject, body })
+  });
+  return response.json();
+}
+
 // Usage
 (async () => {
-  // Index document
-  const indexResult = await indexDocument('data/bitcoin.pdf');
-  console.log('Index Result:', indexResult);
+  // List available PDFs
+  const pdfList = await listPDFs();
+  console.log('Available PDFs:', pdfList.data.pdfs);
+  
+  // Index first available document
+  if (pdfList.data.pdfs.length > 0) {
+    const indexResult = await indexDocument(pdfList.data.pdfs[0].path);
+    console.log('Index Result:', indexResult);
+  }
   
   // Search  
   const searchResult = await searchDocuments('What is Bitcoin?');
   console.log('Search Result:', searchResult);
+  
+  // Send email
+  const emailResult = await sendEmail(
+    'recipient@example.com',
+    'Hello from Agent',
+    'This is a test email from the Document Assistant!'
+  );
+  console.log('Email Result:', emailResult);
 })();
 ```
 
@@ -290,6 +540,10 @@ import requests
 import json
 
 API_BASE = 'http://localhost:5000'
+
+def list_pdfs():
+    response = requests.get(f'{API_BASE}/api/documents/pdfs')
+    return response.json()
 
 def index_document(file_path):
     response = requests.post(
@@ -305,15 +559,36 @@ def search_documents(query):
     )
     return response.json()
 
+def send_email(to, subject, body):
+    response = requests.post(
+        f'{API_BASE}/api/agent/skills/send_email',
+        json={'to': to, 'subject': subject, 'body': body}
+    )
+    return response.json()
+
 # Usage
 if __name__ == '__main__':
-    # Index document
-    index_result = index_document('data/bitcoin.pdf')
-    print('Index Result:', json.dumps(index_result, indent=2))
+    # List available PDFs
+    pdf_list = list_pdfs()
+    print('Available PDFs:', json.dumps(pdf_list['data']['pdfs'], indent=2))
+    
+    # Index first available document
+    if pdf_list['data']['pdfs']:
+        first_pdf = pdf_list['data']['pdfs'][0]['path']
+        index_result = index_document(first_pdf)
+        print('Index Result:', json.dumps(index_result, indent=2))
     
     # Search
     search_result = search_documents('What is Bitcoin?') 
     print('Search Result:', json.dumps(search_result, indent=2))
+    
+    # Send email
+    email_result = send_email(
+        'recipient@example.com',
+        'Hello from Agent', 
+        'This is a test email from the Document Assistant!'
+    )
+    print('Email Result:', json.dumps(email_result, indent=2))
 ```
 
 ## 💬 Chat Mode
@@ -336,6 +611,9 @@ Document Assistant > Index the Bitcoin whitepaper
 
 Document Assistant > What is the main purpose of Bitcoin?
 Based on the Bitcoin whitepaper, the main purpose of Bitcoin is to create a purely peer-to-peer version of electronic cash that allows online payments to be sent directly between parties without going through financial institutions...
+
+Document Assistant > Send email to user@example.com about Bitcoin
+✅ Email sent successfully to user@example.com with information about Bitcoin!
 ```
 
 ## 🚀 Deployment
@@ -448,6 +726,16 @@ npm run setup:production # Setup production environment
 - **Input**: `confirmation` (string, optional) - "yes" to confirm
 - **Output**: Confirmation of deletion
 
+### send_email
+- **Purpose**: Send emails via external Smyth API integration
+- **Input**: 
+  - `to` (string, required) - Recipient email address
+  - `subject` (string, optional) - Email subject line
+  - `body` (string, optional) - Email body content
+  - `cc` (string, optional) - CC recipients
+  - `bcc` (string, optional) - BCC recipients
+- **Output**: Success/error response with email delivery status and message ID
+
 ## 🔒 Security Notes
 
 - API keys are stored in environment variables
@@ -483,3 +771,7 @@ For issues and questions:
 - [ ] Document summarization
 - [ ] Multi-language support
 - [ ] WebSocket for real-time updates
+- [x] Email integration via external API
+- [ ] Email templates and bulk sending
+- [ ] Calendar integration
+- [ ] File attachment support for emails

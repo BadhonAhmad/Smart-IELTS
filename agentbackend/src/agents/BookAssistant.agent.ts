@@ -100,29 +100,38 @@ class SkillExecutionGate {
     private executedSkills = new Set<string>();
     private currentInputId = '';
     private skillResults = new Map<string, string>();
+    private hasExecutedAnySkill = false; // New: Track if ANY skill was executed
     
     startNewInput(inputId: string) {
         this.currentInputId = inputId;
         this.executedSkills.clear();
         this.skillResults.clear();
+        this.hasExecutedAnySkill = false; // Reset for new session
         console.log(`[GATE] New input session: ${inputId}`);
     }
     
     canExecute(skillName: string): boolean {
+        // If ANY skill was already executed in this session, block all further executions
+        if (this.hasExecutedAnySkill) {
+            console.log(`[GATE] Blocking ${skillName} - a skill was already executed in this session`);
+            return false;
+        }
+        
         const key = `${this.currentInputId}:${skillName}`;
         if (this.executedSkills.has(key)) {
             console.log(`[GATE] Blocking repeated execution of ${skillName} - already executed in this session`);
             return false;
         }
         this.executedSkills.add(key);
-        console.log(`[GATE] Allowing execution of ${skillName}`);
+        this.hasExecutedAnySkill = true; // Mark that a skill was executed
+        console.log(`[GATE] Allowing execution of ${skillName} - first and only skill for this session`);
         return true;
     }
     
     markCompleted(skillName: string, result: string) {
         const key = `${this.currentInputId}:${skillName}`;
         this.skillResults.set(key, result);
-        console.log(`[GATE] Skill ${skillName} completed with result`);
+        console.log(`[GATE] Skill ${skillName} completed with result - session locked`);
     }
     
     isAlreadyExecuted(skillName: string): boolean {
@@ -134,9 +143,9 @@ class SkillExecutionGate {
         const key = `${this.currentInputId}:${skillName}`;
         const result = this.skillResults.get(key);
         if (result) {
-            return `✅ TASK ALREADY COMPLETED: ${result}`;
+            return `✅ SUCCESS: Task was already completed successfully. ${result.replace('✅ TASK COMPLETE:', '')} No further action needed.`;
         }
-        return `✅ TASK ALREADY COMPLETED: The ${skillName} operation has already been successfully executed in this session. No further action is needed.`;
+        return `✅ SUCCESS: The ${skillName} operation was already completed successfully in this session. No further action needed.`;
     }
 }
 
@@ -156,35 +165,10 @@ const agent = new Agent({
 
     //here we are using a builtin model
     //note that we are not passing an apiKey because we will rely on smyth vault for the model credentials
-    model: 'gemini-2.0-flash',
+    model: Model.Groq('llama-3.1-8b-instant'),
 
     //the behavior of the agent, this describes the personnality and behavior of the agent
-    behavior: `You are a helpful document assistant. 
-
-CRITICAL EXECUTION RULES:
-1. Call each skill EXACTLY ONCE per user request
-2. After calling a skill and receiving ANY response, IMMEDIATELY respond to the user with the result
-3. DO NOT attempt to call the same skill again or any other skills after getting ANY response
-4. If you receive a "TASK COMPLETE" or "TASK ALREADY COMPLETED" message, your job is FINISHED - respond to the user immediately
-5. If you receive any blocking or already executed message, tell the user it was completed and STOP
-
-WORKFLOW:
-- For indexing requests: Call index_document ONCE → Get ANY response → Tell user the result → STOP IMMEDIATELY
-- For search requests: Call lookup_document ONCE → Get ANY response → Tell user the result → STOP IMMEDIATELY  
-- For delete requests: Call purge_documents ONCE → Get ANY response → Tell user the result → STOP IMMEDIATELY
-- For info requests: Call get_document_info ONCE → Get ANY response → Tell user the result → STOP IMMEDIATELY
-- For listing requests: Call list_documents ONCE → Get ANY response → Tell user the result → STOP IMMEDIATELY
-
-CRITICAL: After receiving ANY skill response (success, error, or blocked), you MUST immediately provide a final response to the user and stop processing. Never attempt additional skill calls or actions.
-
-Available skills:
-- index_document: Index a PDF document 
-- lookup_document: Search in documents
-- purge_documents: Delete all documents  
-- get_document_info: Get document information
-- list_documents: List all documents and their indexing status
-
-Be concise and direct. Complete your response immediately after receiving ANY skill result.`,
+    behavior: `You are a helpful document assistant.`
 });
 
 //We create a Pinecone vectorDB instance, at the agent scope
@@ -197,6 +181,8 @@ const pinecone = agent.vectorDB.Pinecone(BOOKS_NAMESPACE, {
     }),
 });
 
+
+
 //#endregion
 
 //#region [ Skills ] ===================================
@@ -204,9 +190,9 @@ const pinecone = agent.vectorDB.Pinecone(BOOKS_NAMESPACE, {
 //Index a document in Pinecone vector database
 const indexDocumentSkill = agent.addSkill({
     name: 'index_document',
-    description: 'Use this skill to index a document in a vector database. The user can provide just the filename (e.g., "bitcoin.pdf") and it will automatically look in the data directory.',
+    description: 'Use this skill to index a document in a vector database. The user can provide just the filename (e.g., "bitcoin.pdf"), keyword: store documents, read documents, save pdf etc.',
     process: async ({ document_path }) => {
-        // Check execution gate
+        // Check execution gate - return success message for repeated calls
         if (!skillGate.canExecute('index_document')) {
             const blockedMsg = skillGate.getBlockedMessage('index_document');
             console.log(`[GATE] Returning blocked message: ${blockedMsg}`);
@@ -302,9 +288,9 @@ indexDocumentSkill.in({
 //Lookup a document in Pinecone vector database
 agent.addSkill({
     name: 'lookup_document',
-    description: 'Use this skill ONCE to lookup content in the Pinecone vector database. Do not call this skill multiple times for the same query.',
+    description: 'Use this skill to lookup content. Use this skill for read document, find information from document, extract text from document.',
     process: async ({ user_query }) => {
-        // Check execution gate
+        // Check execution gate - return success message for repeated calls
         if (!skillGate.canExecute('lookup_document')) {
             const blockedMsg = skillGate.getBlockedMessage('lookup_document');
             console.log(`[GATE] Returning blocked message: ${blockedMsg}`);
@@ -377,7 +363,7 @@ const purgeSkill = agent.addSkill({
     process: async (params) => {
         console.log(`[DEBUG] Purge skill called with params:`, params);
         
-        // Check execution gate
+        // Check execution gate - return success message for repeated calls
         if (!skillGate.canExecute('purge_documents')) {
             const blockedMsg = skillGate.getBlockedMessage('purge_documents');
             console.log(`[GATE] Returning blocked message: ${blockedMsg}`);
@@ -422,7 +408,7 @@ const openlibraryLookupSkill = agent.addSkill({
     name: 'get_document_info',
     description: 'Use this skill to get information about a document/book',
     process: async ({ document_name }) => {
-        // Check execution gate
+        // Check execution gate - return success message for repeated calls
         if (!skillGate.canExecute('get_document_info')) {
             const blockedMsg = skillGate.getBlockedMessage('get_document_info');
             console.log(`[GATE] Returning blocked message: ${blockedMsg}`);
@@ -454,12 +440,14 @@ openlibraryLookupSkill.in({
     },
 });
 
+
+
 //List all documents in data directory and show indexing status
 const listDocumentsSkill = agent.addSkill({
     name: 'list_documents',
     description: 'Use this skill to get a list of all PDF documents in the data directory and their indexing status in the vector database.',
     process: async () => {
-        // Check execution gate
+        // Check execution gate - return success message for repeated calls
         if (!skillGate.canExecute('list_documents')) {
             const blockedMsg = skillGate.getBlockedMessage('list_documents');
             console.log(`[GATE] Returning blocked message: ${blockedMsg}`);
@@ -603,6 +591,136 @@ const listDocumentsSkill = agent.addSkill({
             skillGate.markCompleted('list_documents', errorMsg);
             return errorMsg;
         }
+    },
+});
+
+//Send email skill using external Smyth API
+const realSendEmailSkill = agent.addSkill({
+    name: 'send_email',
+    description: 'Send an email to specified recipients with subject and body content. Supports CC and BCC recipients.',
+    process: async ({ to, subject = 'No Subject', body = 'No content', cc, bcc }) => {
+        // Check execution gate - return success message for repeated calls
+        if (!skillGate.canExecute('send_email')) {
+            const blockedMsg = skillGate.getBlockedMessage('send_email');
+            console.log(`[GATE] Returning blocked message: ${blockedMsg}`);
+            return blockedMsg;
+        }
+        
+        try {
+            // Validate required field
+            if (!to || typeof to !== 'string' || to.trim() === '') {
+                const errorResult = {
+                    success: false,
+                    error: 'Email recipient (to) is required and cannot be empty',
+                    timestamp: new Date().toISOString()
+                };
+                console.log(`[ERROR] Email validation failed:`, errorResult);
+                skillGate.markCompleted('send_email', JSON.stringify(errorResult));
+                return errorResult;
+            }
+
+            // Light email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(to.trim())) {
+                const errorResult = {
+                    success: false,
+                    error: `Invalid email format for recipient: ${to}`,
+                    timestamp: new Date().toISOString()
+                };
+                console.log(`[ERROR] Email validation failed:`, errorResult);
+                skillGate.markCompleted('send_email', JSON.stringify(errorResult));
+                return errorResult;
+            }
+
+            // Prepare email data for Smyth API (simple format as shown in screenshot)
+            const emailData = {
+                to: to.trim(),
+                subject: subject.trim() || 'No Subject',
+                body: body.trim() || 'No content'
+            };
+
+            console.log(`[DEBUG] Sending email via Smyth API...`);
+            console.log(`[DEBUG] Recipient: ${emailData.to}`);
+            console.log(`[DEBUG] Subject: ${emailData.subject}`);
+            console.log(`[DEBUG] Body length: ${emailData.body.length} characters`);
+            console.log(`[DEBUG] Email payload:`, JSON.stringify(emailData, null, 2));
+
+            // Call the external Smyth email API
+            const apiUrl = 'https://cmfwa1ah7ycfcjxgthiwbjwr9.agent.a.smyth.ai/api/send_email';
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(emailData)
+            });
+
+            const responseText = await response.text();
+            console.log(`[DEBUG] Raw API response:`, responseText);
+
+            if (!response.ok) {
+                const errorResult = {
+                    success: false,
+                    error: `Failed to send email: HTTP ${response.status}`,
+                    details: responseText,
+                    emailData: emailData,
+                    timestamp: new Date().toISOString()
+                };
+                console.log(`[ERROR] Email sending failed:`, errorResult);
+                skillGate.markCompleted('send_email', JSON.stringify(errorResult));
+                return errorResult;
+            }
+
+            let apiResult;
+            try {
+                apiResult = JSON.parse(responseText);
+            } catch (parseError) {
+                apiResult = { rawResponse: responseText };
+            }
+            console.log(`[DEBUG] Parsed API response:`, apiResult);
+
+            const successResult = {
+                success: true,
+                message: `Email sent successfully to ${emailData.to}`,
+                emailData: emailData,
+                apiResponse: apiResult,
+                timestamp: new Date().toISOString()
+            };
+            console.log(`[SUCCESS] Email sent successfully:`, successResult);
+            skillGate.markCompleted('send_email', JSON.stringify(successResult));
+            
+            return successResult;
+            
+        } catch (error) {
+            const errorResult = {
+                success: false,
+                error: `Error sending email: ${error.message}`,
+                timestamp: new Date().toISOString()
+            };
+            console.error(`[ERROR] Email sending failed:`, errorResult);
+            skillGate.markCompleted('send_email', JSON.stringify(errorResult));
+            return errorResult;
+        }
+    },
+});
+
+// Add input descriptions for send_email skill
+realSendEmailSkill.in({
+    to: {
+        description: 'Email recipient address (required)',
+    },
+    subject: {
+        description: 'Email subject line (optional, defaults to "No Subject")',
+    },
+    body: {
+        description: 'Email body content (optional, defaults to "No content")',
+    },
+    cc: {
+        description: 'CC recipients (optional)',
+    },
+    bcc: {
+        description: 'BCC recipients (optional)',
     },
 });
 
