@@ -49,7 +49,7 @@
 ### 👨‍💻 **Team SUST_Prompt_Storm**
 - **[Abhishek Dash](https://www.linkedin.com/in/abhishek-dash-60762322a/)** - Team Leader and Frontend Developer & UI/UX
 - **[Badhon Ahmad](https://www.linkedin.com/in/badhon-ahmad-5a5894225/)** - Full Stack Developer & System Architecture
-- **[Md Ahasanul Haque Sazid](https://www.linkedin.com/in/sksazid/)** - Backend Developer & SmythOS Agent and Open Source SDK Integration
+- **[Md Ahasanul Haque Sazid](https://www.linkedin.com/in/sksazid/)** - Backend Developer & SmythOS Agent and SmythOS SRE Integration
 
 <div align="center">
 
@@ -341,8 +341,8 @@ Node.js + Express.js
 
 ### **AI Agent Backend (SmythOS)**
 ```
-SmythOS SDK + Node.js + TypeScript
-├── AI Agent Framework: SmythOS SDK
+SmythOS SRE + Node.js + TypeScript
+├── AI Agent Framework: SmythOS SRE
 ├── Vector Database: Pinecone (Semantic Search)
 ├── Language Model: Google Gemini AI
 ├── LLM Integration: Groq (llama-3.1-8b-instant)
@@ -416,7 +416,7 @@ RAG Infrastructure
 │ ├── /api/prompt          ├── /api/documents/pdfs          │
 │ └── /api/agent/skills/*  └── /api/agent/skills/execute-all│
 ├─────────────────────────────────────────────────────────────┤
-│ AI Agent Layer (SmythOS SDK)                               │
+│ AI Agent Layer (SmythOS SRE)                               │
 │ ├── BookAssistant Agent  ├── Skill Execution Gate         │
 │ ├── Natural Language     ├── Multi-Agent Coordination     │
 │ └── Context Management   └── Response Processing          │

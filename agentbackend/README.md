@@ -1,6 +1,6 @@
 # Document Assistant Agent Backend
 
-A powerful AI-powered document processing and email system built with the Smythos SDK, featuring vector database integration, natural language processing, and RESTful API endpoints with email capabilities.
+A powerful AI-powered document processing and email system built with the SmythOS SRE, featuring vector database integration, natural language processing, and RESTful API endpoints with email capabilities.
 
 ## 🚀 Features
 
@@ -756,7 +756,7 @@ npm run setup:production # Setup production environment
 
 ### Key Technologies
 
-- **Smythos SDK**: AI agent framework
+- **SmythOS SRE**: AI agent framework
 - **Express.js**: Web server
 - **Pinecone**: Vector database
 - **Google AI**: Language model

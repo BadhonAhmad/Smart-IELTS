@@ -196,7 +196,7 @@ graph LR
 ### 🔧 **Technology Stack**
 ```
 SmythOS Agent Backend
-├── 🧠 SmythOS SDK - Core agent framework
+├── 🧠 SmythOS SRE - Core agent framework
 ├── 🚀 Node.js + TypeScript - Runtime environment
 ├── 🌐 Express.js - Web server framework
 ├── 📊 Vector Database - Pinecone integration
@@ -216,7 +216,7 @@ SmythOS Agent Backend
 │ ├── /api/prompt          ├── /api/documents/pdfs          │
 │ └── /api/agent/skills/*  └── /api/agent/skills/execute-all│
 ├─────────────────────────────────────────────────────────────┤
-│ 🧠 AI Agent Layer (SmythOS SDK)                            │
+│ 🧠 AI Agent Layer (SmythOS SRE)                            │
 │ ├── BookAssistant Agent  ├── Skill Execution Gate         │
 │ ├── Natural Language     ├── Multi-Agent Coordination     │
 │ └── Context Management   └── Response Processing          │
@@ -326,7 +326,7 @@ curl -X POST https://smart-ielts.onrender.com/api/agent/skills/get_document_info
 
 ---
 
-## 🔧 **SmythOS SDK Implementation**
+## 🔧 **SmythOS SRE Implementation**
 
 ### 📦 **Core Dependencies**
 ```json

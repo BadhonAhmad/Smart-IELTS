@@ -10,10 +10,35 @@ This guide will help you deploy the Smart-IELTS application (3 services) to Rend
 ### Services to Deploy:
 1. **Backend** (Node.js/Express API) - ⚠️ Ready but blocked
 2. **Frontend** (Next.js application) - ⚠️ Ready but blocked  
-3. **AgentBackend** (SmythOS SDK agent service) - ✅ Deployed
+3. **AgentBackend** (SmythOS SRE agent service) - ✅ Deployed
 
 ### ⚠️ **Important Limitation**
 **Render Free Tier Blueprint Limitation**: The free tier does not support blueprint deployment for multiple services. To deploy the remaining backend and frontend services, you need to upgrade to a paid plan ($7/month per service).
+
+---
+
+## 📋 Deployment Checklist
+
+### Pre-Deployment Preparation
+- [ ] MongoDB Atlas cluster created and configured
+- [ ] Database user created with read/write permissions
+- [ ] All IP addresses whitelisted (0.0.0.0/0)
+- [ ] Connection string obtained
+
+### API Keys Collection
+- [ ] Google AI API Key (Gemini)
+- [ ] Pinecone API Key  
+- [ ] Tavily API Key (Web Search)
+- [ ] Groq API Key (LLM)
+- [ ] ElevenLabs API Key (Voice)
+- [ ] JWT Secret generated (64 characters)
+
+### Render Account Setup
+- [ ] Render account created
+- [ ] GitHub repository connected
+- [ ] Payment method added (if using paid plans)
+
+---
 
 ## Prerequisites
 
@@ -144,6 +169,76 @@ Test the agent endpoints:
 - ✅ `POST https://your-agent.onrender.com/api/prompt` - Test natural language interface (✅ WORKING)
 - ✅ `POST https://your-agent.onrender.com/api/agent/skills/send_email` - Email functionality (✅ WORKING)
 - ✅ `POST https://your-agent.onrender.com/api/agent/skills/WebSearch` - Web search capability (✅ WORKING)
+
+---
+
+## 📋 Complete Testing Checklist
+
+### System Health Tests
+- [ ] Backend health endpoint responds
+- [x] ✅ Agent health endpoint responds  
+- [ ] Frontend loads without errors
+
+### Application Functionality Tests
+- [ ] User registration/login works
+- [ ] IELTS modules accessible
+- [x] ✅ Agent chat functionality works
+- [x] ✅ Email functionality works
+- [ ] Voice features work (if enabled)
+- [ ] File upload works
+
+### Integration Tests
+- [ ] Frontend connects to backend API
+- [x] ✅ Frontend connects to agent backend
+- [x] ✅ Agent services communicate properly
+- [ ] Database connections working
+- [x] ✅ External API integrations functional
+
+---
+
+## 🎯 Production Readiness Checklist
+
+### Infrastructure
+- [ ] All services on appropriate plans (Starter recommended)
+- [ ] Custom domains configured (optional)
+- [ ] Monitoring and alerts set up
+- [ ] Database backups configured
+- [ ] API rate limits reviewed
+- [ ] Security headers configured
+- [ ] HTTPS enforced
+
+### Documentation
+- [x] ✅ README.md updated with live URLs
+- [x] ✅ Environment variable documentation current
+- [x] ✅ API documentation reflects live endpoints
+
+---
+
+## 📊 Deployment Status Summary
+
+### ✅ Successfully Deployed Services
+**Agent Backend Service**
+- **URL**: https://smart-ielts.onrender.com
+- **Status**: ✅ LIVE & FUNCTIONAL
+- **Features**: Email, WebSearch, Document Q&A, Natural Language Interface
+- **Health Check**: ✅ `/health` endpoint active
+- **API Documentation**: Available at deployment URL
+
+### ⚠️ Ready but Blocked Services
+**Backend Service**
+- **Configuration**: ✅ Complete
+- **Status**: ⚠️ Ready but blocked by free tier
+- **Solution**: Upgrade to paid plan ($7/month)
+
+**Frontend Service**
+- **Configuration**: ✅ Complete
+- **Status**: ⚠️ Ready but blocked by free tier
+- **Solution**: Upgrade to paid plan ($7/month)
+
+### 💰 Cost Analysis
+- **Current Cost**: $0 (Agent Backend on free tier)
+- **Full Deployment Cost**: $21/month (3 Starter services)
+- **Free Tier Limitation**: Does not support blueprint deployment for multiple services
 
 ## Important Notes
 
