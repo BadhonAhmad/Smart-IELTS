@@ -27,6 +27,7 @@ export default function Login() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
@@ -39,19 +40,57 @@ export default function Login() {
     { name: "TOEFL", icon: Globe2, color: "from-indigo-500 to-blue-500", status: "coming-soon" },
   ];
 
+  const validateForm = () => {
+    const errors: {[key: string]: string} = {};
+    
+    // Email validation
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    // Password validation
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters long";
+    }
+
+    return errors;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
-    // Clear error when user starts typing
+    
+    // Clear errors when user starts typing
     if (error) setError("");
+    if (validationErrors[name]) {
+      setValidationErrors({
+        ...validationErrors,
+        [name]: ""
+      });
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setValidationErrors({});
+
+    // Form validation
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setError("Please fix the errors below");
+      setIsLoading(false);
+      return;
+    }
 
     try {
     const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
@@ -74,11 +113,21 @@ export default function Login() {
           router.push("/dashboard");
         }
       } else {
-        setError(data.message || "Login failed");
+        // Handle validation errors from backend
+        if (data.errors && Array.isArray(data.errors)) {
+          const backendErrors: {[key: string]: string} = {};
+          data.errors.forEach((err: any) => {
+            if (err.path) {
+              backendErrors[err.path] = err.msg;
+            }
+          });
+          setValidationErrors(backendErrors);
+        }
+        setError(data.message || "Login failed. Please check your credentials.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("Network error. Please try again.");
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -188,12 +237,26 @@ export default function Login() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-800/50 border border-gray-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-white placeholder-gray-400 transition-all duration-300"
+                    className={`w-full pl-12 pr-4 py-4 bg-gray-800/50 border rounded-xl focus:outline-none focus:ring-2 text-white placeholder-gray-400 transition-all duration-300 ${
+                      validationErrors.email 
+                        ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50' 
+                        : 'border-gray-600/50 focus:ring-blue-500/50 focus:border-blue-500/50'
+                    }`}
                     placeholder="Enter your email"
                     required
                     disabled={isLoading}
                   />
                 </div>
+                {validationErrors.email && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mt-2 text-sm text-red-400 flex items-center space-x-1"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{validationErrors.email}</span>
+                  </motion.p>
+                )}
               </motion.div>
 
               {/* Password Field */}
@@ -214,7 +277,11 @@ export default function Login() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-12 py-4 bg-gray-800/50 border border-gray-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-white placeholder-gray-400 transition-all duration-300"
+                    className={`w-full pl-12 pr-12 py-4 bg-gray-800/50 border rounded-xl focus:outline-none focus:ring-2 text-white placeholder-gray-400 transition-all duration-300 ${
+                      validationErrors.password 
+                        ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50' 
+                        : 'border-gray-600/50 focus:ring-blue-500/50 focus:border-blue-500/50'
+                    }`}
                     placeholder="Enter your password"
                     required
                     disabled={isLoading}
@@ -227,6 +294,16 @@ export default function Login() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {validationErrors.password && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mt-2 text-sm text-red-400 flex items-center space-x-1"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{validationErrors.password}</span>
+                  </motion.p>
+                )}
               </motion.div>
 
               {/* Login Button */}

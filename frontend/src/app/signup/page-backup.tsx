@@ -109,42 +109,15 @@ export default function SignUp() {
     { icon: Zap, text: "24/7 AI Support" }
   ];
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({
       ...formData,
-      [name]: value,
+      [e.target.name]: e.target.value,
     });
-    
-    // Clear errors when user starts typing
+    // Clear error when user starts typing
     if (error) setError("");
-    if (validationErrors[name]) {
-      setValidationErrors({
-        ...validationErrors,
-        [name]: ""
-      });
-    }
-
-    // Real-time validation for password
-    if (name === "password" && value) {
-      const passwordErrors = validatePassword(value);
-      if (passwordErrors.length > 0) {
-        setValidationErrors({
-          ...validationErrors,
-          [name]: passwordErrors[0]
-        });
-      }
-    }
-
-    // Real-time validation for confirm password
-    if (name === "confirmPassword" && value) {
-      if (value !== formData.password) {
-        setValidationErrors({
-          ...validationErrors,
-          [name]: "Passwords don't match"
-        });
-      }
-    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -163,19 +136,17 @@ export default function SignUp() {
     }
 
     try {
-      const response = await fetch(API_ENDPOINTS.AUTH.SIGNUP, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          name: formData.name,
-        }),
-      });
-      
-      const data = await response.json();
+    const response = await fetch(API_ENDPOINTS.AUTH.SIGNUP, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+      }),
+    });      const data = await response.json();
 
       if (response.ok) {
         // Store token in localStorage
@@ -249,42 +220,45 @@ export default function SignUp() {
       </nav>
 
       <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-120px)] p-4">
-        <div className="grid lg:grid-cols-2 gap-12 max-w-6xl w-full">
-          {/* Left Side - Form */}
+        <div className="w-full max-w-md">
+          {/* Header */}
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-8"
           >
-            <div>
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-4xl lg:text-5xl font-bold mb-4"
-              >
-                Create Your
-                <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                  Learning Account
-                </span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="text-gray-300 text-lg"
-              >
-                Join thousands of students achieving their academic goals with AI-powered test preparation.
-              </motion.p>
-            </div>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 mb-6"
+            >
+              <Sparkles className="w-4 h-4 text-green-400 mr-2" />
+              <span className="text-sm font-medium">Join SmartPrep</span>
+            </motion.div>
+            
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-green-100 to-blue-100 bg-clip-text text-transparent">
+              Create Account
+            </h1>
+            
+            <p className="text-lg text-gray-300">
+              Start your AI-powered test preparation journey today
+            </p>
+          </motion.div>
 
-            {/* Error Display */}
+          {/* Signup Form */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10"
+          >
             {error && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center space-x-3 text-red-400"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl mb-6 flex items-center space-x-2"
               >
                 <AlertCircle className="w-5 h-5" />
                 <span>{error}</span>
@@ -330,6 +304,7 @@ export default function SignUp() {
                     <span>{validationErrors.name}</span>
                   </motion.p>
                 )}
+                </div>
               </motion.div>
 
               {/* Email Field */}
@@ -370,6 +345,7 @@ export default function SignUp() {
                     <span>{validationErrors.email}</span>
                   </motion.p>
                 )}
+                </div>
               </motion.div>
 
               {/* Account Type Field */}
@@ -439,47 +415,37 @@ export default function SignUp() {
                 </div>
                 
                 {/* Password Requirements */}
-                <div className="mt-3 text-xs text-gray-400 space-y-2">
-                  <p className="font-semibold text-gray-300">Password Requirements:</p>
-                  <div className="grid grid-cols-1 gap-1 pl-2">
-                    <span className={`flex items-center space-x-2 transition-colors ${
-                      formData.password.length >= 6 ? 'text-green-400' : 'text-gray-500'
+                <div className="mt-2 text-xs text-gray-400 space-y-1">
+                  <p className="font-semibold">Password must contain:</p>
+                  <div className="grid grid-cols-1 gap-1">
+                    <span className={`flex items-center space-x-1 ${
+                      formData.password.length >= 6 ? 'text-green-400' : 'text-gray-400'
                     }`}>
-                      <span className={`w-2 h-2 rounded-full ${
-                        formData.password.length >= 6 ? 'bg-green-400' : 'bg-gray-500'
-                      }`}></span>
+                      <span className="w-1 h-1 rounded-full bg-current"></span>
                       <span>At least 6 characters</span>
                     </span>
-                    <span className={`flex items-center space-x-2 transition-colors ${
-                      /[A-Z]/.test(formData.password) ? 'text-green-400' : 'text-gray-500'
+                    <span className={`flex items-center space-x-1 ${
+                      /[A-Z]/.test(formData.password) ? 'text-green-400' : 'text-gray-400'
                     }`}>
-                      <span className={`w-2 h-2 rounded-full ${
-                        /[A-Z]/.test(formData.password) ? 'bg-green-400' : 'bg-gray-500'
-                      }`}></span>
+                      <span className="w-1 h-1 rounded-full bg-current"></span>
                       <span>One uppercase letter</span>
                     </span>
-                    <span className={`flex items-center space-x-2 transition-colors ${
-                      /[a-z]/.test(formData.password) ? 'text-green-400' : 'text-gray-500'
+                    <span className={`flex items-center space-x-1 ${
+                      /[a-z]/.test(formData.password) ? 'text-green-400' : 'text-gray-400'
                     }`}>
-                      <span className={`w-2 h-2 rounded-full ${
-                        /[a-z]/.test(formData.password) ? 'bg-green-400' : 'bg-gray-500'
-                      }`}></span>
+                      <span className="w-1 h-1 rounded-full bg-current"></span>
                       <span>One lowercase letter</span>
                     </span>
-                    <span className={`flex items-center space-x-2 transition-colors ${
-                      /\d/.test(formData.password) ? 'text-green-400' : 'text-gray-500'
+                    <span className={`flex items-center space-x-1 ${
+                      /\d/.test(formData.password) ? 'text-green-400' : 'text-gray-400'
                     }`}>
-                      <span className={`w-2 h-2 rounded-full ${
-                        /\d/.test(formData.password) ? 'bg-green-400' : 'bg-gray-500'
-                      }`}></span>
+                      <span className="w-1 h-1 rounded-full bg-current"></span>
                       <span>One number</span>
                     </span>
-                    <span className={`flex items-center space-x-2 transition-colors ${
-                      /[!@#$%^&*]/.test(formData.password) ? 'text-green-400' : 'text-gray-500'
+                    <span className={`flex items-center space-x-1 ${
+                      /[!@#$%^&*]/.test(formData.password) ? 'text-green-400' : 'text-gray-400'
                     }`}>
-                      <span className={`w-2 h-2 rounded-full ${
-                        /[!@#$%^&*]/.test(formData.password) ? 'bg-green-400' : 'bg-gray-500'
-                      }`}></span>
+                      <span className="w-1 h-1 rounded-full bg-current"></span>
                       <span>One special character (!@#$%^&*)</span>
                     </span>
                   </div>
@@ -515,11 +481,7 @@ export default function SignUp() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className={`w-full pl-12 pr-12 py-4 bg-gray-800/50 border rounded-xl focus:outline-none focus:ring-2 text-white placeholder-gray-400 transition-all duration-300 ${
-                      validationErrors.confirmPassword 
-                        ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50' 
-                        : 'border-gray-600/50 focus:ring-blue-500/50 focus:border-blue-500/50'
-                    }`}
+                    className="w-full pl-12 pr-12 py-4 bg-gray-800/50 border border-gray-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-white placeholder-gray-400 transition-all duration-300"
                     placeholder="Confirm your password"
                     required
                     disabled={isLoading}
@@ -532,29 +494,28 @@ export default function SignUp() {
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-                {validationErrors.confirmPassword && (
-                  <motion.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="mt-2 text-sm text-red-400 flex items-center space-x-1"
-                  >
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{validationErrors.confirmPassword}</span>
-                  </motion.p>
-                )}
               </motion.div>
 
-              {/* Submit Button */}
+              {/* Sign Up Button */}
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.9 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white py-4 px-6 rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-green-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
-                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                    />
+                    <span>Creating Account...</span>
+                  </>
                 ) : (
                   <>
                     <span>Create Account</span>
@@ -569,107 +530,93 @@ export default function SignUp() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 1.0 }}
-              className="relative"
+              className="my-8 flex items-center"
             >
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-600/50" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-black text-gray-400">Already have an account?</span>
-              </div>
+              <div className="flex-1 border-t border-gray-600/50" />
+              <span className="px-4 text-gray-400 text-sm">or</span>
+              <div className="flex-1 border-t border-gray-600/50" />
             </motion.div>
 
-            {/* Login Link */}
+            {/* Sign In Link */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.1 }}
               className="text-center"
             >
-              <Link
-                href="/login"
-                className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
-              >
-                Sign in to your account
-              </Link>
+              <p className="text-gray-400">
+                Already have an account?{" "}
+                <Link
+                  href="/login"
+                  className="text-green-400 hover:text-green-300 font-semibold transition-colors duration-300 hover:underline"
+                >
+                  Sign in here
+                </Link>
+              </p>
             </motion.div>
           </motion.div>
 
-          {/* Right Side - Benefits */}
+          {/* Features Showcase */}
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="space-y-8 lg:pl-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.2 }}
+            className="mt-12"
           >
-            {/* Features */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.2 }}
-              className="bg-gray-800/30 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50"
-            >
-              <p className="text-gray-400 text-sm mb-6 text-center">What you'll get:</p>
-              <div className="grid grid-cols-2 gap-4">
-                {features.map((feature, index) => {
-                  const Icon = feature.icon;
-                  return (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5, delay: 1.3 + index * 0.1 }}
-                      className="flex items-center space-x-3 p-3 bg-gray-700/30 rounded-xl"
-                    >
-                      <Icon className="w-5 h-5 text-blue-400" />
-                      <span className="text-sm font-medium text-gray-300">{feature.text}</span>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
+            <p className="text-gray-400 text-sm mb-6 text-center">What you'll get:</p>
+            <div className="grid grid-cols-2 gap-4">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 1.3 + index * 0.1 }}
+                    className="flex items-center space-x-3 bg-gray-800/30 rounded-xl p-4 border border-gray-700/50"
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-300">{feature.text}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
 
-            {/* Test Platforms */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.4 }}
-              className="bg-gray-800/30 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50"
-            >
-              <h3 className="text-xl font-bold mb-6 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Supported Tests
-              </h3>
-              <div className="space-y-4">
-                {tests.map((test, index) => {
-                  const Icon = test.icon;
-                  return (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 1.5 + index * 0.1 }}
-                      className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-10 h-10 bg-gradient-to-r ${test.color} rounded-lg flex items-center justify-center`}>
-                          <Icon className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="font-semibold text-white">{test.name}</span>
-                      </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          test.status === "live"
-                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                            : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                        }`}
-                      >
-                        {test.status === "live" ? "Live" : "Coming Soon"}
-                      </span>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
+          {/* Test Showcase */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.4 }}
+            className="mt-8 text-center"
+          >
+            <p className="text-gray-400 text-sm mb-6">Prepare for these tests:</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {tests.map((test, index) => {
+                const Icon = test.icon;
+                return (
+                  <motion.div
+                    key={test.name}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 1.5 + index * 0.1 }}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-full border ${
+                      test.status === 'live' 
+                        ? 'border-green-500/50 bg-green-500/10' 
+                        : 'border-gray-600/50 bg-gray-800/30'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm font-medium">{test.name}</span>
+                    {test.status === 'live' && (
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
         </div>
       </div>
