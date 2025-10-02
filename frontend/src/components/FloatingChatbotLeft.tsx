@@ -15,17 +15,24 @@ interface FloatingChatbotLeftProps {
 
 export default function FloatingChatbotLeft({ className = "" }: FloatingChatbotLeftProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: "Hello! I'm your SmythOS Agent Assistant. I can help you with document management, IELTS preparation, web search, email services, and more. What can I help you with today?",
-      isUser: false,
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Initialize client-side only data
+  useEffect(() => {
+    setIsClient(true);
+    setMessages([
+      {
+        id: "1",
+        text: "Hello! I'm your SmythOS Agent Assistant. I can help you with document management, IELTS preparation, web search, email services, and more. What can I help you with today?",
+        isUser: false,
+        timestamp: new Date(),
+      },
+    ]);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -34,6 +41,11 @@ export default function FloatingChatbotLeft({ className = "" }: FloatingChatbotL
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Don't render until client-side hydration is complete
+  if (!isClient) {
+    return null;
+  }
 
   const generateAIResponse = async (userMessage: string): Promise<string> => {
     try {

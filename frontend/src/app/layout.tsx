@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import FloatingChatbotLeft from "@/components/FloatingChatbotLeft";
+import dynamic from "next/dynamic";
+
+// Dynamically import FloatingChatbotLeft with no SSR to prevent hydration mismatch
+const FloatingChatbotLeft = dynamic(() => import("@/components/FloatingChatbotLeft"), {
+  ssr: false,
+});
 
 export const metadata: Metadata = {
   title: "Smart IELTS",

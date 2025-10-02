@@ -236,7 +236,104 @@ POST /api/agent/skills/execute-all
 
 ---
 
-## 📋 **Project Documentation & Resources**
+## � **Project Idea - SUST Prompt Storm**
+
+<div align="center">
+
+![Project Idea](assets/architecture/Project_Idea_SUST_Prompt_Strom.pdf)
+*Comprehensive Project Proposal for Smart IELTS Platform*
+
+</div>
+
+### 🎯 **Vision Statement**
+
+Smart IELTS was conceived as an innovative solution to address the growing need for intelligent, personalized test preparation in the digital age. Our project idea originated from the observation that traditional IELTS preparation methods often lack personalization, real-time feedback, and comprehensive skill assessment.
+
+### 🧠 **Core Concept**
+
+The project idea centers around creating an **AI-powered, comprehensive IELTS preparation ecosystem** that combines:
+
+- **🤖 Intelligent Tutoring**: SmythOS-powered conversational AI for personalized guidance
+- **📊 Adaptive Learning**: Dynamic skill assessment and customized learning paths  
+- **🎯 Holistic Preparation**: Complete coverage of all four IELTS skills (Reading, Writing, Listening, Speaking)
+- **⚡ Real-time Feedback**: Instant evaluation and improvement suggestions
+- **📱 Modern UX**: Intuitive, responsive design for seamless user experience
+
+### 🔬 **Problem Analysis**
+
+Our research identified key challenges in existing IELTS preparation:
+
+1. **Limited Personalization**: One-size-fits-all approaches don't cater to individual learning styles
+2. **Fragmented Resources**: Students struggle with scattered materials and inconsistent quality
+3. **Lack of Speaking Practice**: Limited opportunities for realistic speaking test simulation
+4. **Delayed Feedback**: Traditional methods provide slow, often generic feedback
+5. **Accessibility Issues**: High costs and geographical limitations of quality preparation
+
+### 💎 **Innovative Solutions**
+
+#### 🚀 **AI-Driven Architecture**
+- **SmythOS Integration**: Advanced agent-based system for natural conversation
+- **Multi-Modal AI**: Support for text, audio, and image processing
+- **Intelligent Routing**: Smart skill orchestration for complex user queries
+
+#### 🎨 **User-Centric Design**
+- **Progressive Web App**: Cross-platform accessibility with native app-like experience
+- **Adaptive Interface**: Personalized dashboard based on user progress and preferences
+- **Gamification**: Achievement system to maintain engagement and motivation
+
+#### 📈 **Scalable Technology Stack**
+- **Frontend**: Next.js 15+ with TypeScript for modern, performant user interface
+- **Backend**: Node.js with Express for robust API management
+- **AI Layer**: SmythOS for intelligent agent orchestration
+- **Database**: MongoDB for flexible data storage and retrieval
+
+### 📊 **Expected Impact**
+
+#### 🎓 **For Students**
+- **Personalized Learning**: Tailored study plans based on individual strengths and weaknesses
+- **Comprehensive Practice**: All four IELTS skills in one integrated platform
+- **Instant Feedback**: Real-time performance analysis and improvement suggestions
+- **Accessibility**: 24/7 availability from anywhere with internet connection
+
+#### 🏫 **For Educators**
+- **Analytics Dashboard**: Detailed insights into student progress and common challenges
+- **Resource Management**: Centralized platform for sharing materials and assignments
+- **Automated Assessment**: Reduced workload through AI-powered evaluation
+
+#### 🌍 **For the Education Sector**
+- **Democratized Access**: Quality IELTS preparation available globally
+- **Cost Efficiency**: Reduced reliance on expensive traditional preparation methods
+- **Innovation Showcase**: Demonstration of AI potential in educational technology
+
+### 🔮 **Future Roadmap**
+
+#### Phase 1: Foundation (Completed ✅)
+- Core platform development
+- Basic AI integration
+- Essential IELTS modules
+
+#### Phase 2: Enhancement (In Progress 🔄)
+- Advanced AI features
+- Speaking test simulation
+- Performance analytics
+
+#### Phase 3: Expansion (Planned 📋)
+- Multi-language support
+- Mobile application
+- Institutional partnerships
+- Additional test formats (TOEFL, PTE)
+
+### 🏆 **Project Validation**
+
+The project idea's strength was validated through:
+- **🥇 4th Place** at Inter-University National Hackathon 2025
+- **👥 Community Feedback** from beta testing with 100+ users
+- **🎯 Technical Excellence** recognized by industry experts and judges
+- **📈 Scalability Assessment** confirmed by technical architecture review
+
+---
+
+## �📋 **Project Documentation & Resources**
 
 <div align="center">
 
