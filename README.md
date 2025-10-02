@@ -14,7 +14,7 @@
 
 **An intelligent, comprehensive test preparation platform powered by cutting-edge AI technology**
 
-[🚀 Live Demo](#) | [📖 Documentation](#getting-started) | [🤝 Contributing](#contributing) | [📞 Support](#support)
+[🚀 Live Demo](https://smart-ielts.onrender.com) | [🎨 Figma Design](https://www.figma.com/design/FLydtNSPZvmzg1wL2KZA7k/Smart-ILTS-UI?node-id=0-1&t=X9lXbv6Ir1GvVkVS-1) | [📊 Presentation](https://gamma.app/docs/Smart-IELTS-AI-Powered-Exam-Preparation-oiflu0ruio4gt67?mode=doc) | [� GitHub](https://github.com/BadhonAhmad/Smart-IELTS) | [📖 Documentation](#getting-started)
 
 </div>
 
@@ -236,6 +236,111 @@ POST /api/agent/skills/execute-all
 
 ---
 
+## 📋 **Project Documentation & Resources**
+
+<div align="center">
+
+### 🎨 **Design & Architecture**
+
+| Resource | Description | Link |
+|----------|-------------|------|
+| **🎨 Figma Design** | Complete UI/UX Design System | [View Design](https://www.figma.com/design/FLydtNSPZvmzg1wL2KZA7k/Smart-ILTS-UI?node-id=0-1&t=X9lXbv6Ir1GvVkVS-1) |
+| **📊 Project Presentation** | Comprehensive Project Overview | [View Slides](https://gamma.app/docs/Smart-IELTS-AI-Powered-Exam-Preparation-oiflu0ruio4gt67?mode=doc) |
+| **💻 GitHub Repository** | Source Code & Documentation | [View Repository](https://github.com/BadhonAhmad/Smart-IELTS) |
+| **🏗️ Architecture Diagram** | System Architecture Overview | [View Below](#architecture-overview) |
+| **📱 UI Design System** | Complete Design Specifications | [View Below](#ui-design-assets) |
+
+### 🏗️ **System Architecture**
+
+![Project Workflow](assets/architecture/project%20workflow.jpeg)
+*Complete system architecture and data flow visualization*
+
+### 📱 **UI Design Assets**
+
+#### 📄 Complete UI Design Documentation
+![UI Design System](assets/architecture/Smart-ILTS%20UI.pdf)
+*[Download Complete UI Design PDF](assets/architecture/Smart-ILTS%20UI.pdf)*
+
+### 🛠️ **Technical Architecture**
+
+```mermaid
+graph TD
+    A[User Interface] --> B[Frontend - Next.js]
+    B --> C[Backend API - Node.js]
+    B --> D[Agent Backend - SmythOS]
+    C --> E[Database - MongoDB]
+    D --> F[AI Services]
+    F --> G[Gemini AI]
+    F --> H[ElevenLabs]
+    F --> I[Pinecone Vector DB]
+    F --> J[Tavily Search]
+    D --> K[Email Service]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fce4ec
+    style F fill:#f1f8e9
+```
+
+</div>
+
+---
+
+## 🎨 **Design System & UI Documentation**
+
+### **Figma Design System**
+
+<div align="center">
+
+[![Figma Design](https://img.shields.io/badge/Figma-Design%20System-F24E1E?style=for-the-badge&logo=figma&logoColor=white)](https://www.figma.com/design/FLydtNSPZvmzg1wL2KZA7k/Smart-ILTS-UI?node-id=0-1&t=X9lXbv6Ir1GvVkVS-1)
+
+**[🎨 View Complete Figma Design System](https://www.figma.com/design/FLydtNSPZvmzg1wL2KZA7k/Smart-ILTS-UI?node-id=0-1&t=X9lXbv6Ir1GvVkVS-1)**
+
+</div>
+
+### **Design Features**
+- **🎯 Modern UI/UX**: Clean, intuitive interface design
+- **📱 Responsive Design**: Mobile-first approach with adaptive layouts
+- **🎨 Consistent Branding**: Cohesive visual identity throughout
+- **♿ Accessibility**: WCAG 2.1 AA compliant design patterns
+- **🌙 Dark Mode**: Elegant dark theme for enhanced user experience
+- **✨ Micro-interactions**: Smooth animations and transitions
+
+### **UI Components**
+- **📋 Test Interface**: Interactive question and answer components
+- **📊 Analytics Dashboard**: Progress tracking and performance visualization
+- **🎤 Voice Interface**: Speaking practice and evaluation UI
+- **📚 Learning Materials**: Document viewer and study resources
+- **👤 User Management**: Authentication and profile management
+- **🤖 AI Chat Interface**: Conversational AI interaction design
+
+### **Technical Specifications**
+- **🎨 Design Tool**: Figma (Professional)
+- **📐 Grid System**: 12-column responsive grid
+- **🎭 Typography**: Inter font family with optimized weights
+- **🌈 Color Palette**: Carefully selected accessible color schemes
+- **📏 Spacing**: 8px base unit consistent spacing system
+- **🔧 Components**: Reusable design system components
+
+### **Local Design Assets**
+
+#### 🏗️ **Architecture Visualization**
+![Project Workflow](assets/architecture/project%20workflow.jpeg)
+*System architecture and component interaction diagram*
+
+#### 📱 **UI Design System Documentation**
+📄 **[Download Complete UI Design PDF](assets/architecture/Smart-ILTS%20UI.pdf)**
+
+```
+assets/architecture/
+├── 📄 Smart-ILTS UI.pdf      # Complete UI design documentation
+└── 🖼️ project workflow.jpeg   # System architecture visualization
+```
+
+---
+
 ## 🌟 Overview
 
 Smart IELTS is a revolutionary AI-powered test preparation platform designed to provide comprehensive, personalized, and interactive preparation for standardized English proficiency tests. Built with modern web technologies and integrated with advanced AI models, it offers an unparalleled learning experience that adapts to each student's unique needs.
@@ -381,6 +486,19 @@ RAG Infrastructure
 
 ## 🏗️ Architecture Overview
 
+<div align="center">
+
+### 📊 **System Architecture Diagram**
+![Project Workflow](assets/architecture/project%20workflow.jpeg)
+*Complete system architecture and data flow visualization*
+
+### 📱 **UI/UX Design System**
+📄 **[Complete UI Design Documentation](assets/architecture/Smart-ILTS%20UI.pdf)**
+*Download the full UI design specifications and component library*
+
+</div>
+
+### **High-Level Architecture**
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │     Backend      │    │  Agent Backend  │    │   AI Services   │
@@ -503,6 +621,12 @@ RAG Infrastructure
 
 ```
 Smart-IELTS/
+├── 📁 assets/                # Project assets and documentation
+│   ├── 📁 architecture/      # System architecture diagrams
+│   │   ├── 📄 Smart-ILTS UI.pdf          # Complete UI design specs
+│   │   └── 🖼️ project workflow.jpeg     # System architecture diagram
+│   ├── 📁 final/             # Hackathon final presentation assets
+│   └── 📁 selection_round/   # Selection round documentation
 ├── 📁 frontend/              # Next.js React application
 │   ├── 📁 src/
 │   │   ├── 📁 app/           # App Router pages
@@ -521,8 +645,13 @@ Smart-IELTS/
 │   ├── 📁 tests/             # Test suites
 │   ├── 📄 package.json
 │   └── 📄 README.md
-├── 📁 agentbackend/          # Additional AI agent services
-└── 📄 README.md              # This file
+├── 📁 agentbackend/          # SmythOS AI agent services
+│   ├── 📁 src/               # Agent source code
+│   ├── 📁 data/              # AI training data and PDFs
+│   └── 📄 package.json
+├── 📄 README.md              # This file
+├── 📄 SmythOS.md             # Detailed AI agent documentation
+└── 📄 RENDER_DEPLOYMENT_GUIDE.md  # Deployment instructions
 ```
 
 ---
@@ -764,9 +893,15 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **Pinecone** - For vector database and semantic search
 - **Tavily** - For intelligent web search capabilities
 - **Next.js Team** - For the amazing React framework
+- **Figma** - For comprehensive UI/UX design system
 - **Open Source Community** - For incredible tools and libraries
 
-> 📖 **Detailed SmythOS Implementation**: See [SmythOS.md](SmythOS.md) for comprehensive documentation of our AI agent architecture and workflows.
+### **Project Resources**
+- **🎨 Figma Design System**: [Complete UI/UX Documentation](https://www.figma.com/design/FLydtNSPZvmzg1wL2KZA7k/Smart-ILTS-UI?node-id=0-1&t=X9lXbv6Ir1GvVkVS-1)
+- **📊 Project Presentation**: [Comprehensive Overview Slides](https://gamma.app/docs/Smart-IELTS-AI-Powered-Exam-Preparation-oiflu0ruio4gt67?mode=doc)
+- **� GitHub Repository**: [Source Code & Documentation](https://github.com/BadhonAhmad/Smart-IELTS)
+- **🏗️ Architecture Assets**: Local documentation in `/assets/architecture/`
+- **📖 Detailed SmythOS Implementation**: See [SmythOS.md](SmythOS.md) for comprehensive documentation
 
 ### **Inspiration**
 This project was born during an intense 48-hour hackathon where we learned the power of:
@@ -788,6 +923,17 @@ This project was born during an intense 48-hour hackathon where we learned the p
 [![GitHub Forks](https://img.shields.io/github/forks/BadhonAhmad/Smart-IELTS?style=social)](https://github.com/BadhonAhmad/Smart-IELTS/network/members)
 [![Follow SK Sazid](https://img.shields.io/github/followers/sk-sazid?style=social&label=Follow%20SK%20Sazid)](https://github.com/sk-sazid)
 [![Follow Badhon Ahmad](https://img.shields.io/github/followers/BadhonAhmad?style=social&label=Follow%20Badhon)](https://github.com/BadhonAhmad)
+
+### 🔗 **Quick Links**
+
+| Resource | Link |
+|----------|------|
+| 🚀 **Live Demo** | [https://smart-ielts.onrender.com](https://smart-ielts.onrender.com) |
+| 🎨 **Figma Design** | [UI/UX Design System](https://www.figma.com/design/FLydtNSPZvmzg1wL2KZA7k/Smart-ILTS-UI?node-id=0-1&t=X9lXbv6Ir1GvVkVS-1) |
+| 📊 **Presentation** | [Project Overview Slides](https://gamma.app/docs/Smart-IELTS-AI-Powered-Exam-Preparation-oiflu0ruio4gt67?mode=doc) |
+| 💻 **GitHub Repository** | [Source Code & Docs](https://github.com/BadhonAhmad/Smart-IELTS) |
+| 🤖 **SmythOS Agent** | [AI Agent Documentation](SmythOS.md) |
+| 🏗️ **Architecture** | [View Assets Below](#local-design-assets) |
 
 ---
 
