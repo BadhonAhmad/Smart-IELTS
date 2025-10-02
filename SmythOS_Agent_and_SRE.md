@@ -2,7 +2,40 @@
 
 <div align="center">
 
-![SmythOS Banner](https://img.shields.io/badge/SmythOS-AI%20Agent%20Platform-purple?style=for-the-badge&logo=robot)
+![SmythOS Banner](https### ☁️ **Google Drive Integration Skills**
+| Skill | Endpoint | Purpose |
+|-----### 📄 **Document Intelligence Skills**
+| Skill | Endpoint | Purpose |
+|-------|----------|---------||
+| **Smart Answer** | `/api/agent/skills/lookup_document` | AI-powered Q&A using vectorized IELTS documents from previous years. Automatically finds relevant content and provides comprehensive answers with source citations |
+| **Document Search** | `/api/agent/skills/search_documents` | Advanced semantic search across all indexed documents using vector similarity. Finds information even with different wording or synonyms |
+| **Document Info** | `/api/agent/skills/get_document_info` | Retrieve detailed metadata including document type, content summary, index status, and vectorization details |
+| **List Documents** | `/api/documents/pdfs` | View all available documents with metadata, indexing status, and search capabilities |
+| **Index Documents** | `/api/agent/skills/index_document` | Process and vectorize new documents for semantic search. Converts PDFs to searchable embeddings in Pinecone database |
+| **Purge Documents** | `/api/agent/skills/purge_documents` | Clean document database and reset vector indices for fresh start or maintenance |----|---### 📧 **Communication Skills**
+| Skill | Endpoint | Purpose |
+|-------|----------|---------||
+| **Send Emails** | `/api/agent/skills/send_email` | Send personalized emails with IELTS study materials, progress reports, and notifications. Supports CC/BCC, attachments, and HTML formatting |
+| **Email Formatting** | *Automatic* | Advanced email formatting with Base64 encoding for attachments, proper MIME types, and Gmail API compliance |
+| **Study Group Messaging** | *Integrated* | Send bulk emails to study groups with shared materials and progress updates |
+| **Notification System** | *Automatic* | Automated email notifications for study reminders, test schedules, and achievement milestones |-### 🌐 **Web Research Skills**
+| Skill | Endpoint | Purpose |
+|-------|----------|---------||
+| **Web Search** | `/api/agent/skills/WebSearch` | Real-time web search for current IELTS information, exam format updates, test dates, and preparation tips using Tavily API |
+| **Current Data** | *Automatic* | Up-to-date search results with relevance filtering and source verification |
+| **IELTS Updates** | *Specialized* | Monitor official IELTS websites for format changes, new test locations, and preparation guidelines |
+| **Study Resources** | *Curated* | Find additional practice materials, online courses, and supplementary study resources |*### 🤖 **AI Processing Skills**
+| Skill | Endpoint | Purpose |
+|-------|----------|---------||
+| **Natural Language** | `/api/prompt` | Handle conversational queries with context awareness. Processes complex IELTS-related questions and provides comprehensive answers |
+| **Skill Recommendation** | *Automatic* | Intelligently suggest the most appropriate skills and endpoints based on user queries and context |
+| **Prompt Analysis** | *Automatic* | Analyze user intent and route requests to appropriate services. Handles multi-step queries and complex reasoning |
+| **Context Management** | *Integrated* | Maintain conversation history and user preferences for personalized learning experiences |
+| **Response Optimization** | *Automatic* | Optimize responses for clarity, relevance, and educational value specific to IELTS preparation | PDFs** | `/api/agent/skills/store_pdf_to_drive` | Automatically save and organize documents to Google Drive with metadata |
+| **List Drive PDFs** | `/api/agent/skills/list_drive_pdfs` | Browse, search, and manage PDF documents stored in Google Drive |
+| **Auto Metadata** | *Automatic* | Generate timestamps, categories, and folder organization for uploaded files |
+| **Share Links** | *Automatic* | Create shareable links for documents with appropriate permissions |
+| **Folder Management** | *Automatic* | Organize documents by subject, date, and document type |.shields.io/badge/SmythOS-AI%20Agent%20Platform-purple?style=for-the-badge&logo=robot)
 
 **Advanced AI Agent Architecture for Educational Technology**
 
@@ -14,14 +47,92 @@
 
 ## 🌟 Overview
 
-Our Smart IELTS platform leverages **SmythOS**, a cutting-edge AI agent orchestration platform, to create intelligent document management and communication capabilities. The AgentBackend serves as a comprehensive API client with advanced document processing and multi-service integrations.
+Our Smart IELTS platform leverages **SmythOS**, a cutting-edge AI agent orchestration platform, to create intelligent document management and communication capabilities. The AgentBackend serves as a comprehensive API client with advanced document processing and multi-service integrations, deployed on **Render** for seamless cloud operations.
 
-### 🎯 **Purpose**
+### 🚀 **Key Workflows & Deployment**
+
+#### **Render Deployed SmythOS SRE**
+Our production deployment on Render provides:
+
+1. **🤖 Agent Prompt API Integration** - We expose the `agentFile.prompt()` skill through our API, enabling seamless integration of AI assistant capabilities into our website. This addresses the limitation where SmythOS builder doesn't provide a direct prompt-sending API endpoint.
+
+2. **📚 Intelligent Document Q&A** - When users ask questions about previous year IELTS materials, the agent automatically searches through vectorized documents stored in Pinecone cloud vector database. The `index_document` skill handles document vectorization for semantic search.
+
+3. **📧 Email Communication** - Built-in email functionality allows sending notifications, study materials, and progress reports directly to users and study groups.
+
+4. **� Web Search Intelligence** - Real-time web search capabilities to find current IELTS-related information, exam updates, and additional study resources.
+
+5. **☁️ Google Drive Integration** - Automatic backup and storage of PDFs and study materials to Google Drive with organized folder structure.
+
+6. **🔍 Document Management** - Advanced document indexing, searching, and metadata management for efficient content organization.
+
+#### **SmythOS Builder Capabilities**
+Our SmythOS builder workflow includes:
+
+1. **📂 List Drive PDFs** - Browse and manage PDF documents stored in Google Drive
+2. **☁️ Store PDF to Drive** - Automatically backup and organize documents to Google Drive with metadata
+
+### �🎯 **Purpose**
 The SmythOS-powered agent backend serves as an intelligent document management and communication hub that:
-- Automatically finds relevant documents for user questions
-- Provides AI-powered responses based on document content
+- Automatically finds relevant documents for user questions using vector search
+- Provides AI-powered responses based on indexed document content
 - Manages Google Drive integrations for backup and storage
 - Handles email communications and web search capabilities
+- Exposes prompt-based AI interaction through custom API endpoints
+
+---
+
+## 🚀 **Render Deployment Architecture**
+
+### 🌐 **Production Environment**
+Our SmythOS SRE is deployed on **Render** for reliable cloud operations with the following architecture:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Render Cloud Deployment                 │
+├─────────────────────────────────────────────────────────────┤
+│ 🌐 Smart-IELTS Production API                              │
+│ └── https://smart-ielts.onrender.com                       │
+├─────────────────────────────────────────────────────────────┤
+│ 🤖 SmythOS Agent Integration                                │
+│ ├── agentFile.prompt() API exposure                        │
+│ ├── Custom endpoint bridging                               │
+│ └── Website AI assistant integration                       │
+├─────────────────────────────────────────────────────────────┤
+│ ☁️ Vector Database (Pinecone)                              │
+│ ├── IELTS document vectorization                           │
+│ ├── Semantic search capabilities                           │
+│ └── index_document skill integration                       │
+├─────────────────────────────────────────────────────────────┤
+│ 🔌 External Integrations                                   │
+│ ├── 📧 Gmail API (Email communication)                     │
+│ ├── 🌐 Tavily API (Web search)                            │
+│ ├── 💾 Google Drive API (PDF storage)                     │
+│ └── 🤖 Google Gemini (AI processing)                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 🔧 **Custom API Bridge**
+Since SmythOS builder doesn't provide direct prompt-sending API endpoints, we've implemented a custom bridge:
+
+```typescript
+// Custom prompt API integration
+app.post('/api/prompt', async (req, res) => {
+  const { prompt } = req.body;
+  
+  // Bridge to SmythOS agent prompt skill
+  const response = await agentFile.prompt({
+    userQuery: prompt,
+    context: 'ielts-assistance'
+  });
+  
+  return res.json({
+    answer: response.content,
+    sources: response.sources,
+    timestamp: new Date().toISOString()
+  });
+});
+```
 
 ---
 
@@ -35,21 +146,77 @@ The SmythOS-powered agent backend serves as an intelligent document management a
 
 > 🌐 **Interactive API Documentation**: The deployment URL provides a complete Swagger/OpenAPI interface for testing all agent skills and endpoints in real-time.
 
+### 📂 **SmythOS Builder Capabilities**
+
+Our SmythOS builder includes specialized workflows for document management and cloud storage integration:
+
+#### **🔧 Core Builder Features**
+
+1. **📂 List Drive PDFs**
+   - **Purpose**: Browse and manage PDF documents stored in Google Drive
+   - **Functionality**: 
+     - Retrieve comprehensive file listings with metadata
+     - Filter by document type, date, and category
+     - Display file sizes, modification dates, and sharing permissions
+     - Search functionality within Drive storage
+   - **Integration**: Seamless connection with Google Drive API
+   - **Output**: Structured JSON response with file details and access links
+
+2. **☁️ Store PDF to Drive**
+   - **Purpose**: Automatically backup and organize documents to Google Drive
+   - **Functionality**:
+     - Upload IELTS study materials and practice tests
+     - Auto-generate organized folder structure by subject and date
+     - Create metadata tags for easy categorization
+     - Generate shareable links with appropriate permissions
+     - Compress and optimize PDFs for cloud storage
+   - **Smart Organization**: 
+     - `/IELTS_Materials/Reading/` for reading practice
+     - `/IELTS_Materials/Writing/` for writing samples
+     - `/IELTS_Materials/Listening/` for audio transcripts
+     - `/IELTS_Materials/Speaking/` for speaking guides
+   - **Backup Strategy**: Automatic versioning and duplicate detection
+
+#### **🔄 Workflow Integration**
+
+```mermaid
+graph TD
+    A[Document Upload] --> B[PDF Processing]
+    B --> C[Metadata Extraction]
+    C --> D[Drive Storage]
+    D --> E[Folder Organization]
+    E --> F[Link Generation]
+    F --> G[Database Update]
+    G --> H[User Notification]
+```
+
+**Process Flow:**
+1. **Upload Trigger**: Document uploaded or processing initiated
+2. **PDF Analysis**: Extract text, images, and metadata
+3. **Smart Categorization**: Auto-detect document type (Reading, Writing, etc.)
+4. **Drive Upload**: Secure transfer to organized folders
+5. **Link Creation**: Generate shareable access URLs
+6. **Database Sync**: Update local records with Drive references
+7. **Notification**: Confirm successful storage and provide access details
+
 ### 🛠️ **Workflow Architecture**
 The SmythOS builder contains our complete agent workflow with:
 
-1. **📥 Input Processing**: Natural language query handling
-2. **🧠 Intent Recognition**: AI-powered skill routing
-3. **📚 Document Intelligence**: RAG-based information retrieval
-4. **🔄 Multi-Service Integration**: Google Drive, Gmail, Web Search
-5. **📤 Response Generation**: Structured output formatting
+1. **📥 Input Processing**: Natural language query handling and prompt API integration
+2. **🧠 Intent Recognition**: AI-powered skill routing and decision making
+3. **📚 Document Intelligence**: RAG-based information retrieval from vectorized IELTS materials
+4. **🔄 Multi-Service Integration**: Google Drive, Gmail, Web Search, and Pinecone vector database
+5. **📤 Response Generation**: Structured output formatting and delivery
+6. **☁️ Cloud Storage Management**: PDF backup and organization workflows
+7. **📧 Communication Hub**: Email notifications and study group messaging
 
 ### 🎨 **Visual Workflow Components**
-- **Entry Points**: API endpoints and natural language prompts
-- **Decision Nodes**: Skill selection and routing logic
-- **Processing Blocks**: Document search, email handling, web research
-- **Integration Points**: External service connections
-- **Output Formatters**: Response structuring and delivery
+- **Entry Points**: API endpoints, natural language prompts, and custom prompt integration
+- **Decision Nodes**: Skill selection, routing logic, and document relevance scoring
+- **Processing Blocks**: Document search, email handling, web research, and PDF management
+- **Integration Points**: External service connections (Pinecone, Google APIs, Tavily, Gmail)
+- **Output Formatters**: Response structuring, email formatting, and data delivery
+- **Storage Workflows**: Google Drive PDF management and document organization
 
 ---
 
@@ -58,14 +225,16 @@ The SmythOS builder contains our complete agent workflow with:
 ### 🎯 **Intelligent Document Processing**
 ```typescript
 // Core workflow logic
-User Query → Document Selection → Content Search → AI Response
+User Query → Intent Analysis → Document Selection → Vector Search → AI Response
 ```
 
 **Key Features:**
-- **Automatic Document Discovery**: Finds relevant content without manual selection
-- **Contextual Search**: Uses vector embeddings for semantic understanding
-- **Comprehensive Responses**: Combines multiple document sources
-- **Backup Integration**: Auto-saves content to Google Drive as PDFs
+- **Prompt API Integration**: Exposes `agentFile.prompt()` skill through custom API endpoints for seamless website integration
+- **Automatic Document Discovery**: Finds relevant IELTS content from vectorized database without manual selection
+- **Contextual Search**: Uses Pinecone vector embeddings for semantic understanding of previous year IELTS questions
+- **Comprehensive Responses**: Combines multiple document sources with confidence scoring
+- **Backup Integration**: Auto-saves content to Google Drive as organized PDFs with metadata
+- **Real-time Intelligence**: Web search integration for current IELTS updates and information
 
 ### 🔄 **Multi-Modal Capabilities**
 1. **Document Intelligence**: PDF processing, indexing, and Q&A
@@ -195,15 +364,16 @@ graph LR
 
 ### 🔧 **Technology Stack**
 ```
-SmythOS Agent Backend
-├── 🧠 SmythOS SRE - Core agent framework
-├── 🚀 Node.js + TypeScript - Runtime environment
-├── 🌐 Express.js - Web server framework
-├── 📊 Vector Database - Pinecone integration
-├── 🤖 AI Models - Google Gemini, Groq LLM
-├── ☁️ Google APIs - Drive, Gmail integration
-├── 🔍 Web Search - Tavily API
-└── 📧 Email Service - External Smyth API
+Smart IELTS - SmythOS Agent Backend
+├── 🧠 SmythOS SRE - Core AI agent orchestration framework
+├── 🚀 Node.js + TypeScript - Runtime environment and type safety
+├── 🌐 Express.js - RESTful API web server framework
+├── 📊 Pinecone - Vector database for semantic search
+├── 🤖 Google Gemini & Groq LLM - AI language models
+├── ☁️ Google APIs - Drive and Gmail cloud integrations
+├── 🔍 Tavily API - Real-time web search capabilities
+├── 📧 Smyth Email API - External email service
+└── 🎯 Render Cloud - Production deployment platform
 ```
 
 ### 🏛️ **Agent Backend Architecture**
@@ -254,12 +424,12 @@ const integrations = {
 ## 🚀 **API Usage Examples**
 
 ### 🌐 **Base URLs**
-- **Production API**: `https://smart-ielts.onrender.com`
-- **SmythOS Agent**: `https://cmfwa1ah7ycfcjxgthiwbjwr9.agent.a.smyth.ai`
-- **Interactive Docs**: `https://cmfwa1ah7ycfcjxgthiwbjwr9.agent.a.smyth.ai/swagger`
-- **Local Development**: `http://localhost:5000`
+- **Production API**: `https://smart-ielts.onrender.com` - Main backend services
+- **SmythOS Agent**: `https://cmfwa1ah7ycfcjxgthiwbjwr9.agent.a.smyth.ai` - Direct agent access
+- **Interactive Docs**: `https://cmfwa1ah7ycfcjxgthiwbjwr9.agent.a.smyth.ai/swagger` - API documentation
+- **Local Development**: `http://localhost:5000` - Development environment
 
-> 💡 **Note**: The SmythOS agent URL provides direct access to the AI agent with Swagger documentation, while the production API serves the integrated backend services.
+> 💡 **Note**: The SmythOS agent URL provides direct access to the AI agent with comprehensive Swagger documentation, while the production API serves the integrated backend services with custom prompt endpoints.
 
 ### 📚 **Document Q&A**
 ```bash
@@ -422,16 +592,16 @@ class DocumentLookupSkill {
 ## 🌟 **Key Features & Benefits**
 
 ### ✅ **Autonomous Intelligence**
-- **🧠 Smart Document Discovery**: Automatically finds relevant content
-- **🎯 Intent Understanding**: Routes queries to appropriate skills
-- **🔄 Context Awareness**: Maintains conversation flow
-- **📊 Performance Optimization**: Learns from usage patterns
+- **🧠 Smart Document Discovery**: Automatically finds relevant IELTS content from previous years
+- **🎯 Intent Understanding**: Intelligently routes queries to appropriate skills and endpoints
+- **🔄 Context Awareness**: Maintains conversation flow and user learning progress
+- **📊 Performance Optimization**: Continuously learns from usage patterns for better responses
 
 ### ✅ **Multi-Format Support**
-- **📄 PDF Processing**: Advanced text extraction and indexing
-- **📝 Text Documents**: Multiple format support
-- **📊 Binary Files**: Metadata extraction and storage
-- **🌐 Web Content**: Real-time information integration
+- **📄 PDF Processing**: Advanced text extraction and indexing for IELTS materials
+- **📝 Text Documents**: Support for multiple document formats and encodings
+- **📊 Binary Files**: Metadata extraction and storage capabilities
+- **🌐 Web Content**: Real-time information integration and web scraping
 
 ### ✅ **Enterprise Integrations**
 - **☁️ Google Workspace**: Drive and Gmail integration
@@ -471,8 +641,6 @@ class DocumentLookupSkill {
 ### 🛠️ **Development Resources**
 - **📖 SmythOS Documentation**: [SmythOS Docs](https://docs.smythos.com)
 - **🔗 Builder Interface**: [Live Workflow](https://app.smythos.com/builder/cmfwa1ah7ycfcjxgthiwbjwr9)
-- **💬 Community Support**: SmythOS Discord Server
-- **📧 Technical Support**: development team contact
 
 ### 🎯 **Implementation Guides**
 - **🚀 Quick Start**: Basic agent setup and configuration

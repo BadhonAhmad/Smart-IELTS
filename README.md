@@ -423,10 +423,6 @@ graph TD
 
 ### **Local Design Assets**
 
-#### 🏗️ **Architecture Visualization**
-![Project Workflow](assets/architecture/project%20workflow.jpeg)
-*System architecture and component interaction diagram*
-
 #### 📱 **UI Design System Documentation**
 📄 **[Download Complete UI Design PDF](assets/architecture/Smart-ILTS%20UI.pdf)**
 
@@ -827,7 +823,7 @@ Smart IELTS is architected for easy extension to support additional standardized
 
 ---
 
-## 🚀 Deployment
+<!-- ## 🚀 Deployment
 
 ### **Production Deployment Options**
 
@@ -848,7 +844,7 @@ docker-compose up --build
 - CDN integration for static assets
 - Load balancer configuration
 
----
+--- -->
 
 ## 🤝 Contributing
 
@@ -955,14 +951,13 @@ git push origin feature/amazing-feature
 ## 📞 Support
 
 ### **Getting Help**
-- 📧 **Email**: sk.sazid.cse@gmail.com
-- 💬 **Discord**: Join our community server
+- 📧 **Email**: ahasanulhaque20@gmail.com
 - 📖 **Documentation**: Comprehensive guides available
 - 🐛 **Issues**: GitHub issue tracker
 
 ### **Community**
-- 🌐 **Portfolio**: [sk-sazid.github.io](https://sk-sazid.github.io)
-- 📱 **LinkedIn**: [SK Sazid](https://linkedin.com/in/sk-sazid)
+- 🌐 **Portfolio**: [sksazid.me](http://sksazid.me)
+- 📱 **LinkedIn**: [Md Ahasanul Haque Sazid](https://www.linkedin.com/in/sksazid/)
 - 📝 **Blog**: Latest features and tutorials
 - 🎥 **Demo Videos**: Project demonstrations
 
@@ -1029,7 +1024,7 @@ This project was born during an intense 48-hour hackathon where we learned the p
 | 🎨 **Figma Design** | [UI/UX Design System](https://www.figma.com/design/FLydtNSPZvmzg1wL2KZA7k/Smart-ILTS-UI?node-id=0-1&t=X9lXbv6Ir1GvVkVS-1) |
 | 📊 **Presentation** | [Project Overview Slides](https://gamma.app/docs/Smart-IELTS-AI-Powered-Exam-Preparation-oiflu0ruio4gt67?mode=doc) |
 | 💻 **GitHub Repository** | [Source Code & Docs](https://github.com/BadhonAhmad/Smart-IELTS) |
-| 🤖 **SmythOS Agent** | [AI Agent Documentation](SmythOS.md) |
+| 🤖 **SmythOS Agent** | [AI Agent Documentation](SmythOS_Agent_and_SRE.md) |
 | 🏗️ **Architecture** | [View Assets Below](#local-design-assets) |
 
 ---
