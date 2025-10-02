@@ -304,7 +304,6 @@ export default function SignUp() {
                     <span>{validationErrors.name}</span>
                   </motion.p>
                 )}
-                </div>
               </motion.div>
 
               {/* Email Field */}
@@ -345,7 +344,6 @@ export default function SignUp() {
                     <span>{validationErrors.email}</span>
                   </motion.p>
                 )}
-                </div>
               </motion.div>
 
               {/* Account Type Field */}
@@ -481,7 +479,11 @@ export default function SignUp() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-12 py-4 bg-gray-800/50 border border-gray-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-white placeholder-gray-400 transition-all duration-300"
+                    className={`w-full pl-12 pr-12 py-4 bg-gray-800/50 border rounded-xl focus:outline-none focus:ring-2 text-white placeholder-gray-400 transition-all duration-300 ${
+                      validationErrors.confirmPassword 
+                        ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50' 
+                        : 'border-gray-600/50 focus:ring-blue-500/50 focus:border-blue-500/50'
+                    }`}
                     placeholder="Confirm your password"
                     required
                     disabled={isLoading}
@@ -494,6 +496,16 @@ export default function SignUp() {
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {validationErrors.confirmPassword && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mt-2 text-sm text-red-400 flex items-center space-x-1"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{validationErrors.confirmPassword}</span>
+                  </motion.p>
+                )}
               </motion.div>
 
               {/* Sign Up Button */}

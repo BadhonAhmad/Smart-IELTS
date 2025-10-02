@@ -168,7 +168,11 @@ export default function ListeningPage() {
 
             {/* Voice Assistant Component - Centered */}
             <div className="flex justify-center items-center">
-              <ListeningVoiceAssistant />
+              <ListeningVoiceAssistant 
+                onAudioStart={() => console.log('Audio started')}
+                onAudioEnd={() => console.log('Audio ended')}
+                onAudioProgress={(progress) => console.log('Audio progress:', progress)}
+              />
             </div>
           </div>
         </div>
