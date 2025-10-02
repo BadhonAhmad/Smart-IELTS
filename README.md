@@ -40,21 +40,21 @@
 
 <div align="center">
 
-| Selection Round | Competition Time | Final Presentation |
+| Selection Round | Competition Time | Presentation Day |
 |:---------------:|:----------------:|:------------------:|
 | ![Selection](assets/selection_round/6th%20at%20prili.png) | ![Competition](assets/final/competition_time/IMG_20250927_191805.jpg) | ![Presentation](assets/final/presentation/IMG_20250927_192434.jpg) |
 
 </div>
 
 ### 👨‍💻 **Team SUST_Prompt_Storm**
-- **[SK Sazid](https://github.com/sk-sazid)** - Full Stack Developer & AI Integration
-- **[Badhon Ahmad](https://github.com/BadhonAhmad)** - Backend Developer & System Architecture  
-- **[Abhishek Dash](https://github.com/AbhishekDash)** - Frontend Developer & UI/UX
+- **[Abhishek Dash](https://www.linkedin.com/in/abhishek-dash-60762322a/)** - Team Leader and Frontend Developer & UI/UX
+- **[Badhon Ahmad](https://www.linkedin.com/in/badhon-ahmad-5a5894225/)** - Full Stack Developer & System Architecture
+- **[Md Ahasanul Haque Sazid](https://www.linkedin.com/in/sksazid/)** - Backend Developer & SmythOS Agent and Open Source SDK Integration
 
 <div align="center">
 
 ![Team Photo](assets/final/presentation/final%20photo.jpg)
-*Team SUST_Prompt_Storm at the Final Presentation*
+*Team SUST_Prompt_Storm at the Grand Final*
 
 </div>
 
@@ -110,33 +110,33 @@
 ### 🧪 **Test the Agent Now!**
 ```bash
 # Test agent health
-curl https://your-agent-url.onrender.com/health
+curl https://smart-ielts.onrender.com/health
 
 # List available skills  
-curl https://your-agent-url.onrender.com/api/agent/skills
+curl https://smart-ielts.onrender.com/api/agent/skills
 
 # Test natural language chat
-curl -X POST https://your-agent-url.onrender.com/api/prompt \
+curl -X POST https://smart-ielts.onrender.com/api/prompt \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Hello! Can you help me with IELTS preparation?"}'
 
 # Send email via agent
-curl -X POST https://your-agent-url.onrender.com/api/agent/skills/send_email \
+curl -X POST https://smart-ielts.onrender.com/api/agent/skills/send_email \
   -H "Content-Type: application/json" \
   -d '{"to": "user@example.com", "subject": "Test", "body": "Hello from AI agent!"}'
 
 # Web search capability
-curl -X POST https://your-agent-url.onrender.com/api/agent/skills/WebSearch \
+curl -X POST https://smart-ielts.onrender.com/api/agent/skills/WebSearch \
   -H "Content-Type: application/json" \
   -d '{"userQuery": "IELTS preparation tips"}'
 
 # Index a document for Q&A
-curl -X POST https://your-agent-url.onrender.com/api/agent/skills/index_document \
+curl -X POST https://smart-ielts.onrender.com/api/agent/skills/index_document \
   -H "Content-Type: application/json" \
-  -d '{"document_path": "data/ielts-guide.pdf"}'
+  -d '{"document_path": "ielts-guide.pdf"}'
 
 # Search through indexed documents
-curl -X POST https://your-agent-url.onrender.com/api/agent/skills/lookup_document \
+curl -X POST https://smart-ielts.onrender.com/api/agent/skills/lookup_document \
   -H "Content-Type: application/json" \
   -d '{"user_query": "What are the IELTS writing task types?"}'
 ```
@@ -146,7 +146,7 @@ curl -X POST https://your-agent-url.onrender.com/api/agent/skills/lookup_documen
 ## 🔗 **AI Agent API Documentation**
 
 ### **Base URL**
-- **Production**: `https://smart-ielts-agent.onrender.com`
+- **Production**: `https://smart-ielts.onrender.com`
 - **Local Development**: `http://localhost:5000`
 
 ### **Available Skills**
@@ -760,11 +760,13 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ### **Technology Partners**
 - **Google Gemini AI** - For advanced language processing capabilities
 - **ElevenLabs** - For natural voice AI technology  
-- **SmythOS Platform** - For comprehensive AI agent orchestration
+- **SmythOS Platform** - For comprehensive AI agent orchestration ([Builder Workflow](https://app.smythos.com/builder/cmfwa1ah7ycfcjxgthiwbjwr9) | [Live Deployment](https://cmfwa1ah7ycfcjxgthiwbjwr9.agent.a.smyth.ai/swagger))
 - **Pinecone** - For vector database and semantic search
 - **Tavily** - For intelligent web search capabilities
 - **Next.js Team** - For the amazing React framework
 - **Open Source Community** - For incredible tools and libraries
+
+> 📖 **Detailed SmythOS Implementation**: See [SmythOS.md](SmythOS.md) for comprehensive documentation of our AI agent architecture and workflows.
 
 ### **Inspiration**
 This project was born during an intense 48-hour hackathon where we learned the power of:

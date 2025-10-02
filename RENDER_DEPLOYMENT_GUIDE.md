@@ -3,10 +3,17 @@
 ## Overview
 This guide will help you deploy the Smart-IELTS application (3 services) to Render.com.
 
+### Current Deployment Status:
+- ✅ **Agent Backend**: Successfully deployed and fully functional
+- ⚠️ **Backend & Frontend**: Prepared for deployment but blocked by Render free tier limitations
+
 ### Services to Deploy:
-1. **Backend** (Node.js/Express API)
-2. **Frontend** (Next.js application)  
-3. **AgentBackend** (SmythOS SDK agent service)
+1. **Backend** (Node.js/Express API) - ⚠️ Ready but blocked
+2. **Frontend** (Next.js application) - ⚠️ Ready but blocked  
+3. **AgentBackend** (SmythOS SDK agent service) - ✅ Deployed
+
+### ⚠️ **Important Limitation**
+**Render Free Tier Blueprint Limitation**: The free tier does not support blueprint deployment for multiple services. To deploy the remaining backend and frontend services, you need to upgrade to a paid plan ($7/month per service).
 
 ## Prerequisites
 
@@ -28,15 +35,12 @@ Obtain the following API keys:
 
 ## Deployment Steps
 
-### Step 1: Deploy Backend Service
+### Step 1: Deploy Backend Service ⚠️ **READY BUT BLOCKED**
 
-1. **Connect Repository to Render**
-   - Go to https://render.com/
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-   - Select the Smart-IELTS repository
+> **⚠️ STATUS**: Backend service configuration is complete and ready for deployment, but blocked by Render free tier blueprint limitations.
+> **💰 SOLUTION**: Upgrade to Render Starter plan ($7/month) to enable deployment.
 
-2. **Backend Service Configuration**
+1. **Service Configuration Prepared**
    - **Name**: `smart-ielts-backend`
    - **Region**: Choose your preferred region (e.g., Singapore)
    - **Branch**: `main` (or your default branch)
@@ -45,8 +49,8 @@ Obtain the following API keys:
    - **Build Command**: `npm ci`
    - **Start Command**: `npm start`
 
-3. **Environment Variables for Backend**
-   Add these in the Render dashboard:
+2. **Environment Variables Ready**
+   Add these when deploying:
    ```
    NODE_ENV=production
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/smart-ielts
@@ -56,6 +60,13 @@ Obtain the following API keys:
    FRONTEND_URL=https://your-frontend-service.onrender.com
    CORS_ORIGIN=https://your-frontend-service.onrender.com
    ```
+
+3. **Deployment Instructions**
+   - Connect repository to Render
+   - Click "New +" → "Web Service"
+   - Select the Smart-IELTS repository
+   - Configure as above
+   - **Note**: Requires paid plan for blueprint deployment
 
 ### Step 2: Deploy Agent Backend Service ✅ **COMPLETED**
 
@@ -89,24 +100,31 @@ Obtain the following API keys:
    - ✅ API endpoints accessible
    - ✅ AI skills functional
 
-### Step 3: Deploy Frontend Service
+### Step 3: Deploy Frontend Service ⚠️ **READY BUT BLOCKED**
 
-1. **Create Frontend Service**
-   - Click "New +" → "Web Service"  
-   - Connect the same repository
+> **⚠️ STATUS**: Frontend service configuration is complete and ready for deployment, but blocked by Render free tier blueprint limitations.
+> **💰 SOLUTION**: Upgrade to Render Starter plan ($7/month) to enable deployment.
+
+1. **Service Configuration Prepared**
    - **Name**: `smart-ielts-frontend`
    - **Region**: Same as backend
    - **Root Directory**: `frontend`
    - **Build Command**: `npm ci && npm run build`
    - **Start Command**: `npm start`
 
-2. **Environment Variables for Frontend**
+2. **Environment Variables Ready**
    ```
    NODE_ENV=production
    NEXT_PUBLIC_API_URL=https://smart-ielts-backend.onrender.com
    NEXT_PUBLIC_ELEVENLABS_API_KEY=your-elevenlabs-api-key
-   NEXT_PUBLIC_AGENT_API_URL=https://smart-ielts-agent.onrender.com
+   NEXT_PUBLIC_AGENT_API_URL=https://smart-ielts.onrender.com
    ```
+
+3. **Deployment Instructions**
+   - Click "New +" → "Web Service"  
+   - Connect the same repository
+   - Configure as above
+   - **Note**: Requires paid plan for blueprint deployment
 
 ## Post-Deployment Configuration
 
@@ -136,9 +154,19 @@ Deploy in this order:
 3. 🔄 **Frontend** (next - needs backend URLs)
 
 ### Free Tier Limitations
-- Services on free tier may sleep after 15 minutes of inactivity
-- Consider upgrading to Starter plan ($7/month) for production use
-- Free tier includes 750 hours/month (enough for 1 service always-on)
+- **⚠️ Blueprint Deployment**: Free tier does not support blueprint deployment for multiple services
+- **Service Sleeping**: Services on free tier may sleep after 15 minutes of inactivity
+- **Hours Limit**: Free tier includes 750 hours/month (enough for 1 service always-on)
+- **💰 Recommendation**: Upgrade to Starter plan ($7/month per service) for production use
+
+### ✅ Currently Working (Agent Backend)
+- **Agent Backend**: Successfully deployed on free tier (individual service deployment)
+- **Live URL**: https://smart-ielts.onrender.com
+- **Status**: Fully functional with all AI capabilities
+
+### ⚠️ Blocked Services
+- **Backend API**: Ready for deployment, requires paid plan
+- **Frontend**: Ready for deployment, requires paid plan
 
 ### Database Recommendations
 - Use MongoDB Atlas (free tier available)
