@@ -7,11 +7,230 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.3-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=flat-square&logo=node.js)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![SmythOS](https://img.shields.io/badge/SmythOS-Powered-purple?style=flat-square&logo=robot)](https://smythos.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+
+**🏆 4th Place Winner - Inter-University National Hackathon 2025**
 
 **An intelligent, comprehensive test preparation platform powered by cutting-edge AI technology**
 
 [🚀 Live Demo](#) | [📖 Documentation](#getting-started) | [🤝 Contributing](#contributing) | [📞 Support](#support)
+
+</div>
+
+---
+
+## 🏆 Hackathon Achievement
+
+<div align="center">
+
+### 🎉 **4th Position at Inter-University National Hackathon 2025**
+**Green University of Bangladesh • Powered by SmythOS**
+
+![Hackathon Achievement](assets/final/presentation/4th%20at%20final.png)
+
+</div>
+
+> **Alhamdulillah!** We are super excited to share that our team **SUST_Prompt_Storm** secured **4th position** 🎉 in the **Inter-University National Hackathon 2025** at Green University of Bangladesh, powered by **SmythOS** 🚀
+
+### 🌟 **Our Journey**
+- **📊 Selection Round**: Ranked **6th out of ~250 teams**
+- **🏁 Final Round**: Competed among **50 finalist teams**
+- **🥇 Final Result**: Secured **4th position**
+
+<div align="center">
+
+| Selection Round | Competition Time | Final Presentation |
+|:---------------:|:----------------:|:------------------:|
+| ![Selection](assets/selection_round/6th%20at%20prili.png) | ![Competition](assets/final/competition_time/IMG_20250927_191805.jpg) | ![Presentation](assets/final/presentation/IMG_20250927_192434.jpg) |
+
+</div>
+
+### 👨‍💻 **Team SUST_Prompt_Storm**
+- **[SK Sazid](https://github.com/sk-sazid)** - Full Stack Developer & AI Integration
+- **[Badhon Ahmad](https://github.com/BadhonAhmad)** - Backend Developer & System Architecture  
+- **[Abhishek Dash](https://github.com/AbhishekDash)** - Frontend Developer & UI/UX
+
+<div align="center">
+
+![Team Photo](assets/final/presentation/final%20photo.jpg)
+*Team SUST_Prompt_Storm at the Final Presentation*
+
+</div>
+
+### 🌟 **What We Learned**
+- ✅ **Effective teamwork** under pressure
+- ✅ **Error handling** in tight deadlines
+- ✅ **Confident project presentation** to judges
+- ✅ **Time management** in critical situations
+- ✅ **Fast thinking** and adaptability
+- ✅ **Innovative problem-solving** approaches
+
+### 🎯 **Competition Highlights**
+- **Duration**: 48 hours intensive development
+- **Theme**: AI-powered educational solutions
+- **Technology Stack**: SmythOS, Next.js, Node.js, AI/ML
+- **Challenges**: Real-time AI integration, scalable architecture, user experience
+
+<div align="center">
+
+| Development Phase | Team Collaboration | Final Demo |
+|:-----------------:|:------------------:|:----------:|
+| ![Dev](assets/final/competition_time/IMG_20250927_192712.jpg) | ![Team](assets/final/competition_time/IMG_20250927_192742.jpg) | ![Demo](assets/final/presentation/IMG_20250927_192629.jpg) |
+
+</div>
+
+---
+
+## 🚀 **Current Deployment Status**
+
+<div align="center">
+
+### 🌐 **Live Services Status**
+
+| Service | Status | URL | Health Check |
+|---------|--------|-----|--------------|
+| **Agent Backend** | ✅ **LIVE** | [Agent Service URL] | ✅ `/health` |
+| **Main Backend** | ⏳ **Pending** | *Next to deploy* | ⏳ Waiting |
+| **Frontend** | ⏳ **Pending** | *After backend* | ⏳ Waiting |
+
+### 🛠️ **Available Features**
+- ✅ **AI Agent Skills**: Email, WebSearch, Document Q&A, PDF Processing
+- ✅ **Natural Language Interface**: Conversational AI chat
+- ✅ **Document Processing**: PDF indexing with vector embeddings
+- ✅ **Semantic Search**: Natural language document queries
+- ✅ **Email Integration**: Full email functionality via Smyth API
+- ✅ **Web Search**: Comprehensive search using Tavily API
+- ✅ **RESTful API**: Complete endpoint suite for programmatic access
+- ✅ **Vector Database**: Pinecone integration for scalable storage
+- ✅ **SmythOS Integration**: Full platform capabilities with MCP protocol
+- ⏳ **IELTS Test Modules**: Coming with frontend deployment
+- ⏳ **User Authentication**: Coming with backend deployment
+
+### 🧪 **Test the Agent Now!**
+```bash
+# Test agent health
+curl https://your-agent-url.onrender.com/health
+
+# List available skills  
+curl https://your-agent-url.onrender.com/api/agent/skills
+
+# Test natural language chat
+curl -X POST https://your-agent-url.onrender.com/api/prompt \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Hello! Can you help me with IELTS preparation?"}'
+
+# Send email via agent
+curl -X POST https://your-agent-url.onrender.com/api/agent/skills/send_email \
+  -H "Content-Type: application/json" \
+  -d '{"to": "user@example.com", "subject": "Test", "body": "Hello from AI agent!"}'
+
+# Web search capability
+curl -X POST https://your-agent-url.onrender.com/api/agent/skills/WebSearch \
+  -H "Content-Type: application/json" \
+  -d '{"userQuery": "IELTS preparation tips"}'
+
+# Index a document for Q&A
+curl -X POST https://your-agent-url.onrender.com/api/agent/skills/index_document \
+  -H "Content-Type: application/json" \
+  -d '{"document_path": "data/ielts-guide.pdf"}'
+
+# Search through indexed documents
+curl -X POST https://your-agent-url.onrender.com/api/agent/skills/lookup_document \
+  -H "Content-Type: application/json" \
+  -d '{"user_query": "What are the IELTS writing task types?"}'
+```
+
+---
+
+## 🔗 **AI Agent API Documentation**
+
+### **Base URL**
+- **Production**: `https://smart-ielts-agent.onrender.com`
+- **Local Development**: `http://localhost:5000`
+
+### **Available Skills**
+
+#### 📧 **Email Skill**
+```http
+POST /api/agent/skills/send_email
+Content-Type: application/json
+
+{
+  "to": "recipient@example.com",
+  "subject": "IELTS Study Reminder",
+  "body": "Don't forget to practice your speaking skills today!",
+  "cc": "mentor@example.com"
+}
+```
+
+#### 🌐 **Web Search Skill**
+```http
+POST /api/agent/skills/WebSearch
+Content-Type: application/json
+
+{
+  "userQuery": "latest IELTS exam format changes 2025"
+}
+```
+
+#### 📚 **Document Processing Skills**
+```http
+# Index a PDF document
+POST /api/agent/skills/index_document
+{
+  "document_path": "data/ielts-preparation-guide.pdf"
+}
+
+# Search indexed documents
+POST /api/agent/skills/lookup_document
+{
+  "user_query": "How to improve IELTS writing band score?"
+}
+
+# Get document information
+POST /api/agent/skills/get_document_info
+{
+  "document_name": "IELTS Official Guide"
+}
+```
+
+#### 🤖 **Natural Language Interface**
+```http
+POST /api/prompt
+Content-Type: application/json
+
+{
+  "prompt": "Send an email to my teacher about my IELTS practice progress and ask for feedback on my writing"
+}
+```
+
+### **Utility Endpoints**
+```http
+# Health check
+GET /health
+
+# List all available skills
+GET /api/agent/skills
+
+# List PDF documents in data directory
+GET /api/documents/pdfs
+
+# Execute multiple skills in sequence
+POST /api/agent/skills/execute-all
+{
+  "skillsToExecute": [
+    {
+      "skillName": "index_document",
+      "parameters": {"document_path": "data/ielts-guide.pdf"}
+    },
+    {
+      "skillName": "lookup_document",
+      "parameters": {"user_query": "IELTS writing tips"}
+    }
+  ]
+}
+```
 
 </div>
 
@@ -120,14 +339,31 @@ Node.js + Express.js
 └── Database: SQLite with potential PostgreSQL scaling
 ```
 
+### **AI Agent Backend (SmythOS)**
+```
+SmythOS SDK + Node.js + TypeScript
+├── AI Agent Framework: SmythOS SDK
+├── Vector Database: Pinecone (Semantic Search)
+├── Language Model: Google Gemini AI
+├── LLM Integration: Groq (llama-3.1-8b-instant)
+├── Web Search: Tavily API
+├── Email Service: External Smyth API
+├── Document Processing: PDF indexing & RAG
+├── Natural Language: Conversational AI interface
+├── RESTful API: Complete endpoint suite
+└── Production Ready: Deployed on Render
+```
+
 ### **AI & Voice Services**
 ```
 AI Services
 ├── Google Gemini AI: Content evaluation & generation
+├── Groq LLM: Fast inference for chat interactions
 ├── ElevenLabs: Natural voice conversation
 ├── SmythOS Agents: Advanced AI workflow automation
 ├── MCP Server: Model Context Protocol integration
 ├── Pinecone Vector DB: Semantic search & RAG system
+├── Tavily API: Comprehensive web search
 └── Custom NLP: Performance analysis algorithms
 ```
 
@@ -147,16 +383,55 @@ RAG Infrastructure
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │     Backend      │    │   AI Services   │    │   RAG System    │
-│   (Next.js)     │◄──►│   (Node.js)      │◄──►│   (Gemini AI)   │◄──►│  (SmythOS RAG)  │
-│                 │    │                  │    │   (ElevenLabs)  │    │  (Pinecone DB)  │
+│   Frontend      │    │     Backend      │    │  Agent Backend  │    │   AI Services   │
+│   (Next.js)     │◄──►│   (Node.js)      │◄──►│   (SmythOS)     │◄──►│   (Multi-AI)    │
+│                 │    │                  │    │                 │    │                 │
 ├─────────────────┤    ├──────────────────┤    ├─────────────────┤    ├─────────────────┤
-│ • User Interface│    │ • REST API       │    │ • Content Eval  │    │ • PDF Processing│
-│ • State Mgmt    │    │ • Authentication │    │ • Voice AI      │    │ • Vector Search │
-│ • Voice Client  │    │ • File Upload    │    │ • NLP Analysis  │    │ • Q&A System   │
-│ • Progress UI   │    │ • Test Logic     │    │ • Score Predict │    │ • Doc Analysis  │
-│ • PDF Q&A UI    │    │ • MCP Server     │    │ • SmythOS Agents│    │ • Semantic Ret  │
+│ • User Interface│    │ • REST API       │    │ • AI Agents     │    │ • Gemini AI     │
+│ • IELTS Modules │    │ • Authentication │    │ • Vector DB     │    │ • Groq LLM      │
+│ • Progress UI   │    │ • File Upload    │    │ • Document RAG  │    │ • ElevenLabs    │
+│ • Voice Client  │    │ • Test Logic     │    │ • Email Service │    │ • Tavily Search │
+│ • PDF Q&A UI    │    │ • User Mgmt      │    │ • Web Search    │    │ • Pinecone DB   │
+│ • Chat Interface│    │ • Score Tracking │    │ • NL Interface  │    │ • Smyth APIs    │
 └─────────────────┘    └──────────────────┘    └─────────────────┘    └─────────────────┘
+                                ▲                        ▲
+                                │                        │
+                         ┌──────▼──────┐        ┌───────▼───────┐
+                         │  Database   │        │   External    │
+                         │ (MongoDB)   │        │   Services    │
+                         │             │        │ • Smyth API   │
+                         │ • User Data │        │ • OpenLibrary │
+                         │ • Test Data │        │ • Email SMTP  │
+                         │ • Progress  │        │ • Web APIs    │
+                         └─────────────┘        └───────────────┘
+```
+
+### **Agent Backend Architecture**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    SmythOS Agent Backend                   │
+├─────────────────────────────────────────────────────────────┤
+│ Express API Server                                          │
+│ ├── /health              ├── /api/agent/skills            │
+│ ├── /api/prompt          ├── /api/documents/pdfs          │
+│ └── /api/agent/skills/*  └── /api/agent/skills/execute-all│
+├─────────────────────────────────────────────────────────────┤
+│ AI Agent Layer (SmythOS SDK)                               │
+│ ├── BookAssistant Agent  ├── Skill Execution Gate         │
+│ ├── Natural Language     ├── Multi-Agent Coordination     │
+│ └── Context Management   └── Response Processing          │
+├─────────────────────────────────────────────────────────────┤
+│ Skills & Capabilities                                       │
+│ ├── 📧 Email (Smyth API) ├── 📚 Document Indexing        │
+│ ├── 🌐 Web Search (Tavily)├── 🔍 Semantic Search          │
+│ ├── 📄 PDF Processing    ├── 🤖 Natural Language         │
+│ └── 💾 Vector Storage    └── 📖 Document Q&A             │
+├─────────────────────────────────────────────────────────────┤
+│ Data Layer                                                  │
+│ ├── Pinecone Vector DB   ├── Local File System            │
+│ ├── Document Embeddings  ├── PDF Processing               │
+│ └── Semantic Indexing    └── Context Storage              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -404,32 +679,49 @@ git push origin feature/amazing-feature
 
 ## 🏆 Awards & Recognition
 
-- 🥇 **Best Educational Technology** - University Innovation Award 2024
-- 🌟 **Outstanding AI Integration** - Tech Excellence Recognition
-- 🎓 **Students' Choice Award** - Education Platform of the Year
+- 🥇 **4th Position** - Inter-University National Hackathon 2025 (Green University of Bangladesh)
+- 🚀 **SmythOS Powered Solution** - Advanced AI Integration Recognition
+- 🌟 **Top 50 Finalist** - Among 250+ participating teams
+- 🎯 **Innovation in Education Technology** - AI-powered Learning Platform
+
+### 🏅 **Competition Journey**
+- **Preliminary Round**: 6th position out of ~250 teams
+- **Final Round**: Top 50 teams onsite competition  
+- **Final Ranking**: 4th position overall
+- **Special Recognition**: Outstanding use of SmythOS platform
 
 ---
 
 ## 📈 Roadmap
 
-### **Phase 1: Core IELTS Platform** ✅
-- All four IELTS skills implementation
+### **Phase 1: Hackathon MVP** ✅
+- Core IELTS skills implementation
 - AI-powered evaluation system
-- Progress tracking dashboard
+- SmythOS agent integration
+- Real-time feedback system
 
-### **Phase 2: Enhanced Features** 🚧
-- Mobile application development
-- Offline mode capabilities
+### **Phase 1.5: Production Deployment** 🚧
+- ✅ **Agent Backend**: Deployed and fully functional
+- ⏳ **Main Backend**: Deployment in progress
+- ⏳ **Frontend**: Next in deployment queue
+- ✅ **AI Skills**: Email and WebSearch capabilities live
+
+### **Phase 2: Enhanced Features** �
 - Advanced analytics dashboard
+- Multi-modal AI interactions
+- Enhanced voice recognition
+- Comprehensive progress tracking
 
-### **Phase 3: Multi-Test Support** 📋
-- GRE preparation modules
-- GMAT practice tests
-- TOEFL integration
+### **Phase 3: Production Scale** 📋
+- Mobile application development
+- Cloud deployment optimization
+- Advanced security features
+- Performance enhancements
 
-### **Phase 4: Community Features** 🤝
-- Peer learning groups
-- Expert mentor connections
+### **Phase 4: Platform Expansion** 🤝
+- Multiple test support (GRE, GMAT, TOEFL)
+- Community features
+- Expert mentor integration
 - Global competition platform
 
 ---
@@ -437,16 +729,16 @@ git push origin feature/amazing-feature
 ## 📞 Support
 
 ### **Getting Help**
-- 📧 **Email**: support@smartielts.com
+- 📧 **Email**: sk.sazid.cse@gmail.com
 - 💬 **Discord**: Join our community server
 - 📖 **Documentation**: Comprehensive guides available
 - 🐛 **Issues**: GitHub issue tracker
 
 ### **Community**
-- 🌐 **Website**: [smartielts.com](#)
-- 📱 **Social Media**: Follow us for updates
+- 🌐 **Portfolio**: [sk-sazid.github.io](https://sk-sazid.github.io)
+- 📱 **LinkedIn**: [SK Sazid](https://linkedin.com/in/sk-sazid)
 - 📝 **Blog**: Latest features and tutorials
-- 🎥 **YouTube**: Video tutorials and demos
+- 🎥 **Demo Videos**: Project demonstrations
 
 ---
 
@@ -458,24 +750,47 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🙏 Acknowledgments
 
+### **Special Thanks**
+- **Green University of Bangladesh** - For hosting an amazing hackathon
+- **SmythOS Team** - For providing cutting-edge AI platform and support
+- **Hackathon Organizers** - For creating an incredible learning environment
+- **Fellow Competitors** - For inspiring innovation and healthy competition
+- **Judges & Mentors** - For valuable feedback and guidance
+
+### **Technology Partners**
 - **Google Gemini AI** - For advanced language processing capabilities
 - **ElevenLabs** - For natural voice AI technology  
+- **SmythOS Platform** - For comprehensive AI agent orchestration
+- **Pinecone** - For vector database and semantic search
+- **Tavily** - For intelligent web search capabilities
 - **Next.js Team** - For the amazing React framework
-- **Open Source Community** - For the incredible tools and libraries
-- **Beta Testers** - For valuable feedback and suggestions
+- **Open Source Community** - For incredible tools and libraries
+
+### **Inspiration**
+This project was born during an intense 48-hour hackathon where we learned the power of:
+- **Collaborative development** under pressure
+- **Rapid prototyping** with modern technologies
+- **AI integration** for educational solutions
+- **User-centric design** in limited time
+- **Innovation through constraints**
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by the Smart IELTS Team**
+**Made with ❤️ by Team SUST_Prompt_Storm**
+
+### 🏆 Inter-University National Hackathon 2025 - 4th Position Winners
 
 [![GitHub Stars](https://img.shields.io/github/stars/BadhonAhmad/Smart-IELTS?style=social)](https://github.com/BadhonAhmad/Smart-IELTS/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/BadhonAhmad/Smart-IELTS?style=social)](https://github.com/BadhonAhmad/Smart-IELTS/network/members)
-[![Follow on GitHub](https://img.shields.io/github/followers/BadhonAhmad?style=social)](https://github.com/BadhonAhmad)
+[![Follow SK Sazid](https://img.shields.io/github/followers/sk-sazid?style=social&label=Follow%20SK%20Sazid)](https://github.com/sk-sazid)
+[![Follow Badhon Ahmad](https://img.shields.io/github/followers/BadhonAhmad?style=social&label=Follow%20Badhon)](https://github.com/BadhonAhmad)
 
 ---
 
 ### 🌟 Star this repository if you found it helpful!
+
+**"Innovation happens when passionate minds collaborate under pressure"** - Team SUST_Prompt_Storm
 
 </div>

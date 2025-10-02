@@ -36,22 +36,25 @@
   - [ ] CORS_ORIGIN (update after frontend deployment)
 - [ ] Health check working: `/health`
 
-### 2. Agent Backend Service ✓
-- [ ] Service created: `smart-ielts-agent`
-- [ ] Root directory: `agentbackend`
-- [ ] Build command: `npm ci && npm run build`
-- [ ] Start command: `npm run start:api`
-- [ ] Environment variables configured:
-  - [ ] NODE_ENV=production
-  - [ ] GOOGLE_API_KEY
-  - [ ] GOOGLEAI_API_KEY
-  - [ ] PINECONE_API_KEY
-  - [ ] TAVILY_API_KEY
-  - [ ] GROQ_API_KEY
-  - [ ] SMYTH_VAULT_PATH=/tmp/.smyth/.sre/vault.json
-  - [ ] HOME=/tmp
-- [ ] Health check working: `/health`
-- [ ] Skills endpoint working: `/api/agent/skills`
+### 2. Agent Backend Service ✅ **COMPLETED**
+- [x] Service created: `smart-ielts-agent`
+- [x] Root directory: `agentbackend`
+- [x] Build command: `npm ci && npm run build`
+- [x] Start command: `npm run start:api`
+- [x] Environment variables configured:
+  - [x] NODE_ENV=production
+  - [x] GOOGLE_API_KEY
+  - [x] GOOGLEAI_API_KEY
+  - [x] PINECONE_API_KEY
+  - [x] TAVILY_API_KEY
+  - [x] GROQ_API_KEY
+  - [x] SMYTH_VAULT_PATH=/tmp/.smyth/.sre/vault.json
+  - [x] HOME=/tmp
+- [x] Health check working: `/health`
+- [x] Skills endpoint working: `/api/agent/skills`
+- [x] Email skill functional: `/api/agent/skills/send_email`
+- [x] WebSearch skill functional: `/api/agent/skills/WebSearch`
+- [x] Natural language interface: `/api/prompt`
 
 ### 3. Frontend Service ✓
 - [ ] Service created: `smart-ielts-frontend`
@@ -98,9 +101,9 @@
 ---
 
 **Deployment URLs:**
-- Backend: https://smart-ielts-backend.onrender.com
-- Agent: https://smart-ielts-agent.onrender.com  
-- Frontend: https://smart-ielts-frontend.onrender.com
+- Backend: https://smart-ielts-backend.onrender.com (⏳ pending)
+- Agent: ✅ https://smart-ielts-agent.onrender.com (✅ LIVE)
+- Frontend: https://smart-ielts-frontend.onrender.com (⏳ pending)
 
 **Estimated Total Cost:** $21/month (3 Starter services)
 **Free Tier Option:** Limited to 750 hours/month shared across services
