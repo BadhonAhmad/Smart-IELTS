@@ -34,9 +34,29 @@ export const API_ENDPOINTS = {
   
   // SmythOS Agent endpoints
   AGENT: {
+    // System Management
+    HEALTH: `${API_CONFIG.AGENT_URL}/health`,
     PROMPT: `${API_CONFIG.AGENT_URL}/api/prompt`,
     SKILLS: `${API_CONFIG.AGENT_URL}/api/agent/skills`,
-    HEALTH: `${API_CONFIG.AGENT_URL}/health`,
+    EXECUTE_ALL: `${API_CONFIG.AGENT_URL}/api/agent/skills/execute-all`,
+    
+    // Document Intelligence Skills
+    LOOKUP_DOCUMENT: `${API_CONFIG.AGENT_URL}/api/agent/skills/lookup_document`,
+    SEARCH_DOCUMENTS: `${API_CONFIG.AGENT_URL}/api/agent/skills/search_documents`,
+    GET_DOCUMENT_INFO: `${API_CONFIG.AGENT_URL}/api/agent/skills/get_document_info`,
+    LIST_DOCUMENTS: `${API_CONFIG.AGENT_URL}/api/documents/pdfs`,
+    INDEX_DOCUMENT: `${API_CONFIG.AGENT_URL}/api/agent/skills/index_document`,
+    PURGE_DOCUMENTS: `${API_CONFIG.AGENT_URL}/api/agent/skills/purge_documents`,
+    
+    // Google Drive Integration
+    STORE_PDF_TO_DRIVE: `${API_CONFIG.AGENT_URL}/api/agent/skills/store_pdf_to_drive`,
+    LIST_DRIVE_PDFS: `${API_CONFIG.AGENT_URL}/api/agent/skills/list_drive_pdfs`,
+    
+    // Communication Skills
+    SEND_EMAIL: `${API_CONFIG.AGENT_URL}/api/agent/skills/send_email`,
+    
+    // Web Research Skills
+    WEB_SEARCH: `${API_CONFIG.AGENT_URL}/api/agent/skills/WebSearch`,
   },
 } as const;
 
