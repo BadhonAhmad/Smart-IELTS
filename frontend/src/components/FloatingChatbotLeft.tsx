@@ -18,7 +18,7 @@ export default function FloatingChatbotLeft({ className = "" }: FloatingChatbotL
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hello! I'm your Smart Agent Assistant. I can help you with various tasks including document management, IELTS preparation, and more. What can I help you with today?",
+      text: "Hello! I'm your SmythOS Agent Assistant. I can help you with document management, IELTS preparation, web search, email services, and more. What can I help you with today?",
       isUser: false,
       timestamp: new Date(),
     },
@@ -37,7 +37,7 @@ export default function FloatingChatbotLeft({ className = "" }: FloatingChatbotL
 
   const generateAIResponse = async (userMessage: string): Promise<string> => {
     try {
-      const response = await fetch("https://agentbackend-qmbo.onrender.com/api/prompt", {
+      const response = await fetch("https://smart-ielts.onrender.com/api/prompt", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -55,60 +55,71 @@ export default function FloatingChatbotLeft({ className = "" }: FloatingChatbotL
       console.log("API Response:", data); // Debug log
       
       if (data.success) {
-        // Priority 1: Check for complex result with data.result (like purge operations)
+        // Priority 1: Check for complex result with agent response
         if (data.result && data.result.data && data.result.data.result) {
-          return data.result.data.result;
+          let response = data.result.data.result;
+          
+          // Add context if available
+          if (data.chosenAPI && data.chosenAPI.description) {
+            response = `🤖 Agent Action: ${data.chosenAPI.description}\n\n${response}`;
+          }
+          
+          return response;
         }
         
         // Priority 2: Check for simple result with status (like health check)
         if (data.result && data.result.status) {
-          let response = `System Status: ${data.result.status}`;
+          let response = `✅ System Status: ${data.result.status}`;
           if (data.chosenAPI && data.chosenAPI.description) {
-            response += `\n\nAPI Used: ${data.chosenAPI.description}`;
+            response += `\n\n🔧 Service: ${data.chosenAPI.description}`;
           }
           if (data.reasoning) {
-            response += `\n\nReasoning: ${data.reasoning}`;
+            response += `\n\n💭 Analysis: ${data.reasoning}`;
           }
           return response;
         }
         
         // Priority 3: Direct result string
         if (data.result && typeof data.result === 'string') {
-          return data.result;
+          let response = data.result;
+          if (data.chosenAPI && data.chosenAPI.description) {
+            response = `🤖 ${data.chosenAPI.description}\n\n${response}`;
+          }
+          return response;
         }
         
         // Priority 4: If result exists but is an object, format it nicely
         if (data.result) {
           let response = '';
           if (data.chosenAPI && data.chosenAPI.description) {
-            response += `Action: ${data.chosenAPI.description}\n\n`;
+            response += `🤖 Agent Action: ${data.chosenAPI.description}\n\n`;
           }
           if (data.reasoning) {
-            response += `${data.reasoning}\n\n`;
+            response += `💭 ${data.reasoning}\n\n`;
           }
-          response += `Result: ${JSON.stringify(data.result, null, 2)}`;
+          response += `📋 Result:\n${JSON.stringify(data.result, null, 2)}`;
           return response;
         }
         
         // Priority 5: Fallback to reasoning alone
         if (data.reasoning) {
-          return data.reasoning;
+          return `💭 ${data.reasoning}`;
         }
         
         // Priority 6: Show that request was successful but no clear result
-        return "Request processed successfully, but no detailed result available.";
+        return "✅ Request processed successfully by the SmythOS agent, but no detailed result available.";
       }
       
       // Handle non-success responses
       if (data.error) {
-        return `Error: ${data.error}`;
+        return `❌ SmythOS Agent Error: ${data.error}`;
       }
       
-      return "I received your message but the response format was unexpected. Please try again.";
+      return "🤖 I received your message but the response format was unexpected. Please try rephrasing your request.";
       
     } catch (error) {
-      console.error("Error calling Agent API:", error);
-      return "I'm experiencing some technical difficulties. Please try again later or check your internet connection.";
+      console.error("Error calling SmythOS Agent API:", error);
+      return "🔌 I'm experiencing some technical difficulties connecting to the SmythOS agent. Please try again later or check your internet connection.";
     }
   };
 
@@ -162,7 +173,7 @@ export default function FloatingChatbotLeft({ className = "" }: FloatingChatbotL
   };
 
   return (
-    <div className={`fixed bottom-6 left-6 z-50 ${className}`}>
+    <div className={`fixed bottom-6 right-6 z-50 ${className}`}>
       {/* Chat Window */}
       {isOpen && (
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-96 h-[600px] mb-4 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
@@ -185,7 +196,7 @@ export default function FloatingChatbotLeft({ className = "" }: FloatingChatbotL
                 </svg>
               </div>
               <div>
-                <h3 className="font-bold text-lg">Smart Agent</h3>
+                <h3 className="font-bold text-lg">SmythOS Agent</h3>
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   <span className="text-sm text-white/80">Online • AI Powered</span>
@@ -339,9 +350,9 @@ export default function FloatingChatbotLeft({ className = "" }: FloatingChatbotL
       
       {/* Tooltip */}
       {!isOpen && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-          Need help? Ask me anything!
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+        <div className="absolute bottom-full right-1/2 transform translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          SmythOS Agent - Ask me anything!
+          <div className="absolute top-full right-1/2 transform translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
         </div>
       )}
     </div>

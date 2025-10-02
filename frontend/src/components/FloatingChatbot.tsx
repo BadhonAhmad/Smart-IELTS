@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { API_ENDPOINTS } from "@/utils/api";
 
 interface Message {
   id: string;
@@ -37,15 +38,12 @@ export default function FloatingChatbot({ className = "" }: FloatingChatbotProps
 
   const generateAIResponse = async (userMessage: string): Promise<string> => {
     try {
-      const response = await fetch("http://localhost:4000/api/gemini/chat", {
-        method: "POST",
+      const response = await fetch(API_ENDPOINTS.GEMINI.CHAT, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          message: `You are an IELTS study assistant. Help with: ${userMessage}. Provide helpful, concise answers about IELTS preparation, study strategies, test format, or practice tips.`,
-        }),
+        body: JSON.stringify({ message: userMessage, history: [] }),
       });
 
       if (!response.ok) {
@@ -110,7 +108,7 @@ export default function FloatingChatbot({ className = "" }: FloatingChatbotProps
   };
 
   return (
-    <div className={`fixed bottom-6 right-6 z-50 ${className}`}>
+    <div className={`fixed bottom-6 left-6 z-50 ${className}`}>
       {/* Chat Window */}
       {isOpen && (
         <div className="bg-gray-900 rounded-lg shadow-2xl border border-gray-700 w-96 h-[600px] mb-4 flex flex-col">

@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { API_ENDPOINTS } from "@/utils/api";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -53,15 +54,13 @@ export default function Login() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:4000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
+    const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: formData.email, password: formData.password }),
+    });      const data = await response.json();
 
       if (response.ok) {
         // Store token in localStorage
