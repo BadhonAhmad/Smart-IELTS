@@ -5,8 +5,11 @@
 
 "use client";
 
-import { useState } from "react";
-import FloatingChatbot from "@/components/FloatingChatbot";
+import { useState } from 'react';
+import { motion } from "framer-motion";
+import { Brain } from "lucide-react";
+import Link from "next/link";
+import FloatingChatbot from '@/components/FloatingChatbot';
 import StudyMaterialsManager from "@/components/StudyMaterialsManager";
 import IELTSQuestionAssistant from "@/components/IELTSQuestionAssistant";
 import AgentDashboard from "@/components/AgentDashboard";
@@ -37,12 +40,16 @@ export default function AgentDemoPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">SI</span>
-                </div>
+              <Link href="/landing" className="flex items-center space-x-2 group">
+                <motion.div
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                  className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center"
+                >
+                  <Brain className="w-5 h-5 text-white" />
+                </motion.div>
                 <h1 className="text-xl font-bold text-gray-800">Smart IELTS</h1>
-              </div>
+              </Link>
               <div className="hidden md:block h-6 w-px bg-gray-300"></div>
               <div className="hidden md:block">
                 <span className="text-sm text-gray-600">Powered by</span>

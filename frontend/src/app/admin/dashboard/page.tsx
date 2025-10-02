@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Brain } from "lucide-react";
+import Link from "next/link";
 
 interface User {
   _id: string;
@@ -278,11 +281,18 @@ export default function AdminDashboard() {
       <nav className="bg-gray-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold">
+            <Link href="/landing" className="flex items-center space-x-2 group">
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+                className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center"
+              >
+                <Brain className="w-6 h-6 text-white" />
+              </motion.div>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 Smart IELTS - Admin Dashboard
-              </h1>
-            </div>
+              </span>
+            </Link>
             <div className="flex items-center space-x-4">
               <span className="text-gray-300">
                 Welcome, {currentUser?.name}

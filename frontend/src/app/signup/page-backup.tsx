@@ -205,7 +205,7 @@ export default function SignUp() {
               <Brain className="w-6 h-6 text-white" />
             </motion.div>
             <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              SmartPrep
+              Smart IELTS
             </span>
           </Link>
           
@@ -235,7 +235,7 @@ export default function SignUp() {
               className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 mb-6"
             >
               <Sparkles className="w-4 h-4 text-green-400 mr-2" />
-              <span className="text-sm font-medium">Join SmartPrep</span>
+              <span className="text-sm font-medium">Join Smart IELTS</span>
             </motion.div>
             
             <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-green-100 to-blue-100 bg-clip-text text-transparent">

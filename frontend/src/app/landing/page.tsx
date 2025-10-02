@@ -130,7 +130,7 @@ export default function LandingPage() {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
                 <Brain className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold">SmartPrep</span>
+              <span className="text-xl font-bold">Smart IELTS</span>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -320,7 +320,7 @@ export default function LandingPage() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Why Choose <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">SmartPrep</span>?
+              Why Choose <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Smart IELTS</span>?
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Our AI-powered platform revolutionizes test preparation with cutting-edge technology 
@@ -587,7 +587,7 @@ export default function LandingPage() {
               Success <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">Stories</span>
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Join thousands of students who have achieved their target scores with SmartPrep
+              Join thousands of students who have achieved their target scores with Smart IELTS
             </p>
           </motion.div>
 
@@ -671,7 +671,7 @@ export default function LandingPage() {
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
                   <Brain className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold">SmartPrep</span>
+                <span className="text-xl font-bold">Smart IELTS</span>
               </div>
               <p className="text-gray-400 text-sm">
                 AI-powered test preparation for IELTS, GRE, GMAT, SAT, and TOEFL.
@@ -707,7 +707,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 SmartPrep. All rights reserved.</p>
+            <p>&copy; 2024 Smart IELTS. All rights reserved.</p>
           </div>
         </div>
       </footer>

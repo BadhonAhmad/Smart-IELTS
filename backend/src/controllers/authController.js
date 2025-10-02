@@ -28,9 +28,16 @@ const createSendToken = (user, statusCode, res) => {
 // Sign up controller
 exports.signup = async (req, res) => {
   try {
+    console.log('🔥 Signup request received:', {
+      body: req.body,
+      headers: req.headers,
+      origin: req.get('Origin')
+    });
+
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({
         status: 'error',
         message: 'Validation failed',

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Brain } from "lucide-react";
 import FloatingChatbot from "../../components/FloatingChatbot";
 
 interface Passage {
@@ -1001,6 +1003,18 @@ export default function ReadingTest() {
                 className="text-blue-400 hover:text-blue-300"
               >
                 ← Back to Dashboard
+              </Link>
+              <Link href="/landing" className="flex items-center space-x-2 group">
+                <motion.div
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                  className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center"
+                >
+                  <Brain className="w-5 h-5 text-white" />
+                </motion.div>
+                <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Smart IELTS
+                </span>
               </Link>
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center">

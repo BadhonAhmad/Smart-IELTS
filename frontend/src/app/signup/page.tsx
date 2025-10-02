@@ -10,7 +10,6 @@ import {
     Calculator,
     Eye,
     EyeOff,
-    Globe,
     Globe2,
     Lock,
     Mail,
@@ -95,7 +94,7 @@ export default function SignUp() {
   };
 
   const tests = [
-    { name: "IELTS", icon: Globe, color: "from-blue-500 to-cyan-500", status: "live" },
+    { name: "IELTS", icon: Globe2, color: "from-blue-500 to-cyan-500", status: "live" },
     { name: "GRE", icon: Brain, color: "from-purple-500 to-pink-500", status: "coming-soon" },
     { name: "GMAT", icon: Calculator, color: "from-green-500 to-emerald-500", status: "coming-soon" },
     { name: "SAT", icon: BookOpen, color: "from-orange-500 to-red-500", status: "coming-soon" },
@@ -163,6 +162,9 @@ export default function SignUp() {
     }
 
     try {
+      console.log('🔍 Signup URL:', API_ENDPOINTS.AUTH.SIGNUP);
+      console.log('🔍 Environment API URL:', process.env.NEXT_PUBLIC_API_URL);
+      
       const response = await fetch(API_ENDPOINTS.AUTH.SIGNUP, {
         method: 'POST',
         headers: {
@@ -234,7 +236,7 @@ export default function SignUp() {
               <Brain className="w-6 h-6 text-white" />
             </motion.div>
             <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              SmartPrep
+              Smart IELTS
             </span>
           </Link>
           

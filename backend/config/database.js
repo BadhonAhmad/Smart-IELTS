@@ -7,8 +7,8 @@ const mongoose = require('mongoose');
 const dbConfig = {
     url: process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-ielts',
     options: {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
+        // Removed deprecated options: useNewUrlParser and useUnifiedTopology
+        // These are defaults in MongoDB Driver 4.0.0+
     },
 };
 
