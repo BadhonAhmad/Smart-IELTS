@@ -108,6 +108,13 @@ app.get('/api/agent/skills', (req, res) => {
                     cc: { description: 'CC recipients', required: false },
                     bcc: { description: 'BCC recipients', required: false }
                 }
+            },
+            {
+                name: 'WebSearch',
+                description: 'Use this skill to get comprehensive web search results',
+                inputs: { 
+                    userQuery: { description: 'The search query to get the web search results of', required: true }
+                }
             }
         ];
         
@@ -241,18 +248,34 @@ app.post('/api/prompt', async (req: any, res: any) => {
         const inputId = `api-prompt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         skillGate.startNewInput(inputId);
         
-        // Call the agent with the user prompt
+        // Call the agent with the user prompt using planner mode properly
         console.log('📨 Sending prompt to agent...');
         
         let agentResponse;
         try {
-            console.log('[DEBUG] Calling BookAssistantAgent.chat...');
-            agentResponse = await BookAssistantAgent.chat(prompt);
-            console.log('[DEBUG] Raw agent response type:', typeof agentResponse);
-            console.log('[DEBUG] Raw agent response:', agentResponse);
+            console.log('[DEBUG] Using agent with planner mode for skill execution...');
+            
+            // Create a proper conversation session that should trigger planner mode
+            const conversation = BookAssistantAgent.chat({
+                id: `conversation-${inputId}`,
+                persist: false
+            });
+            
+            console.log('[DEBUG] Sending message to conversation...');
+            agentResponse = await conversation.prompt(prompt);
+            
+            console.log('[DEBUG] Agent conversation response received:', typeof agentResponse);
+            console.log('[DEBUG] Agent response content:', agentResponse);
         } catch (error) {
-            console.error('❌ Error calling agent:', error);
-            throw error;
+            console.error('❌ Error in agent conversation:', error);
+            // Fallback to chat method if conversation fails
+            try {
+                console.log('[DEBUG] Trying fallback agent.chat...');
+                agentResponse = await BookAssistantAgent.chat(prompt);
+            } catch (fallbackError) {
+                console.error('❌ Fallback also failed:', fallbackError);
+                throw error;
+            }
         }
         
         console.log('✅ Agent response received successfully');
@@ -273,18 +296,15 @@ app.post('/api/prompt', async (req: any, res: any) => {
                     // Try to extract text from the response object
                     if (typeof (agentResponse as any).text === 'function') {
                         responseData = await (agentResponse as any).text();
+                    } else if ((agentResponse as any).content) {
+                        responseData = (agentResponse as any).content;
+                    } else if ((agentResponse as any).message) {
+                        responseData = (agentResponse as any).message;
+                    } else if ((agentResponse as any).response) {
+                        responseData = (agentResponse as any).response;
                     } else {
-                        // Safely extract properties to avoid circular references
-                        responseData = {
-                            content: (agentResponse as any).content || 
-                                   (agentResponse as any).message || 
-                                   (agentResponse as any).response ||
-                                   'Agent response received',
-                            type: typeof agentResponse,
-                            hasText: typeof (agentResponse as any).text === 'function',
-                            hasContent: !!(agentResponse as any).content,
-                            hasMessage: !!(agentResponse as any).message
-                        };
+                        // Return the object as-is if it looks structured
+                        responseData = agentResponse;
                     }
                 }
             } else {

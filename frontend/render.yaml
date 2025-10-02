@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: smart-ielts-frontend
+    env: node
+    plan: free
+    region: singapore
+    rootDir: ./frontend
+    buildCommand: cd frontend && npm ci && npm run build
+    startCommand: cd frontend && npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: NEXT_PUBLIC_ELEVENLABS_API_KEY
+        sync: false
+      - key: NEXT_PUBLIC_AGENT_ID
+        sync: false
+      - key: NEXT_PUBLIC_AGENT_ID_2
+        sync: false

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: smart-ielts-backend
+    env: node
+    plan: free
+    region: singapore
+    rootDir: ./backend
+    buildCommand: cd backend && npm ci && npm run build
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Database - set in Render dashboard (recommended: MongoDB Atlas)
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      # Any other secrets (GOOGLEAI_API_KEY etc.)
+      - key: GOOGLEAI_API_KEY
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false

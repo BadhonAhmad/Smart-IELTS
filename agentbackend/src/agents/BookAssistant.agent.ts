@@ -1,4 +1,4 @@
-import { Agent, Doc, Model, VectorDB } from '@smythos/sdk';
+import { Agent, Doc, Model, VectorDB, Component, TAgentMode } from '@smythos/sdk';
 import { Pinecone } from '@pinecone-database/pinecone';
 import fs from 'fs';
 import path from 'path';
@@ -111,20 +111,17 @@ class SkillExecutionGate {
     }
     
     canExecute(skillName: string): boolean {
-        // If ANY skill was already executed in this session, block all further executions
-        if (this.hasExecutedAnySkill) {
-            console.log(`[GATE] Blocking ${skillName} - a skill was already executed in this session`);
-            return false;
-        }
-        
         const key = `${this.currentInputId}:${skillName}`;
+        
+        // Only block if this exact skill was already executed in this session
         if (this.executedSkills.has(key)) {
             console.log(`[GATE] Blocking repeated execution of ${skillName} - already executed in this session`);
             return false;
         }
+        
         this.executedSkills.add(key);
         this.hasExecutedAnySkill = true; // Mark that a skill was executed
-        console.log(`[GATE] Allowing execution of ${skillName} - first and only skill for this session`);
+        console.log(`[GATE] Allowing execution of ${skillName}`);
         return true;
     }
     
@@ -167,8 +164,23 @@ const agent = new Agent({
     //note that we are not passing an apiKey because we will rely on smyth vault for the model credentials
     model: Model.Groq('llama-3.1-8b-instant'),
 
-    //the behavior of the agent, this describes the personnality and behavior of the agent
-    behavior: `You are a helpful document assistant.`
+    //IMPORTANT: Set agent mode to PLANNER so it can execute skills
+    mode: TAgentMode.PLANNER,
+
+        //the behavior of the agent, this describes the personnality and behavior of the agent
+    behavior: `You are a helpful document assistant that can:
+    
+1. Index and search PDF documents in a vector database
+2. Send emails to recipients with custom subject and body
+3. Search the web for current information using Tavily
+4. Get document information from OpenLibrary
+5. Manage document storage (purge, list)
+
+When users ask you to send emails, use the send_email skill with the provided recipient, subject, and body.
+When users ask about current information or need web search, use the WebSearch skill.
+When users want to work with documents, use the appropriate document skills.
+
+Be helpful, direct, and always execute the requested actions using the available skills.`
 });
 
 //We create a Pinecone vectorDB instance, at the agent scope
@@ -401,6 +413,126 @@ purgeSkill.in({
         description: 'Set to "yes" to confirm deletion of all documents',
         optional: true
     }
+});
+
+// Web search skill using Tavily component
+const webSearchSkill = agent.addSkill({
+    name: 'WebSearch',
+    description: 'Use this skill to get comprehensive web search results',
+    process: async ({ userQuery }) => {
+        // Check execution gate - return success message for repeated calls
+        if (!skillGate.canExecute('WebSearch')) {
+            const blockedMsg = skillGate.getBlockedMessage('WebSearch');
+            console.log(`[GATE] Returning blocked message: ${blockedMsg}`);
+            return blockedMsg;
+        }
+        
+        try {
+            console.log(`[DEBUG] WebSearch query: "${userQuery}"`);
+            
+            // Check if TAVILY_API_KEY is available
+            if (!process.env.TAVILY_API_KEY) {
+                const errorMsg = "❌ TAVILY_API_KEY is not configured. Please set the environment variable.";
+                console.error(`[ERROR] ${errorMsg}`);
+                skillGate.markCompleted('WebSearch', errorMsg);
+                return {
+                    success: false,
+                    error: errorMsg,
+                    query: userQuery,
+                    timestamp: new Date().toISOString()
+                };
+            }
+            
+            // Use fetch to call Tavily API directly (more reliable than component for now)
+            const tavilyUrl = 'https://api.tavily.com/search';
+            const response = await fetch(tavilyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.TAVILY_API_KEY}`
+                },
+                body: JSON.stringify({
+                    query: userQuery,
+                    search_depth: 'basic',
+                    include_answer: false,
+                    include_images: false,
+                    include_raw_content: false,
+                    max_results: 10,
+                    include_domains: [],
+                    exclude_domains: []
+                })
+            });
+
+            if (!response.ok) {
+                const errorMsg = `❌ Tavily API error: HTTP ${response.status}`;
+                console.error(`[ERROR] ${errorMsg}`);
+                skillGate.markCompleted('WebSearch', errorMsg);
+                return {
+                    success: false,
+                    error: errorMsg,
+                    query: userQuery,
+                    timestamp: new Date().toISOString()
+                };
+            }
+
+            const searchData = await response.json();
+            console.log(`[DEBUG] Tavily API response:`, searchData);
+            
+            const results = searchData.results || [];
+            
+            if (results.length === 0) {
+                const noResultMsg = "❌ No web search results found. Please check your search query and try again.";
+                skillGate.markCompleted('WebSearch', noResultMsg);
+                return {
+                    success: false,
+                    error: noResultMsg,
+                    query: userQuery,
+                    timestamp: new Date().toISOString()
+                };
+            }
+            
+            // Format results for display
+            let formattedResults = `✅ WEB SEARCH COMPLETE: Found ${results.length} results for "${userQuery}":\n\n`;
+            
+            results.forEach((result, index) => {
+                formattedResults += `${index + 1}. **${result.title || 'No Title'}**\n`;
+                formattedResults += `   ${result.url || 'No URL'}\n`;
+                formattedResults += `   ${result.content || result.snippet || 'No content available'}\n\n`;
+            });
+            
+            formattedResults += `The web search operation is finished. Found ${results.length} relevant results.`;
+            
+            console.log(`[SUCCESS] WebSearch returning formatted results`);
+            skillGate.markCompleted('WebSearch', formattedResults);
+            
+            return {
+                success: true,
+                query: userQuery,
+                resultsCount: results.length,
+                results: results,
+                formattedResults: formattedResults,
+                timestamp: new Date().toISOString()
+            };
+            
+        } catch (error) {
+            const errorMsg = `❌ Error performing web search: ${error.message}`;
+            console.error(`[ERROR] ${errorMsg}`, error);
+            skillGate.markCompleted('WebSearch', errorMsg);
+            return {
+                success: false,
+                error: errorMsg,
+                query: userQuery,
+                timestamp: new Date().toISOString()
+            };
+        }
+    },
+});
+
+// Define input contract for the skill
+webSearchSkill.in({
+    userQuery: {
+        description: 'The search query to get the web search results of',
+    },
 });
 
 //Openlibrary lookup : this is a simple skill that uses the openlibrary API to get information about a book

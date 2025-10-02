@@ -6,6 +6,7 @@ A powerful AI-powered document processing and email system built with the Smytho
 
 - **Document Indexing**: Upload and index PDF documents using vector embeddings
 - **Semantic Search**: Search through documents using natural language queries
+- **Web Search**: Comprehensive web search capabilities using Tavily API
 - **Email Integration**: Send emails via external Smyth API with full functionality
 - **AI Agent Integration**: Powered by Google's Gemini AI for intelligent responses
 - **Vector Database**: Pinecone integration for scalable document storage and retrieval
@@ -81,6 +82,9 @@ PINECONE_API_KEY=your_pinecone_api_key_here
 GOOGLE_AI_API_KEY=your_google_ai_api_key_here
 googleai=your_google_ai_api_key_here
 
+# Tavily Web Search Configuration
+TAVILY_API_KEY=your_tavily_api_key_here
+
 # Server Configuration (optional)
 PORT=5000
 NODE_ENV=development
@@ -90,6 +94,7 @@ NODE_ENV=development
 
 1. **Pinecone**: Get your API key from [Pinecone Console](https://app.pinecone.io/)
 2. **Google AI**: Get your API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+3. **Tavily**: Get your API key from [Tavily API](https://tavily.com/) for web search functionality
 
 ## 🔗 API Endpoints
 
@@ -187,6 +192,16 @@ GET /api/agent/skills
             "required": false
           }
         }
+      },
+      {
+        "name": "WebSearch",
+        "description": "Use this skill to get comprehensive web search results using Tavily API",
+        "inputs": {
+          "userQuery": {
+            "description": "The search query to get the web search results of",
+            "required": true
+          }
+        }
       }
     ]
   }
@@ -236,6 +251,18 @@ Content-Type: application/json
   "body": "This is a test email sent via the agent's email skill."
 }
 ```
+
+#### 5. Web Search
+```http
+POST /api/agent/skills/WebSearch
+Content-Type: application/json
+
+{
+  "userQuery": "where is dhaka?"
+}
+```
+
+#### 6. Purge All Documents
 
 **Response:**
 ```json
@@ -452,7 +479,14 @@ Content-Type: application/json
      }' | jq
    ```
 
-7. **Natural Language Query**
+7. **Web Search**
+   ```bash
+   curl -X POST http://localhost:5000/api/agent/skills/WebSearch \
+     -H "Content-Type: application/json" \
+     -d '{"userQuery": "where is dhaka?"}' | jq
+   ```
+
+8. **Natural Language Query**
    ```bash
    curl -X POST http://localhost:5000/api/agent/prompt \
      -H "Content-Type: application/json" \
@@ -507,6 +541,16 @@ async function sendEmail(to, subject, body) {
   return response.json();
 }
 
+// Web search
+async function webSearch(query) {
+  const response = await fetch(`${API_BASE}/api/agent/skills/WebSearch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userQuery: query })
+  });
+  return response.json();
+}
+
 // Usage
 (async () => {
   // List available PDFs
@@ -530,6 +574,10 @@ async function sendEmail(to, subject, body) {
     'This is a test email from the Document Assistant!'
   );
   console.log('Email Result:', emailResult);
+  
+  // Web search
+  const searchResult = await webSearch('where is dhaka?');
+  console.log('Web Search Result:', searchResult);
 })();
 ```
 
@@ -566,6 +614,13 @@ def send_email(to, subject, body):
     )
     return response.json()
 
+def web_search(query):
+    response = requests.post(
+        f'{API_BASE}/api/agent/skills/WebSearch',
+        json={'userQuery': query}
+    )
+    return response.json()
+
 # Usage
 if __name__ == '__main__':
     # List available PDFs
@@ -589,6 +644,10 @@ if __name__ == '__main__':
         'This is a test email from the Document Assistant!'
     )
     print('Email Result:', json.dumps(email_result, indent=2))
+    
+    # Web search
+    web_result = web_search('where is dhaka?')
+    print('Web Search Result:', json.dumps(web_result, indent=2))
 ```
 
 ## 💬 Chat Mode
@@ -735,6 +794,12 @@ npm run setup:production # Setup production environment
   - `cc` (string, optional) - CC recipients
   - `bcc` (string, optional) - BCC recipients
 - **Output**: Success/error response with email delivery status and message ID
+
+### WebSearch
+- **Purpose**: Perform comprehensive web searches using Tavily API
+- **Input**: `userQuery` (string, required) - Search query to execute
+- **Output**: Structured search results with titles, URLs, content snippets, and formatted display text
+- **Requirements**: TAVILY_API_KEY environment variable must be set
 
 ## 🔒 Security Notes
 
